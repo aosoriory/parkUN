@@ -12,21 +12,21 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0B0D10;
-    --panel:#14171C;
-    --panel-2:#1B1F26;
+    --bg:#000000;
+    --panel:#1C1C1E;
+    --panel-2:#252528;
     --line:rgba(255,255,255,0.08);
     --text:#F2F4F7;
-    --muted:#8B93A1;
-    --accent:#4FA3FF;
-    --accent-dim:rgba(79,163,255,0.15);
-    --green:#2FB170;
-    --green-dim:rgba(47,177,112,0.16);
-    --amber:#E0A72E;
-    --amber-dim:rgba(224,167,46,0.16);
-    --red:#E5484D;
-    --red-dim:rgba(229,72,77,0.16);
-    --gray:#3A404B;
+    --muted:#9AA0A6;
+    --accent:#2F7CE0;
+    --accent-dim:rgba(47,124,224,0.15);
+    --green:#1E8E3E;
+    --green-dim:rgba(30,142,62,0.16);
+    --amber:#E8A317;
+    --amber-dim:rgba(232,163,23,0.16);
+    --red:#D5302F;
+    --red-dim:rgba(213,48,47,0.16);
+    --gray:#2B2B2D;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{
@@ -43,38 +43,35 @@
 
   /* ---- Top bar ---- */
   .topbar{
-    display:flex; align-items:center; gap:6px;
-    padding:14px 14px 10px 14px;
-    border-bottom:1px solid var(--line);
+    display:flex; align-items:center; gap:8px;
+    padding:12px 14px;
+    background:var(--bg);
     flex-shrink:0;
   }
   .icon-btn{
-    width:42px; height:42px; border-radius:12px;
-    border:1px solid var(--line); background:var(--panel);
+    width:44px; height:44px; border-radius:10px;
+    border:none; background:var(--panel);
     color:var(--text); display:flex; align-items:center; justify-content:center;
-    font-size:20px; cursor:pointer; user-select:none;
+    font-size:21px; cursor:pointer; user-select:none;
   }
   .icon-btn:active{ background:var(--panel-2); }
-  .icon-btn.active{ border-color:var(--accent); color:var(--accent); }
-  .title{
-    font-family:'Space Grotesk', sans-serif; font-weight:700;
-    font-size:17px; letter-spacing:0.02em; margin-left:4px;
-  }
-  .title small{ display:block; font-family:'Inter',sans-serif; font-weight:500; font-size:11px; color:var(--muted); letter-spacing:0.04em; }
+  .icon-btn.active{ color:var(--accent); }
+  .title{ display:none; }
   .spacer{ flex:1; }
   .timer{
-    font-family:'JetBrains Mono', monospace; font-size:14px; color:var(--muted);
+    font-family:'JetBrains Mono', monospace; font-weight:700; font-size:22px; color:var(--text);
     min-width:48px; text-align:right;
   }
 
   /* ---- Column header ---- */
   .colheader{
     display:flex; align-items:center; gap:8px;
-    padding:8px 18px; font-size:11px; color:var(--muted);
+    padding:10px 18px; font-size:12px; color:var(--muted);
     letter-spacing:0.06em; text-transform:uppercase; flex-shrink:0;
+    background:var(--panel);
   }
   .colheader .name{ flex:1; }
-  .colheader .col{ width:64px; text-align:center; }
+  .colheader .col{ width:64px; text-align:center; color:var(--accent); font-size:15px; }
 
   /* ---- List ---- */
   #listWrap{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; position:relative; }
@@ -83,27 +80,36 @@
     display:flex; align-items:center; justify-content:center;
     color:var(--muted); font-size:13px; transition:transform .15s ease;
   }
-  #rows{ padding:6px 14px 24px 14px; display:flex; flex-direction:column; gap:8px; }
+  #rows{ display:flex; flex-direction:column; }
 
   .row{
-    display:flex; align-items:center; gap:8px;
-    background:var(--panel); border:1px solid var(--line); border-radius:14px;
-    padding:12px 10px 12px 16px; min-height:64px;
-  }
-  .row .name{
-    flex:1; font-family:'Space Grotesk',sans-serif; font-weight:700;
-    font-size:15px; letter-spacing:0.01em;
-  }
-  .row .name .sub{ display:block; font-family:'Inter'; font-weight:500; font-size:11px; color:var(--muted); margin-top:2px; }
-  .cell{
-    width:64px; height:44px; border-radius:10px;
-    display:flex; align-items:center; justify-content:center;
-    font-family:'JetBrains Mono', monospace; font-weight:700; font-size:19px;
+    display:flex; align-items:stretch; gap:0;
     background:var(--gray); color:var(--muted);
+    border-bottom:2px solid #000;
+    min-height:72px;
   }
-  .cell.green{ background:var(--green-dim); color:var(--green); text-shadow:0 0 14px rgba(47,177,112,0.35); }
-  .cell.amber{ background:var(--amber-dim); color:var(--amber); text-shadow:0 0 14px rgba(224,167,46,0.35); }
-  .cell.red{ background:var(--red-dim); color:var(--red); text-shadow:0 0 14px rgba(229,72,77,0.35); }
+  .row.red{ background:var(--red); color:#fff; }
+  .row.amber{ background:var(--amber); color:#1a1200; }
+  .row.green{ background:var(--green); color:#fff; }
+  .row .name{
+    flex:1; display:flex; align-items:center;
+    font-family:'Space Grotesk',sans-serif; font-weight:700;
+    font-size:21px; letter-spacing:0.01em; text-transform:uppercase;
+    padding:10px 14px;
+  }
+  .row .name .sub{ display:block; font-family:'Inter'; font-weight:500; font-size:11px; opacity:.8; margin-top:2px; }
+  .cell{
+    width:84px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono', monospace; font-weight:700; font-size:28px;
+    border-left:2px solid rgba(0,0,0,0.3);
+    color:inherit;
+  }
+  .cell.plain{ background:transparent; }
+  .cell.chip.green{ background:var(--green); color:#fff; }
+  .cell.chip.amber{ background:var(--amber); color:#1a1200; }
+  .cell.chip.red{ background:var(--red); color:#fff; }
+  .cell.chip.gray{ background:rgba(255,255,255,0.08); color:var(--muted); }
   .cell .u{ font-size:10px; margin-left:2px; opacity:.7; font-family:'Inter'; font-weight:600;}
 
   .empty{ text-align:center; color:var(--muted); font-size:14px; padding:40px 20px; }
@@ -183,7 +189,7 @@
 <div id="app">
 
   <div class="topbar">
-    <button class="icon-btn" id="btnSettings" aria-label="Ajustes">⚙</button>
+    <button class="icon-btn" id="btnSettings" aria-label="Ajustes">☰</button>
     <button class="icon-btn" id="btnInfo" aria-label="Info">ⓘ</button>
     <button class="icon-btn" id="btnTalk" aria-label="Voz">🔊</button>
     <div class="title">APARCAMIENTOS<small>UNIVERSIDAD DE NAVARRA</small></div>
@@ -499,7 +505,7 @@ function classify(val){
 function renderColHeader(){
   const el = document.getElementById("colheader");
   el.innerHTML = `<div class="name">Aparcamiento</div>` +
-    (state.verP ? `<div class="col">🅿️</div>` : "") +
+    (state.verP ? `<div class="col">P</div>` : "") +
     (state.verR ? `<div class="col">⚡</div>` : "");
 }
 
@@ -513,19 +519,25 @@ function renderRows(){
     return;
   }
 
+  const twoCols = state.verP && state.verR;
+
   rows.innerHTML = codes.map(code=>{
     const info = NAME_BY_CODE[code];
     const d = state.data[code] || {p:null,r:null};
+    const primaryVal = state.verP ? d.p : d.r;
+    const rowClass = classify(primaryVal);
     let cells = "";
     if (state.verP){
       const v = d.p;
-      cells += `<div class="cell ${classify(v)}">${v===null?"—":v}</div>`;
+      const cls = twoCols ? `chip ${classify(v) || "gray"}` : "plain";
+      cells += `<div class="cell ${cls}">${v===null?"—":v}</div>`;
     }
     if (state.verR){
       const v = d.r;
-      cells += `<div class="cell ${classify(v)}">${v===null?"—":v}</div>`;
+      const cls = state.verP ? `chip ${classify(v) || "gray"}` : "plain";
+      cells += `<div class="cell ${cls}">${v===null?"—":v}</div>`;
     }
-    return `<div class="row">
+    return `<div class="row ${rowClass}">
       <div class="name">${info.name}</div>
       ${cells}
     </div>`;
