@@ -398,6 +398,7 @@ function parseParkingHTML(html){
 /* Fetch a través de proxies CORS (unav.edu no envía cabeceras CORS) */
 async function fetchParkingHTML(){
   const proxies = [
+    { name:"worker propio", url:"https://park-proxy.aosoriory.workers.dev/" },
     { name:"allorigins", url:"https://api.allorigins.win/raw?url=" + encodeURIComponent(TARGET_URL) },
     { name:"corsproxy.io", url:"https://corsproxy.io/?url=" + encodeURIComponent(TARGET_URL) },
     { name:"codetabs", url:"https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(TARGET_URL) },
