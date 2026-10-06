@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0B0D10">
+<title>Aparcamientos UNAV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0D10;
+    --panel:#14171C;
+    --panel-2:#1B1F26;
+    --line:rgba(255,255,255,0.08);
+    --text:#F2F4F7;
+    --muted:#8B93A1;
+    --accent:#4FA3FF;
+    --accent-dim:rgba(79,163,255,0.15);
+    --green:#2FB170;
+    --green-dim:rgba(47,177,112,0.16);
+    --amber:#E0A72E;
+    --amber-dim:rgba(224,167,46,0.16);
+    --red:#E5484D;
+    --red-dim:rgba(229,72,77,0.16);
+    --gray:#3A404B;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:var(--bg); color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    overscroll-behavior-y:contain;
+  }
+  #app{
+    display:flex; flex-direction:column; height:100dvh;
+    padding-top:env(safe-area-inset-top);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+
+  /* ---- Top bar ---- */
+  .topbar{
+    display:flex; align-items:center; gap:6px;
+    padding:14px 14px 10px 14px;
+    border-bottom:1px solid var(--line);
+    flex-shrink:0;
+  }
+  .icon-btn{
+    width:42px; height:42px; border-radius:12px;
+    border:1px solid var(--line); background:var(--panel);
+    color:var(--text); display:flex; align-items:center; justify-content:center;
+    font-size:20px; cursor:pointer; user-select:none;
+  }
+  .icon-btn:active{ background:var(--panel-2); }
+  .icon-btn.active{ border-color:var(--accent); color:var(--accent); }
+  .title{
+    font-family:'Space Grotesk', sans-serif; font-weight:700;
+    font-size:17px; letter-spacing:0.02em; margin-left:4px;
+  }
+  .title small{ display:block; font-family:'Inter',sans-serif; font-weight:500; font-size:11px; color:var(--muted); letter-spacing:0.04em; }
+  .spacer{ flex:1; }
+  .timer{
+    font-family:'JetBrains Mono', monospace; font-size:14px; color:var(--muted);
+    min-width:48px; text-align:right;
+  }
+
+  /* ---- Column header ---- */
+  .colheader{
+    display:flex; align-items:center; gap:8px;
+    padding:8px 18px; font-size:11px; color:var(--muted);
+    letter-spacing:0.06em; text-transform:uppercase; flex-shrink:0;
+  }
+  .colheader .name{ flex:1; }
+  .colheader .col{ width:64px; text-align:center; }
+
+  /* ---- List ---- */
+  #listWrap{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; position:relative; }
+  #pullIndicator{
+    position:absolute; top:-46px; left:0; right:0; height:46px;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--muted); font-size:13px; transition:transform .15s ease;
+  }
+  #rows{ padding:6px 14px 24px 14px; display:flex; flex-direction:column; gap:8px; }
+
+  .row{
+    display:flex; align-items:center; gap:8px;
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:12px 10px 12px 16px; min-height:64px;
+  }
+  .row .name{
+    flex:1; font-family:'Space Grotesk',sans-serif; font-weight:700;
+    font-size:15px; letter-spacing:0.01em;
+  }
+  .row .name .sub{ display:block; font-family:'Inter'; font-weight:500; font-size:11px; color:var(--muted); margin-top:2px; }
+  .cell{
+    width:64px; height:44px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono', monospace; font-weight:700; font-size:19px;
+    background:var(--gray); color:var(--muted);
+  }
+  .cell.green{ background:var(--green-dim); color:var(--green); text-shadow:0 0 14px rgba(47,177,112,0.35); }
+  .cell.amber{ background:var(--amber-dim); color:var(--amber); text-shadow:0 0 14px rgba(224,167,46,0.35); }
+  .cell.red{ background:var(--red-dim); color:var(--red); text-shadow:0 0 14px rgba(229,72,77,0.35); }
+  .cell .u{ font-size:10px; margin-left:2px; opacity:.7; font-family:'Inter'; font-weight:600;}
+
+  .empty{ text-align:center; color:var(--muted); font-size:14px; padding:40px 20px; }
+  .empty b{ color:var(--text); }
+
+  /* ---- Flash on refresh ---- */
+  #flash{ position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none; transition:opacity .12s ease; z-index:50;}
+  #flash.on{ opacity:.18; }
+
+  /* ---- Modal ---- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.55);
+    display:flex; align-items:flex-end; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity .18s ease; z-index:100;
+  }
+  .overlay.open{ opacity:1; pointer-events:auto; }
+  .sheet{
+    width:100%; max-width:560px; max-height:86vh;
+    background:var(--panel); border-radius:20px 20px 0 0;
+    border:1px solid var(--line); border-bottom:none;
+    padding:16px 16px calc(16px + env(safe-area-inset-bottom));
+    display:flex; flex-direction:column; gap:14px;
+    transform:translateY(12px); transition:transform .18s ease;
+    overflow:hidden;
+  }
+  .overlay.open .sheet{ transform:translateY(0); }
+  .sheet-head{ display:flex; align-items:center; }
+  .sheet-title{ font-family:'Space Grotesk'; font-weight:700; font-size:18px; flex:1; }
+  .sheet-body{ overflow-y:auto; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; gap:18px; padding-bottom:4px; }
+
+  .section-label{ font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:8px; }
+
+  .seg{ display:flex; gap:6px; }
+  .seg button{
+    flex:1; padding:10px 0; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel-2); color:var(--muted); font-family:'JetBrains Mono'; font-weight:700; font-size:14px;
+  }
+  .seg button.on{ background:var(--accent-dim); border-color:var(--accent); color:var(--accent); }
+
+  .toggles{ display:flex; gap:10px; }
+  .toggle-card{
+    flex:1; border:1px solid var(--line); background:var(--panel-2); border-radius:14px;
+    padding:14px; display:flex; flex-direction:column; align-items:center; gap:6px; color:var(--muted);
+  }
+  .toggle-card.on{ border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+  .toggle-card .ic{ font-size:22px; }
+  .toggle-card .lb{ font-size:12px; font-weight:700; letter-spacing:0.04em; }
+
+  .plist{ display:flex; flex-direction:column; gap:6px; }
+  .prow{ display:flex; align-items:center; gap:8px; }
+  .prow .pname{
+    flex:1; padding:12px 12px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel-2); color:var(--muted); font-weight:600; font-size:14px;
+  }
+  .prow .pname.on{ color:var(--text); border-color:var(--accent); background:var(--accent-dim); }
+  .prow .arrow{
+    width:38px; height:38px; border-radius:9px; border:1px solid var(--line); background:var(--panel-2);
+    color:var(--text); display:flex; align-items:center; justify-content:center; font-size:16px;
+  }
+
+  .btn-primary{
+    width:100%; padding:14px; border-radius:12px; border:none;
+    background:var(--text); color:#0B0D10; font-weight:700; font-size:15px;
+    font-family:'Space Grotesk';
+  }
+
+  .info-text{ font-size:14px; line-height:1.55; color:#D6DAE1; }
+  .info-text b{ color:var(--text); }
+  .info-text .note{ color:var(--muted); font-size:12.5px; margin-top:10px; display:block; }
+
+  ::-webkit-scrollbar{ width:0; height:0; }
+</style>
+</head>
+<body>
+
+<div id="flash"></div>
+<div id="app">
+
+  <div class="topbar">
+    <button class="icon-btn" id="btnSettings" aria-label="Ajustes">⚙</button>
+    <button class="icon-btn" id="btnInfo" aria-label="Info">ⓘ</button>
+    <button class="icon-btn" id="btnTalk" aria-label="Voz">🔊</button>
+    <div class="title">APARCAMIENTOS<small>UNIVERSIDAD DE NAVARRA</small></div>
+    <div class="spacer"></div>
+    <div class="timer" id="timer">0:00</div>
+  </div>
+
+  <div class="colheader" id="colheader">
+    <div class="name">Aparcamiento</div>
+  </div>
+
+  <div id="listWrap">
+    <div id="pullIndicator">↓ Suelta para actualizar</div>
+    <div id="rows"></div>
+  </div>
+</div>
+
+<!-- Settings modal -->
+<div class="overlay" id="ovSettings">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-title">Ajustes</div>
+      <button class="icon-btn" id="closeSettings">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div>
+        <div class="section-label">Frecuencia de actualización</div>
+        <div class="seg" id="freqSeg">
+          <button data-v="30">30s</button>
+          <button data-v="60">60s</button>
+          <button data-v="120">120s</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label">Tipo de plazas</div>
+        <div class="toggles">
+          <div class="toggle-card" id="toggleP"><div class="ic">🅿️</div><div class="lb">PARKING</div></div>
+          <div class="toggle-card" id="toggleR"><div class="ic">⚡</div><div class="lb">RECARGA</div></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label">Ordenar y seleccionar</div>
+        <div class="plist" id="plist"></div>
+      </div>
+
+      <button class="btn-primary" id="btnSaveSettings">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Info modal -->
+<div class="overlay" id="ovInfo">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-title">Información</div>
+      <button class="icon-btn" id="closeInfo">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="info-text">
+        <b>Plazas libres en los aparcamientos de la UNAV</b>, obtenidas de la página oficial de Gestión de Espacios.
+        <br><br>
+        • Toca la pantalla o desliza hacia abajo para actualizar.<br>
+        • En Ajustes eliges la frecuencia de actualización, qué tipo de plazas ver (parking y/o recarga eléctrica) y qué aparcamientos mostrar, y en qué orden.<br>
+        • El icono del altavoz activa la lectura en voz alta de las plazas libres tras cada actualización.
+        <span class="note">Tus ajustes se guardan en este dispositivo y navegador, y se mantienen la próxima vez que abras la app. Añade esta página a la pantalla de inicio para usarla como una app.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   DATOS DE APARCAMIENTOS
+   ========================================================= */
+const PARKING_DATA = [
+  { code:"P01", name:"COMEDORES",   spoken:"Comedores" },
+  { code:"P02", name:"ISMAEL",      spoken:"Ismael" },
+  { code:"P03", name:"POLI",        spoken:"Poli" },
+  { code:"P04", name:"TEOLOGÍA",    spoken:"Teología" },
+  { code:"P05", name:"AMIGOS",      spoken:"Amigos" },
+  { code:"P06", name:"FCOM",        spoken:"Efecom" },
+  { code:"P07", name:"MUSEO",       spoken:"Museo" },
+  { code:"P08", name:"CIMA",        spoken:"Cima" },
+  { code:"P09", name:"ARQUITECTURA",spoken:"Arquitectura" },
+  { code:"P10", name:"MADRID",      spoken:"Madrid" },
+  { code:"P11", name:"SS · IBAETA", spoken:"Ibaeta" },
+  { code:"P12", name:"SS · MIRAMÓN",spoken:"Miramón" },
+  { code:"P13", name:"SS · IGARA",  spoken:"Igara" },
+];
+const NAME_BY_CODE = Object.fromEntries(PARKING_DATA.map(p=>[p.code,p]));
+const TARGET_URL = "https://www.unav.edu/web/gestion-de-espacios/aparcamientos";
+const NO_EV_CODES = ["P06","P07","P13"]; // sin datos de recarga eléctrica
+
+/* =========================================================
+   ESTADO (en memoria — se reinicia al recargar la página)
+   ========================================================= */
+const state = {
+  fullOrder: PARKING_DATA.map(p=>p.code),
+  active:    PARKING_DATA.map(p=>p.code),
+  verP: true,
+  verR: false,
+  talkEnabled: false,
+  refreshSeconds: 60,
+  data: {},           // code -> {p:number|null, r:number|null}
+  lastSuccess: null,
+  refreshing: false,
+};
+
+let refreshIntervalId = null;
+let timerIntervalId = null;
+
+/* =========================================================
+   PREFERENCIAS PERSISTENTES POR USUARIO (localStorage)
+   Estándar del navegador: gratis, sin cuenta ni plan de ningún
+   tipo. Cada dispositivo/navegador guarda sus propias prefs.
+   ========================================================= */
+const PREFS_KEY = "aparcamientos_unav_prefs_v1";
+let storageAvailable = false;
+
+async function loadPrefs(){
+  try{
+    const raw = localStorage.getItem(PREFS_KEY);
+    storageAvailable = true;
+    if (raw){
+      const p = JSON.parse(raw);
+      if (Array.isArray(p.fullOrder)) state.fullOrder = p.fullOrder;
+      if (Array.isArray(p.active)) state.active = p.active;
+      if (typeof p.verP === "boolean") state.verP = p.verP;
+      if (typeof p.verR === "boolean") state.verR = p.verR;
+      if (typeof p.talkEnabled === "boolean") state.talkEnabled = p.talkEnabled;
+      if (typeof p.refreshSeconds === "number") state.refreshSeconds = p.refreshSeconds;
+    }
+  }catch(e){
+    // Navegación privada u otro bloqueo de localStorage: seguimos sin persistencia.
+    storageAvailable = false;
+  }
+}
+
+async function savePrefs(){
+  try{
+    localStorage.setItem(PREFS_KEY, JSON.stringify({
+      fullOrder: state.fullOrder,
+      active: state.active,
+      verP: state.verP,
+      verR: state.verR,
+      talkEnabled: state.talkEnabled,
+      refreshSeconds: state.refreshSeconds,
+    }));
+    storageAvailable = true;
+  }catch(e){
+    storageAvailable = false;
+    // Silencioso a propósito: la app debe seguir funcionando sin persistencia.
+  }
+}
+
+/* =========================================================
+   SCRAPING / PARSING (misma lógica que la app Android)
+   ========================================================= */
+function extractCode(text){
+  const m = text.match(/P(\d{2})/);
+  if (m) return "P" + m[1];
+  const t = text.toLowerCase();
+  if (t.includes("madrid")) return "P10";
+  if (t.includes("ibaeta")) return "P11";
+  if (t.includes("miram")) return "P12";
+  if (t.includes("igara")) return "P13";
+  return null;
+}
+function extractLastNum(text){
+  const nums = text.match(/\d+/g);
+  if (!nums || !nums.length) return null;
+  return parseInt(nums[nums.length-1], 10);
+}
+function parseParkingHTML(html){
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const allUl = Array.from(doc.querySelectorAll("ul"));
+  const validas = allUl.filter(ul => {
+    const t = ul.textContent || "";
+    return t.includes("P01") || t.includes("COMEDORES");
+  });
+
+  const gen = {}, elec = {};
+  if (validas[0]) {
+    validas[0].querySelectorAll("li").forEach(li=>{
+      const t = li.textContent || "";
+      const c = extractCode(t);
+      if (c) gen[c] = extractLastNum(t);
+    });
+  }
+  if (validas[1]) {
+    validas[1].querySelectorAll("li").forEach(li=>{
+      const t = li.textContent || "";
+      const c = extractCode(t);
+      if (c && !NO_EV_CODES.includes(c)) {
+        const n = extractLastNum(t);
+        if (n !== null) elec[c] = n;
+      }
+    });
+  }
+
+  const out = {};
+  PARKING_DATA.forEach(p=>{
+    out[p.code] = { p: gen[p.code] ?? null, r: elec[p.code] ?? null };
+  });
+  return out;
+}
+
+/* Fetch a través de proxies CORS (unav.edu no envía cabeceras CORS) */
+async function fetchParkingHTML(){
+  const proxies = [
+    "https://api.allorigins.win/raw?url=" + encodeURIComponent(TARGET_URL),
+    "https://corsproxy.io/?url=" + encodeURIComponent(TARGET_URL),
+  ];
+  let lastErr = null;
+  for (const url of proxies){
+    try{
+      const res = await fetch(url, { cache:"no-store" });
+      if (res.ok){
+        const text = await res.text();
+        if (text && text.length > 500) return text;
+      }
+    }catch(e){ lastErr = e; }
+  }
+  throw lastErr || new Error("No se pudo obtener la página");
+}
+
+/* =========================================================
+   REFRESCO
+   ========================================================= */
+async function refresh(opts={}){
+  if (state.refreshing) return;
+  state.refreshing = true;
+  const shouldTalk = opts.talk === undefined ? state.talkEnabled : !!opts.talk;
+
+  try{
+    const html = await fetchParkingHTML();
+    const parsed = parseParkingHTML(html);
+    if (Object.keys(parsed).length){
+      state.data = parsed;
+      state.lastSuccess = Date.now();
+    }
+  }catch(e){
+    console.warn("Refresh error:", e);
+  }finally{
+    state.refreshing = false;
+    renderRows();
+    if (shouldTalk) speakAll();
+  }
+}
+
+function flash(){
+  const f = document.getElementById("flash");
+  f.classList.add("on");
+  setTimeout(()=>f.classList.remove("on"), 120);
+}
+
+function manualRefresh(){
+  flash();
+  refresh({talk:undefined});
+}
+
+function scheduleAutoRefresh(){
+  if (refreshIntervalId) clearInterval(refreshIntervalId);
+  refreshIntervalId = setInterval(()=>refresh(), state.refreshSeconds*1000);
+}
+
+function tickTimer(){
+  const el = document.getElementById("timer");
+  if (!state.lastSuccess){ el.textContent = "0:00"; return; }
+  const s = Math.floor((Date.now()-state.lastSuccess)/1000);
+  el.textContent = Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
+}
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+function classify(val){
+  if (typeof val !== "number") return "";
+  if (val <= 0) return "red";
+  if (val <= 5) return "amber";
+  return "green";
+}
+
+function renderColHeader(){
+  const el = document.getElementById("colheader");
+  el.innerHTML = `<div class="name">Aparcamiento</div>` +
+    (state.verP ? `<div class="col">🅿️</div>` : "") +
+    (state.verR ? `<div class="col">⚡</div>` : "");
+}
+
+function renderRows(){
+  renderColHeader();
+  const rows = document.getElementById("rows");
+  const codes = state.fullOrder.filter(c=>state.active.includes(c));
+
+  if (!codes.length){
+    rows.innerHTML = `<div class="empty">No hay aparcamientos seleccionados.<br><b>Ajustes → Ordenar y seleccionar</b></div>`;
+    return;
+  }
+
+  rows.innerHTML = codes.map(code=>{
+    const info = NAME_BY_CODE[code];
+    const d = state.data[code] || {p:null,r:null};
+    let cells = "";
+    if (state.verP){
+      const v = d.p;
+      cells += `<div class="cell ${classify(v)}">${v===null?"—":v}</div>`;
+    }
+    if (state.verR){
+      const v = d.r;
+      cells += `<div class="cell ${classify(v)}">${v===null?"—":v}</div>`;
+    }
+    return `<div class="row">
+      <div class="name">${info.name}</div>
+      ${cells}
+    </div>`;
+  }).join("");
+}
+
+/* =========================================================
+   VOZ (Web Speech API)
+   ========================================================= */
+let speechQueue = [];
+let speechIdx = 0;
+let speechGen = 0;
+
+function buildSpeechQueue(){
+  const q = [];
+  state.fullOrder.forEach(code=>{
+    if (!state.active.includes(code)) return;
+    const d = state.data[code] || {p:null,r:null};
+    const hasP = state.verP && typeof d.p === "number";
+    const hasR = state.verR && typeof d.r === "number";
+    if (!hasP && !hasR) return;
+    const name = NAME_BY_CODE[code].spoken;
+    if (hasP && hasR) q.push(`${name}, ${d.p}, recarga ${d.r}`);
+    else if (hasP) q.push(`${name}, ${d.p}`);
+    else q.push(`${name}, recarga ${d.r}`);
+  });
+  return q;
+}
+
+function speakAll(){
+  if (!state.talkEnabled || !("speechSynthesis" in window)) return;
+  speechGen++;
+  const gen = speechGen;
+  speechQueue = buildSpeechQueue();
+  speechIdx = 0;
+  window.speechSynthesis.cancel();
+  if (!speechQueue.length) return;
+  speakNext(gen);
+}
+
+function speakNext(gen){
+  if (gen !== speechGen || !state.talkEnabled) return;
+  if (speechIdx >= speechQueue.length) return;
+  const text = speechQueue[speechIdx++];
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "es-ES";
+  u.onend = ()=>{ if (gen===speechGen && state.talkEnabled) speakNext(gen); };
+  u.onerror = ()=>{ if (gen===speechGen && state.talkEnabled) speakNext(gen); };
+  window.speechSynthesis.speak(u);
+}
+
+function toggleTalk(){
+  state.talkEnabled = !state.talkEnabled;
+  document.getElementById("btnTalk").classList.toggle("active", state.talkEnabled);
+  document.getElementById("btnTalk").textContent = state.talkEnabled ? "🔊" : "🔇";
+  savePrefs();
+  if (!state.talkEnabled){
+    window.speechSynthesis.cancel();
+    return;
+  }
+  flash();
+  refresh({talk:true});
+}
+
+/* =========================================================
+   PULL-TO-REFRESH + TAP-TO-REFRESH
+   ========================================================= */
+(function initGestures(){
+  const wrap = document.getElementById("listWrap");
+  const indicator = document.getElementById("pullIndicator");
+  let startY = 0, pulling = false, moved = false, dragAmt = 0;
+
+  wrap.addEventListener("touchstart", (e)=>{
+    if (wrap.scrollTop <= 0){
+      startY = e.touches[0].clientY;
+      pulling = true; moved = false; dragAmt = 0;
+    } else { pulling = false; }
+  }, {passive:true});
+
+  wrap.addEventListener("touchmove", (e)=>{
+    if (!pulling) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 4){
+      moved = true;
+      dragAmt = Math.min(dy, 90);
+      indicator.style.transform = `translateY(${dragAmt}px)`;
+      indicator.textContent = dragAmt > 60 ? "↑ Suelta para actualizar" : "↓ Sigue tirando";
+    }
+  }, {passive:true});
+
+  wrap.addEventListener("touchend", ()=>{
+    if (pulling && moved && dragAmt > 60){
+      manualRefresh();
+    } else if (pulling && !moved){
+      manualRefresh(); // tap-to-refresh
+    }
+    indicator.style.transform = "translateY(0)";
+    indicator.textContent = "↓ Suelta para actualizar";
+    pulling = false; moved = false; dragAmt = 0;
+  }, {passive:true});
+})();
+
+/* =========================================================
+   MODALES / AJUSTES
+   ========================================================= */
+let draftOrder = [], draftActive = [], draftP = true, draftR = false, draftFreq = 60;
+
+function openSettings(){
+  draftOrder = [...state.fullOrder];
+  draftActive = [...state.active];
+  draftP = state.verP; draftR = state.verR; draftFreq = state.refreshSeconds;
+  renderFreqSeg(); renderToggles(); renderPlist();
+  document.getElementById("ovSettings").classList.add("open");
+}
+function closeSettings(){ document.getElementById("ovSettings").classList.remove("open"); }
+
+function renderFreqSeg(){
+  document.querySelectorAll("#freqSeg button").forEach(b=>{
+    b.classList.toggle("on", parseInt(b.dataset.v,10) === draftFreq);
+  });
+}
+document.getElementById("freqSeg").addEventListener("click", (e)=>{
+  const b = e.target.closest("button"); if (!b) return;
+  draftFreq = parseInt(b.dataset.v,10);
+  renderFreqSeg();
+});
+
+function renderToggles(){
+  document.getElementById("toggleP").classList.toggle("on", draftP);
+  document.getElementById("toggleR").classList.toggle("on", draftR);
+}
+document.getElementById("toggleP").addEventListener("click", ()=>{ draftP = !draftP; if(!draftP && !draftR) draftR=true; renderToggles(); });
+document.getElementById("toggleR").addEventListener("click", ()=>{ draftR = !draftR; if(!draftP && !draftR) draftP=true; renderToggles(); });
+
+function renderPlist(){
+  const el = document.getElementById("plist");
+  el.innerHTML = draftOrder.map((code,i)=>{
+    const info = NAME_BY_CODE[code];
+    const on = draftActive.includes(code);
+    return `<div class="prow" data-code="${code}" data-idx="${i}">
+      <div class="pname ${on?"on":""}" data-act="toggle">${info.name}</div>
+      <div class="arrow" data-act="up">↑</div>
+      <div class="arrow" data-act="down">↓</div>
+    </div>`;
+  }).join("");
+}
+document.getElementById("plist").addEventListener("click", (e)=>{
+  const row = e.target.closest(".prow"); if (!row) return;
+  const idx = parseInt(row.dataset.idx,10);
+  const code = row.dataset.code;
+  const act = e.target.dataset.act;
+  if (act === "toggle"){
+    if (draftActive.includes(code)) draftActive = draftActive.filter(c=>c!==code);
+    else draftActive.push(code);
+    renderPlist();
+  } else if (act === "up" && idx > 0){
+    [draftOrder[idx-1], draftOrder[idx]] = [draftOrder[idx], draftOrder[idx-1]];
+    renderPlist();
+  } else if (act === "down" && idx < draftOrder.length-1){
+    [draftOrder[idx+1], draftOrder[idx]] = [draftOrder[idx], draftOrder[idx+1]];
+    renderPlist();
+  }
+});
+
+document.getElementById("btnSaveSettings").addEventListener("click", ()=>{
+  const freqChanged = draftFreq !== state.refreshSeconds;
+  state.fullOrder = [...draftOrder];
+  state.active = [...draftActive];
+  state.verP = draftP; state.verR = draftR;
+  state.refreshSeconds = draftFreq;
+  if (freqChanged) scheduleAutoRefresh();
+  closeSettings();
+  manualRefresh();
+  savePrefs();
+});
+
+/* =========================================================
+   EVENTOS GLOBALES
+   ========================================================= */
+document.getElementById("btnSettings").addEventListener("click", openSettings);
+document.getElementById("closeSettings").addEventListener("click", closeSettings);
+document.getElementById("ovSettings").addEventListener("click", (e)=>{ if(e.target.id==="ovSettings") closeSettings(); });
+
+document.getElementById("btnInfo").addEventListener("click", ()=>document.getElementById("ovInfo").classList.add("open"));
+document.getElementById("closeInfo").addEventListener("click", ()=>document.getElementById("ovInfo").classList.remove("open"));
+document.getElementById("ovInfo").addEventListener("click", (e)=>{ if(e.target.id==="ovInfo") document.getElementById("ovInfo").classList.remove("open"); });
+
+document.getElementById("btnTalk").addEventListener("click", toggleTalk);
+
+/* =========================================================
+   ARRANQUE
+   ========================================================= */
+(async function start(){
+  await loadPrefs();
+  document.getElementById("btnTalk").classList.toggle("active", state.talkEnabled);
+  document.getElementById("btnTalk").textContent = state.talkEnabled ? "🔊" : "🔇";
+  renderRows();
+  timerIntervalId = setInterval(tickTimer, 1000);
+  scheduleAutoRefresh();
+  setTimeout(()=>refresh({talk: state.talkEnabled ? true : undefined}), 400);
+})();
+</script>
+</body>
+</html>
