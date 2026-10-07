@@ -82,8 +82,10 @@
   #pullIndicator{
     position:absolute; top:-46px; left:0; right:0; height:46px;
     display:flex; align-items:center; justify-content:center;
-    color:var(--muted); font-size:13px; transition:transform .15s ease;
+    color:#fff; font-size:20px; font-weight:700; letter-spacing:0.01em;
+    background:#2F7CE0; transition:transform .15s ease, background .15s ease;
   }
+  #pullIndicator.ready{ background:#1E8E3E; }
   #rows{ display:flex; flex-direction:column; }
 
   .row{
@@ -679,7 +681,9 @@ function toggleTalk(){
     if (atTop && dy > TAP_SLOP){
       dragAmt = Math.min(dy, RELOAD_PULL + 30);
       indicator.style.transform = `translateY(${dragAmt}px)`;
-      indicator.textContent = dragAmt >= RELOAD_PULL ? "↑ Suelta para recargar la app" : "↓ Sigue tirando para recargar";
+      const ready = dragAmt >= RELOAD_PULL;
+      indicator.classList.toggle("ready", ready);
+      indicator.textContent = ready ? "↑ Suelta para recargar la app" : "↓ Sigue tirando para recargar";
     }
   }, {passive:true});
 
@@ -688,6 +692,7 @@ function toggleTalk(){
     const reload = atTop && dragAmt >= RELOAD_PULL;
     const tap = !reload && maxMove <= TAP_SLOP;
     indicator.style.transform = "translateY(0)";
+    indicator.classList.remove("ready");
     indicator.textContent = "↓ Sigue tirando para recargar";
     active = false; dragAmt = 0;
     if (reload){ location.reload(); }
@@ -696,6 +701,7 @@ function toggleTalk(){
 
   wrap.addEventListener("touchcancel", ()=>{
     active = false; dragAmt = 0;
+    indicator.classList.remove("ready");
     indicator.style.transform = "translateY(0)";
   }, {passive:true});
 })();
