@@ -750,7 +750,7 @@ function renderPlist(){
 /* Reordena con animación lenta (técnica FLIP): cada fila se desliza desde
    su posición anterior a la nueva para que se vea bien el intercambio. */
 const REORDER_MS = 600;
-function renderPlistAnimated(mutate){
+function renderPlistAnimated(mutate, clickedCode){
   const before = {};
   document.querySelectorAll("#plist .prow").forEach(r=>{ before[r.dataset.code] = r.getBoundingClientRect().top; });
   mutate();
@@ -761,7 +761,7 @@ function renderPlistAnimated(mutate){
     const dy = prev - r.getBoundingClientRect().top;
     if (Math.abs(dy) < 1 || !r.animate) return;
     r.style.position = "relative";
-    r.style.zIndex = "2";
+    r.style.zIndex = (r.dataset.code === clickedCode) ? "3" : "2";
     const anim = r.animate(
       [{ transform:`translateY(${dy}px)` }, { transform:"translateY(0)" }],
       { duration: REORDER_MS, easing: "ease-in-out" }
@@ -787,9 +787,9 @@ document.getElementById("plist").addEventListener("click", (e)=>{
     draftOrder.splice(idx, 1);
     renderPlist();
   } else if (act === "up" && idx > 0){
-    renderPlistAnimated(()=>{ [draftOrder[idx-1], draftOrder[idx]] = [draftOrder[idx], draftOrder[idx-1]]; });
+    renderPlistAnimated(()=>{ [draftOrder[idx-1], draftOrder[idx]] = [draftOrder[idx], draftOrder[idx-1]]; }, code);
   } else if (act === "down" && idx < draftOrder.length-1){
-    renderPlistAnimated(()=>{ [draftOrder[idx+1], draftOrder[idx]] = [draftOrder[idx], draftOrder[idx+1]]; });
+    renderPlistAnimated(()=>{ [draftOrder[idx+1], draftOrder[idx]] = [draftOrder[idx], draftOrder[idx+1]]; }, code);
   }
 });
 
