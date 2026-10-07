@@ -741,8 +741,17 @@ document.getElementById("plist").addEventListener("click", (e)=>{
     else draftGaps.push(code);
     renderPlist();
   } else if (act === "up" && idx > 0){
+    // Mantiene el parking movido bajo el dedo: tras subir un puesto,
+    // desplaza el scroll para que quede en la misma posición de pantalla.
+    const scroller = document.querySelector(".plist-scroll");
+    const topBefore = row.getBoundingClientRect().top;
     [draftOrder[idx-1], draftOrder[idx]] = [draftOrder[idx], draftOrder[idx-1]];
     renderPlist();
+    const moved = document.querySelector(`#plist .prow[data-code="${code}"]`);
+    if (moved && scroller){
+      const delta = moved.getBoundingClientRect().top - topBefore;
+      scroller.scrollTop += delta;
+    }
   } else if (act === "down" && idx < draftOrder.length-1){
     [draftOrder[idx+1], draftOrder[idx]] = [draftOrder[idx], draftOrder[idx+1]];
     renderPlist();
