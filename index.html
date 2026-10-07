@@ -112,6 +112,8 @@
     border-left:2px solid rgba(0,0,0,0.3);
     color:inherit;
   }
+  .row.twocols .cell{ width:68px; }
+  .cell.wide3{ font-size:32px; }
   .cell.plain{ background:transparent; }
   .cell.chip.green{ background:var(--green); color:#fff; }
   .cell.chip.amber{ background:var(--amber); color:#1a1200; }
@@ -545,12 +547,14 @@ function renderRows(){
     if (state.verP){
       const v = d.p;
       const cls = twoCols ? `chip ${classify(v) || "gray"}` : "plain";
-      cells += `<div class="cell ${cls}">${v===null?"—":v}</div>`;
+      const wide = (typeof v === "number" && v >= 100) ? " wide3" : "";
+      cells += `<div class="cell ${cls}${wide}">${v===null?"—":v}</div>`;
     }
     if (state.verR){
       const v = d.r;
       const cls = state.verP ? `chip ${classify(v) || "gray"}` : "plain";
-      cells += `<div class="cell ${cls}">${v===null?"—":v}</div>`;
+      const wide = (typeof v === "number" && v >= 100) ? " wide3" : "";
+      cells += `<div class="cell ${cls}${wide}">${v===null?"—":v}</div>`;
     }
     return `<div class="row ${rowClass}">
       <div class="name">${info.name}</div>
