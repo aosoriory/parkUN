@@ -69,13 +69,13 @@
 
   /* ---- Column header ---- */
   .colheader{
-    display:flex; align-items:center; gap:8px;
-    padding:10px 18px; font-size:12px; color:var(--muted);
+    display:flex; align-items:center; gap:0;
+    padding:10px 0; font-size:12px; color:var(--muted);
     letter-spacing:0.06em; text-transform:uppercase; flex-shrink:0;
     background:var(--panel);
   }
-  .colheader .name{ flex:1; }
-  .colheader .col{ width:64px; text-align:center; color:var(--accent); font-size:28px; font-weight:700; line-height:1; }
+  .colheader .name{ flex:1; padding-left:14px; }
+  .colheader .col{ width:92px; flex-shrink:0; padding-left:2px; box-sizing:border-box; text-align:center; color:var(--accent); font-size:28px; font-weight:700; line-height:1; }
 
   /* ---- List ---- */
   #listWrap{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; position:relative; }
@@ -114,6 +114,7 @@
     color:inherit;
   }
   .row.twocols .cell{ width:68px; }
+  .colheader.twocols .col{ width:68px; }
   .cell.wide3{ font-size:32px; }
   .cell.plain{ background:transparent; }
   .cell.chip.green{ background:var(--green); color:#fff; }
@@ -539,6 +540,7 @@ function classify(val){
 
 function renderColHeader(){
   const el = document.getElementById("colheader");
+  el.classList.toggle("twocols", state.verP && state.verR);
   el.innerHTML = `<div class="name">Aparcamiento</div>` +
     (state.verP ? `<div class="col">P</div>` : "") +
     (state.verR ? `<div class="col">⚡</div>` : "");
