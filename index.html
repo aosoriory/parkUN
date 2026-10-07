@@ -136,7 +136,7 @@
   }
   .overlay.open{ opacity:1; pointer-events:auto; }
   .sheet{
-    width:100%; max-width:560px; max-height:86vh;
+    width:100%; max-width:560px; height:96vh; height:96dvh;
     background:var(--panel); border-radius:20px 20px 0 0;
     border:1px solid var(--line); border-bottom:none;
     padding:16px 16px calc(16px + env(safe-area-inset-bottom));
@@ -148,7 +148,7 @@
   .sheet-head{ display:flex; align-items:center; flex-shrink:0; }
   .sheet-title{ font-family:'Space Grotesk'; font-weight:700; font-size:18px; flex:1; }
   .sheet-body{ display:flex; flex-direction:column; gap:14px; overflow:hidden; min-height:0; flex:1; }
-  .sheet-fixed{ display:flex; flex-direction:column; gap:18px; flex-shrink:0; }
+  .sheet-fixed{ display:flex; flex-direction:column; gap:10px; flex-shrink:0; }
   .plist-scroll{ flex:1; min-height:80px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
 
   .section-label{ font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:8px; }
@@ -163,11 +163,11 @@
   .toggles{ display:flex; gap:10px; }
   .toggle-card{
     flex:1; border:1px solid var(--line); background:var(--panel-2); border-radius:14px;
-    padding:14px; display:flex; flex-direction:column; align-items:center; gap:6px; color:var(--muted);
+    padding:6px 10px; display:flex; flex-direction:row; align-items:center; justify-content:center; gap:8px; color:var(--muted);
   }
   .toggle-card.on{ border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
-  .toggle-card .ic{ font-size:22px; }
-  .toggle-card .lb{ font-size:12px; font-weight:700; letter-spacing:0.04em; }
+  .toggle-card .ic{ font-size:16px; }
+  .toggle-card .lb{ font-size:11px; font-weight:700; letter-spacing:0.04em; }
 
   .plist{ display:flex; flex-direction:column; gap:6px; }
   .prow{ display:flex; align-items:center; gap:8px; }
