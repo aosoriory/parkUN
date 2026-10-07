@@ -145,9 +145,11 @@
     overflow:hidden;
   }
   .overlay.open .sheet{ transform:translateY(0); }
-  .sheet-head{ display:flex; align-items:center; }
+  .sheet-head{ display:flex; align-items:center; flex-shrink:0; }
   .sheet-title{ font-family:'Space Grotesk'; font-weight:700; font-size:18px; flex:1; }
-  .sheet-body{ overflow-y:auto; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; gap:18px; padding-bottom:4px; }
+  .sheet-body{ display:flex; flex-direction:column; gap:14px; overflow:hidden; min-height:0; flex:1; }
+  .sheet-fixed{ display:flex; flex-direction:column; gap:18px; flex-shrink:0; }
+  .plist-scroll{ flex:1; min-height:80px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
 
   .section-label{ font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:8px; }
 
@@ -226,25 +228,28 @@
       <button class="icon-btn" id="closeSettings">✕</button>
     </div>
     <div class="sheet-body">
-      <div>
-        <div class="section-label">Frecuencia de actualización</div>
-        <div class="seg" id="freqSeg">
-          <button data-v="30">30s</button>
-          <button data-v="60">60s</button>
-          <button data-v="120">120s</button>
+      <div class="sheet-fixed">
+        <div>
+          <div class="section-label">Frecuencia de actualización</div>
+          <div class="seg" id="freqSeg">
+            <button data-v="30">30s</button>
+            <button data-v="60">60s</button>
+            <button data-v="120">120s</button>
+          </div>
         </div>
+
+        <div>
+          <div class="section-label">Tipo de plazas</div>
+          <div class="toggles">
+            <div class="toggle-card" id="toggleP"><div class="ic">🅿️</div><div class="lb">PARKING</div></div>
+            <div class="toggle-card" id="toggleR"><div class="ic">⚡</div><div class="lb">RECARGA</div></div>
+          </div>
+        </div>
+
+        <div class="section-label" style="margin-bottom:0">Ordenar y seleccionar</div>
       </div>
 
-      <div>
-        <div class="section-label">Tipo de plazas</div>
-        <div class="toggles">
-          <div class="toggle-card" id="toggleP"><div class="ic">🅿️</div><div class="lb">PARKING</div></div>
-          <div class="toggle-card" id="toggleR"><div class="ic">⚡</div><div class="lb">RECARGA</div></div>
-        </div>
-      </div>
-
-      <div>
-        <div class="section-label">Ordenar y seleccionar</div>
+      <div class="plist-scroll">
         <div class="plist" id="plist"></div>
       </div>
 
