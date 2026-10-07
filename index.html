@@ -645,6 +645,7 @@ async function refresh(opts={}){
     if (anyData){
       state.data = parsed;
       state.lastSuccess = Date.now();
+      if (opts.flash) flash();   // parpadeo al recibir los datos nuevos
       state.timerOff = false;   // ...y vuelve a 0:00 al recibir respuesta
       tickTimer();
       setStatus(null);
@@ -685,10 +686,9 @@ function flash(){
 }
 
 function manualRefresh(){
-  flash();
   state.timerOff = true;   // el contador se apaga al instante...
   tickTimer();
-  refresh({talk:undefined});
+  refresh({talk:undefined, flash:true});
 }
 
 function scheduleAutoRefresh(){
@@ -893,8 +893,7 @@ function toggleTalk(){
     window.speechSynthesis.cancel();
     return;
   }
-  flash();
-  refresh({talk:true});
+  refresh({talk:true, flash:true});
 }
 
 /* =========================================================
