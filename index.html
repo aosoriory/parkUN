@@ -207,9 +207,12 @@
   /* ---- Vista de mapa ---- */
   #mapWrap{ flex:1; display:none; flex-direction:column; position:relative; overflow:hidden; min-height:0; }
   #mapWrap.on{ display:flex; }
-  #mapBox{ flex:1; min-height:0; padding:6px 8px 0; display:flex; align-items:flex-start; justify-content:center; }
-  #campusMap{ width:100%; height:auto; max-height:100%; display:block; border-radius:10px; }
+  #mapBox{ flex:0 0 auto; padding:6px 8px 0; display:flex; align-items:flex-start; justify-content:center; touch-action:none; }
+  #mapViewport{ position:relative; overflow:hidden; width:min(100%, calc((100dvh - 190px) * 0.7275)); aspect-ratio:430.7 / 592; border-radius:10px; background:#e9eee3; touch-action:none; }
+  #campusMap{ width:100%; height:100%; display:block; transform-origin:0 0; will-change:transform; }
   #campusMap text{ font-family:'Inter',system-ui,sans-serif; }
+  #compass{ position:absolute; top:8px; left:8px; width:38px; height:38px; background:rgba(255,255,255,.88); border-radius:50%; pointer-events:none; }
+  #compass.flipped{ top:auto; left:auto; bottom:8px; right:8px; }
   .pk{ fill:#4a4a4d; fill-opacity:.82; stroke:#2b2b2d; stroke-width:1.5; stroke-linejoin:round; }
   .pk.green{ fill:#1E8E3E; stroke:#0f5a26; }
   .pk.amber{ fill:#E8A317; stroke:#8f5f00; }
@@ -220,8 +223,13 @@
   .lbl-f{ display:none; }
   #campusMap.flipped .lbl-n{ display:none; }
   #campusMap.flipped .lbl-f{ display:inline; }
-  #mapFoot{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 14px 10px; color:var(--muted); font-size:12px; flex-shrink:0; }
-  #compass{ width:34px; height:34px; flex-shrink:0; }
+  #mapFoot{ display:flex; align-items:center; gap:8px; padding:10px 10px 12px; color:var(--muted); font-size:12px; flex-shrink:0; }
+  #mapCaption{ flex:1; line-height:1.3; }
+  .mbtn{ width:44px; height:44px; border-radius:10px; border:none; background:var(--panel); color:var(--text); display:flex; align-items:center; justify-content:center; font-size:21px; cursor:pointer; flex-shrink:0; }
+  .mbtn:active{ background:var(--panel-2); }
+  .mseg{ display:flex; border-radius:10px; overflow:hidden; background:var(--panel); flex-shrink:0; }
+  .mseg button{ width:44px; height:44px; border:none; background:transparent; color:var(--text); font-size:20px; cursor:pointer; }
+  .mseg button.on{ background:var(--accent); }
 
   ::-webkit-scrollbar{ width:0; height:0; }
 </style>
@@ -235,7 +243,6 @@
     <button class="icon-btn" id="btnSettings" aria-label="Ajustes">☰</button>
     <button class="icon-btn" id="btnInfo" aria-label="Info">ⓘ</button>
     <button class="icon-btn" id="btnTalk" aria-label="Voz">🔊</button>
-    <button class="icon-btn" id="btnFlip" aria-label="Girar el mapa" style="display:none">🧭</button>
     <button class="icon-btn" id="btnView" aria-label="Cambiar entre lista y mapa">🗺️</button>
     <div class="title">APARCAMIENTOS<small>UNIVERSIDAD DE NAVARRA</small></div>
     <div class="spacer"></div>
@@ -255,7 +262,7 @@
 
   <div id="mapWrap">
     <div class="pull" id="pullIndicator2">↓ Sigue tirando para recargar</div>
-    <div id="mapBox">
+    <div id="mapBox"><div id="mapViewport">
 <svg xmlns="http://www.w3.org/2000/svg" id="campusMap" viewBox="0 0 430.7 592.0" preserveAspectRatio="xMidYMid meet">
 <defs><clipPath id="cl"><rect width="430.7" height="592.0"/></clipPath></defs>
 <g id="mapRot" clip-path="url(#cl)"><rect width="430.7" height="592.0" fill="#e9eee3"/>
@@ -362,13 +369,16 @@
 <text class="pl" id="pl-P09" x="319.5" y="337.0" font-size="6.5" font-weight="700" text-anchor="middle">P9</text>
 <text class="pn" id="pn-P09" x="319.5" y="376.0" text-anchor="middle" data-cx="319.5" data-cy="360.0"></text>
 </g></svg>
+<svg id="compass" viewBox="-19 -19 38 38"><circle r="17" fill="none" stroke="#9aa5ad" stroke-width="1.2"/>
+        <g id="cmpN"><path d="M-12,0 L-3,-5 L-3,5 Z" fill="#c62828"/><path d="M12,0 L3,-5 L3,5 Z" fill="#9aa5ad"/><text x="-7" y="-7" font-size="8" font-weight="700" fill="#c62828" text-anchor="middle" font-family="Inter,sans-serif">N</text></g>
+        <g id="cmpF" style="display:none"><path d="M12,0 L3,-5 L3,5 Z" fill="#c62828"/><path d="M-12,0 L-3,-5 L-3,5 Z" fill="#9aa5ad"/><text x="7" y="-7" font-size="8" font-weight="700" fill="#c62828" text-anchor="middle" font-family="Inter,sans-serif">N</text></g>
+      </svg></div>
     </div>
     <div id="mapFoot">
       <span id="mapCaption">Esquema aproximado · Este arriba</span>
-      <svg id="compass" viewBox="-17 -17 34 34"><circle r="15" fill="#fff" stroke="#9aa5ad"/>
-        <g id="cmpN"><path d="M-11,0 L-2,-4.5 L-2,4.5 Z" fill="#c62828"/><path d="M11,0 L2,-4.5 L2,4.5 Z" fill="#9aa5ad"/><text x="-7" y="-6" font-size="7" font-weight="700" fill="#c62828" text-anchor="middle" font-family="Inter,sans-serif">N</text></g>
-        <g id="cmpF" style="display:none"><path d="M11,0 L2,-4.5 L2,4.5 Z" fill="#c62828"/><path d="M-11,0 L-2,-4.5 L-2,4.5 Z" fill="#9aa5ad"/><text x="7" y="-6" font-size="7" font-weight="700" fill="#c62828" text-anchor="middle" font-family="Inter,sans-serif">N</text></g>
-      </svg>
+      <button class="mbtn" id="btnZoomReset" aria-label="Quitar el zoom" style="display:none">⤢</button>
+      <div class="mseg" id="mapMetric"><button data-m="p" aria-label="Plazas de parking">🅿️</button><button data-m="r" aria-label="Puntos de recarga">⚡</button></div>
+      <button class="mbtn" id="btnFlip" aria-label="Girar el mapa">🧭</button>
     </div>
   </div>
 </div>
@@ -473,6 +483,7 @@ const state = {
   lastSuccess: null,
   refreshing: false,
   view: "list",       // "list" | "map"
+  mapMetric: "p",    // en el mapa: "p" plazas de parking · "r" puntos de recarga
   mapFlip: false,     // false: Este arriba (N a la izquierda) · true: Oeste arriba (N a la derecha)
 };
 
@@ -509,6 +520,7 @@ async function loadPrefs(){
       if (typeof p.refreshSeconds === "number") state.refreshSeconds = p.refreshSeconds;
       if (p.view === "map" || p.view === "list") state.view = p.view;
       if (typeof p.mapFlip === "boolean") state.mapFlip = p.mapFlip;
+      if (p.mapMetric === "p" || p.mapMetric === "r") state.mapMetric = p.mapMetric;
     }
   }catch(e){
     // Navegación privada u otro bloqueo de localStorage: seguimos sin persistencia.
@@ -527,6 +539,7 @@ async function savePrefs(){
       refreshSeconds: state.refreshSeconds,
       view: state.view,
       mapFlip: state.mapFlip,
+      mapMetric: state.mapMetric,
     }));
     storageAvailable = true;
   }catch(e){
@@ -772,11 +785,12 @@ function renderMap(){
     const pn = document.getElementById("pn-"+code);
     const pl = document.getElementById("pl-"+code);
     if (!pk || !pn || !pl) return;
-    const on = state.active.includes(code);
+    // El mapa muestra siempre todos los parkings de Pamplona (P01–P09),
+    // con independencia de los que se hayan elegido para la lista.
     const d = state.data[code] || {p:null,r:null};
-    const v = state.verP ? d.p : d.r;
-    pk.setAttribute("class", "pk " + (on ? (classify(v) || "gray") : "gray"));
-    const txt = !on ? "" : (typeof v === "number" ? String(v) : "—");
+    const v = state.mapMetric === "r" ? d.r : d.p;
+    pk.setAttribute("class", "pk " + (classify(v) || "gray"));
+    const txt = typeof v === "number" ? String(v) : "—";
     pn.textContent = txt;
     // Cuantas menos cifras, más grande.
     const fs = txt === "—" ? 28 : (txt.length <= 1 ? 46 : txt.length === 2 ? 31 : 23);
@@ -799,7 +813,14 @@ function applyFlip(){
     "Esquema aproximado · " + (state.mapFlip ? "Oeste arriba" : "Este arriba");
   document.getElementById("cmpN").style.display = state.mapFlip ? "none" : "";
   document.getElementById("cmpF").style.display = state.mapFlip ? "" : "none";
+  // Brújula en la esquina nordeste: con el Este arriba y el Norte a la izquierda es
+  // la de arriba a la izquierda; al girar el mapa pasa a abajo a la derecha.
+  document.getElementById("compass").classList.toggle("flipped", state.mapFlip);
   applyFlipTexts();
+}
+
+function applyMetric(){
+  document.querySelectorAll("#mapMetric button").forEach(b=>b.classList.toggle("on", b.dataset.m === state.mapMetric));
 }
 
 function applyView(){
@@ -807,7 +828,6 @@ function applyView(){
   document.getElementById("colheader").style.display = map ? "none" : "";
   document.getElementById("listWrap").style.display = map ? "none" : "";
   document.getElementById("mapWrap").classList.toggle("on", map);
-  document.getElementById("btnFlip").style.display = map ? "" : "none";
   const b = document.getElementById("btnView");
   b.textContent = map ? "📋" : "🗺️";
   b.setAttribute("aria-label", map ? "Ver la lista" : "Ver el mapa");
@@ -919,7 +939,103 @@ function initGestures(wrap, indicator){
   }, {passive:true});
 }
 initGestures(document.getElementById("listWrap"), document.getElementById("pullIndicator"));
-initGestures(document.getElementById("mapWrap"), document.getElementById("pullIndicator2"));
+
+/* Gestos del mapa: pellizcar para ampliar, arrastrar para moverlo cuando está ampliado.
+   Con el mapa sin ampliar valen los mismos gestos que en la lista:
+   un toque actualiza los datos y tirar hacia abajo recarga la app. */
+const mapZoom = { k:1, x:0, y:0 };
+function setMapZoom(k, x, y){
+  const vp = document.getElementById("mapViewport");
+  const r = vp.getBoundingClientRect();
+  k = Math.max(1, Math.min(6, k));
+  x = Math.max(r.width  - k*r.width,  Math.min(0, x));
+  y = Math.max(r.height - k*r.height, Math.min(0, y));
+  if (k <= 1.001){ k = 1; x = 0; y = 0; }
+  mapZoom.k = k; mapZoom.x = x; mapZoom.y = y;
+  document.getElementById("campusMap").style.transform = k === 1 ? "" : `translate(${x}px,${y}px) scale(${k})`;
+  document.getElementById("btnZoomReset").style.display = k > 1 ? "" : "none";
+}
+(function initMapGestures(){
+  const box = document.getElementById("mapBox");
+  const vp = document.getElementById("mapViewport");
+  const indicator = document.getElementById("pullIndicator2");
+  const RELOAD_PULL = 110, TAP_SLOP = 10;
+  let mode = null, sx = 0, sy = 0, maxMove = 0, dragAmt = 0, pinched = false;
+  let p0 = null, pan0 = null;
+
+  const pt = t => { const r = vp.getBoundingClientRect(); return { x:t.clientX - r.left, y:t.clientY - r.top }; };
+  function startPinch(ts){
+    const a = pt(ts[0]), b = pt(ts[1]);
+    const mid = { x:(a.x+b.x)/2, y:(a.y+b.y)/2 };
+    p0 = { d:Math.hypot(a.x-b.x, a.y-b.y) || 1, k:mapZoom.k,
+           cx:(mid.x - mapZoom.x)/mapZoom.k, cy:(mid.y - mapZoom.y)/mapZoom.k };
+    mode = "pinch"; pinched = true;
+  }
+  function startPan(t){
+    sx = t.clientX; sy = t.clientY; pan0 = { x:mapZoom.x, y:mapZoom.y }; mode = "single";
+  }
+  function resetIndicator(){
+    indicator.style.transform = "translateY(0)";
+    indicator.classList.remove("ready");
+    indicator.textContent = "↓ Sigue tirando para recargar";
+  }
+
+  box.addEventListener("touchstart", (e)=>{
+    if (e.touches.length >= 2){ startPinch(e.touches); return; }
+    if (mode !== "pinch"){ startPan(e.touches[0]); maxMove = 0; dragAmt = 0; pinched = false; }
+  }, {passive:true});
+
+  box.addEventListener("touchmove", (e)=>{
+    if (mode === "pinch" && e.touches.length >= 2){
+      const a = pt(e.touches[0]), b = pt(e.touches[1]);
+      const mid = { x:(a.x+b.x)/2, y:(a.y+b.y)/2 };
+      const k = p0.k * (Math.hypot(a.x-b.x, a.y-b.y) / p0.d);
+      const kk = Math.max(1, Math.min(6, k));
+      setMapZoom(kk, mid.x - kk*p0.cx, mid.y - kk*p0.cy);
+      return;
+    }
+    if (mode !== "single" || !e.touches.length) return;
+    const t = e.touches[0];
+    const dx = t.clientX - sx, dy = t.clientY - sy;
+    maxMove = Math.max(maxMove, Math.abs(dx), Math.abs(dy));
+    if (mapZoom.k > 1.001){
+      setMapZoom(mapZoom.k, pan0.x + dx, pan0.y + dy);
+    } else if (dy > TAP_SLOP){
+      dragAmt = Math.min(dy, RELOAD_PULL + 30);
+      indicator.style.transform = `translateY(${dragAmt}px)`;
+      const ready = dragAmt >= RELOAD_PULL;
+      indicator.classList.toggle("ready", ready);
+      indicator.textContent = ready ? "↑ Suelta para recargar la app" : "↓ Sigue tirando para recargar";
+    }
+  }, {passive:true});
+
+  box.addEventListener("touchend", (e)=>{
+    if (e.touches.length >= 1){
+      // Queda un dedo tras un pellizco: sigue como arrastre, sin contar como toque.
+      if (mode === "pinch"){ startPan(e.touches[0]); maxMove = 999; pinched = true; }
+      return;
+    }
+    const reload = mode === "single" && mapZoom.k === 1 && dragAmt >= RELOAD_PULL;
+    const tap = !reload && !pinched && mode === "single" && maxMove <= TAP_SLOP;
+    resetIndicator();
+    mode = null; dragAmt = 0;
+    if (reload) location.reload();
+    else if (tap) manualRefresh();
+  }, {passive:true});
+
+  box.addEventListener("touchcancel", ()=>{ mode = null; dragAmt = 0; resetIndicator(); }, {passive:true});
+
+  // Rueda del ratón (ordenador)
+  vp.addEventListener("wheel", (e)=>{
+    e.preventDefault();
+    const p = pt(e);
+    const k = mapZoom.k * (e.deltaY < 0 ? 1.2 : 1/1.2);
+    const kk = Math.max(1, Math.min(6, k));
+    const cx = (p.x - mapZoom.x)/mapZoom.k, cy = (p.y - mapZoom.y)/mapZoom.k;
+    setMapZoom(kk, p.x - kk*cx, p.y - kk*cy);
+  }, {passive:false});
+  window.addEventListener("resize", ()=>setMapZoom(mapZoom.k, mapZoom.x, mapZoom.y));
+})();
 
 /* =========================================================
    MODALES / AJUSTES
@@ -1050,6 +1166,12 @@ document.getElementById("btnView").addEventListener("click", ()=>{
   state.view = state.view === "map" ? "list" : "map";
   applyView(); savePrefs();
 });
+document.getElementById("mapMetric").addEventListener("click", (e)=>{
+  const b = e.target.closest("button"); if (!b) return;
+  state.mapMetric = b.dataset.m;
+  applyMetric(); renderMap(); savePrefs();
+});
+document.getElementById("btnZoomReset").addEventListener("click", ()=>setMapZoom(1,0,0));
 document.getElementById("btnFlip").addEventListener("click", ()=>{
   state.mapFlip = !state.mapFlip;
   applyFlip(); savePrefs();
@@ -1062,7 +1184,7 @@ document.getElementById("btnFlip").addEventListener("click", ()=>{
   await loadPrefs();
   document.getElementById("btnTalk").classList.toggle("active", state.talkEnabled);
   document.getElementById("btnTalk").textContent = state.talkEnabled ? "🔊" : "🔇";
-  applyView(); applyFlip();
+  applyView(); applyFlip(); applyMetric();
   renderRows();
   timerIntervalId = setInterval(tickTimer, 1000);
   scheduleAutoRefresh();
