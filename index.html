@@ -722,8 +722,8 @@ function renderPlist(){
       <div class="pname ${on?"on":""}" data-act="toggle">${info.name}</div>
       <div class="arrow" data-act="up" ${i===0?'style="visibility:hidden"':''}>↑</div>
       <div class="arrow" data-act="down" ${i===draftOrder.length-1?'style="visibility:hidden"':''}>↓</div>
-      <div class="arrow gapbtn ${draftGaps.includes(code)?"on":""}" data-act="gap" title="Espacio de 30px debajo">⇕</div>
-    </div>${draftGaps.includes(code) ? `<div class="gapmark"></div>` : ""}`;
+      <div class="arrow gapbtn ${draftGaps.includes(code)?"on":""}" data-act="gap" title="Espacio de 30px debajo" ${i===draftOrder.length-1?'style="visibility:hidden"':''}>⇕</div>
+    </div>${(draftGaps.includes(code) && i<draftOrder.length-1) ? `<div class="gapmark"></div>` : ""}`;
   }).join("");
 }
 document.getElementById("plist").addEventListener("click", (e)=>{
