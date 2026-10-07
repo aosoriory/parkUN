@@ -435,6 +435,8 @@ async function fetchParkingHTML(){
 /* =========================================================
    REFRESCO
    ========================================================= */
+let retryTimeoutId = null;
+
 async function refresh(opts={}){
   if (state.refreshing) return;
   state.refreshing = true;
@@ -448,12 +450,18 @@ async function refresh(opts={}){
       state.data = parsed;
       state.lastSuccess = Date.now();
       setStatus(null);
+      if (retryTimeoutId){ clearTimeout(retryTimeoutId); retryTimeoutId = null; }
     } else {
       setStatus("Datos recibidos, pero no se reconoció ningún aparcamiento (puede que la UNAV haya cambiado el formato de la página).");
     }
   }catch(e){
     console.warn("Refresh error:", e);
     setStatus("No se pudieron cargar los datos: " + e.message);
+    // Fallo transitorio probable (red, proxy caído un instante): reintenta
+    // pronto en vez de esperar al próximo refresco programado.
+    if (!retryTimeoutId){
+      retryTimeoutId = setTimeout(()=>{ retryTimeoutId = null; refresh(); }, 8000);
+    }
   }finally{
     state.refreshing = false;
     renderRows();
