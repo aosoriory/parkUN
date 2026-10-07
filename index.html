@@ -95,6 +95,7 @@
   .row.red{ background:var(--red); color:#fff; }
   .row.amber{ background:var(--amber); color:#1a1200; }
   .row.green{ background:var(--green); color:#fff; }
+  .row.twocols{ background:var(--gray); color:var(--muted); }
   .row .name{
     flex:1; display:flex; align-items:center;
     font-family:'Space Grotesk',sans-serif; font-weight:700;
@@ -537,7 +538,7 @@ function renderRows(){
     const info = NAME_BY_CODE[code];
     const d = state.data[code] || {p:null,r:null};
     const primaryVal = state.verP ? d.p : d.r;
-    const rowClass = classify(primaryVal);
+    const rowClass = twoCols ? "twocols" : classify(primaryVal);
     let cells = "";
     if (state.verP){
       const v = d.p;
