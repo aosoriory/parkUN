@@ -1,6 +1,6 @@
 {
-  "name": "Aparcamientos UNAV",
-  "short_name": "Aparcamientos",
+  "name": "ParkUN",
+  "short_name": "ParkUN",
   "description": "Plazas libres en los aparcamientos de la Universidad de Navarra",
   "start_url": "./index.html",
   "scope": "./",
