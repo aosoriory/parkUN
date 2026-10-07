@@ -90,7 +90,6 @@
     display:flex; align-items:stretch; gap:0;
     background:var(--gray); color:var(--muted);
     border-bottom:2px solid #000;
-    min-height:46px;
   }
   .row.red{ background:var(--red); color:#fff; }
   .row.amber{ background:var(--amber); color:#1a1200; }
@@ -99,14 +98,15 @@
   .row .name{
     flex:1; display:flex; align-items:center;
     font-family:'Space Grotesk',sans-serif; font-weight:700;
-    font-size:17px; letter-spacing:0.01em; text-transform:uppercase;
-    padding:6px 14px;
+    font-size:21px; letter-spacing:0.01em; text-transform:uppercase;
+    padding:4px 14px;
   }
   .row .name .sub{ display:block; font-family:'Inter'; font-weight:500; font-size:11px; opacity:.8; margin-top:2px; }
   .cell{
     width:84px; flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
-    font-family:'JetBrains Mono', monospace; font-weight:700; font-size:28px;
+    font-family:'JetBrains Mono', monospace; font-weight:700; font-size:44px;
+    line-height:1; padding:6px 0;
     border-left:2px solid rgba(0,0,0,0.3);
     color:inherit;
   }
