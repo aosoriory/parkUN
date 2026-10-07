@@ -831,6 +831,23 @@ document.getElementById("btnTalk").addEventListener("click", toggleTalk);
   setTimeout(()=>refresh({talk: state.talkEnabled ? true : undefined}), 400);
 })();
 
+/* Mantiene la pantalla encendida mientras la app está abierta (Screen Wake Lock).
+   El navegador libera el bloqueo al ocultar la página, así que se vuelve a pedir
+   cuando la app vuelve a ser visible. */
+let wakeLock = null;
+async function requestWakeLock(){
+  if (!("wakeLock" in navigator) || document.visibilityState !== "visible") return;
+  if (wakeLock && !wakeLock.released) return;
+  try{
+    wakeLock = await navigator.wakeLock.request("screen");
+    wakeLock.addEventListener("release", ()=>{ wakeLock = null; });
+  }catch(e){ /* no disponible o denegado (p. ej. ahorro de batería): se ignora */ }
+}
+requestWakeLock();
+document.addEventListener("visibilitychange", requestWakeLock);
+// Algunos navegadores solo lo conceden tras una interacción: reintenta en el primer toque.
+document.addEventListener("pointerdown", requestWakeLock, { passive:true });
+
 if ("serviceWorker" in navigator){
   window.addEventListener("load", ()=>{
     navigator.serviceWorker.register("sw.js").catch(()=>{});
