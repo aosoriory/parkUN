@@ -175,7 +175,7 @@
   .prow{ display:flex; align-items:center; gap:8px; }
   .prow .arrow.gapbtn{ font-size:13px; font-weight:700; }
   .prow .arrow.gapbtn.on{ background:#2F7CE0; border-color:#1F5FB8; color:#fff; }
-  .gapmark{ height:10px; margin:-1px 0; border-left:3px dashed #2F7CE0; margin-left:18px; }
+  .prow .gapname{ flex:1; padding:5px 12px; border-radius:10px; border:1px dashed #8A93A3; color:#6B7280; font-size:12px; font-weight:600; background:transparent; }
   .prow .pname{
     flex:1; padding:12px 12px; border-radius:10px; border:1px solid #B8BDC7;
     background:#fff; color:#6B7280; font-weight:600; font-size:14px;
@@ -308,6 +308,10 @@ const PARKING_DATA = [
   { code:"P12", name:"SS · MIRAMÓN",spoken:"Miramón" },
   { code:"P13", name:"SS · IGARA",  spoken:"Igara" },
 ];
+/* Los huecos de separación (30px) son elementos más de la lista de orden,
+   con id "gap:xxxx". Se pueden mover saltando sobre ellos como un parking. */
+const isGap = c => typeof c === "string" && c.startsWith("gap:");
+const newGapId = () => "gap:" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
 const NAME_BY_CODE = Object.fromEntries(PARKING_DATA.map(p=>[p.code,p]));
 const TARGET_URL = "https://www.unav.edu/web/gestion-de-espacios/aparcamientos";
 const NO_EV_CODES = ["P06","P07","P13"]; // sin datos de recarga eléctrica
@@ -318,7 +322,6 @@ const NO_EV_CODES = ["P06","P07","P13"]; // sin datos de recarga eléctrica
 const state = {
   fullOrder: PARKING_DATA.map(p=>p.code),
   active:    PARKING_DATA.map(p=>p.code),
-  gaps: [],           // códigos tras los cuales se inserta un hueco de 30px
   verP: true,
   verR: false,
   talkEnabled: false,
@@ -347,7 +350,14 @@ async function loadPrefs(){
       const p = JSON.parse(raw);
       if (Array.isArray(p.fullOrder)) state.fullOrder = p.fullOrder;
       if (Array.isArray(p.active)) state.active = p.active;
-      if (Array.isArray(p.gaps)) state.gaps = p.gaps;
+      // Migración: antes los huecos eran "tras el parking X"; ahora son elementos de la lista.
+      if (Array.isArray(p.gaps) && p.gaps.length && !state.fullOrder.some(isGap)){
+        const out = [];
+        state.fullOrder.forEach(c=>{ out.push(c); if (p.gaps.includes(c)) out.push(newGapId()); });
+        state.fullOrder = out;
+      }
+      // Asegura que no falte ningún parking en el orden guardado.
+      PARKING_DATA.forEach(pd=>{ if (!state.fullOrder.includes(pd.code)) state.fullOrder.push(pd.code); });
       if (typeof p.verP === "boolean") state.verP = p.verP;
       if (typeof p.verR === "boolean") state.verR = p.verR;
       if (typeof p.talkEnabled === "boolean") state.talkEnabled = p.talkEnabled;
@@ -364,7 +374,6 @@ async function savePrefs(){
     localStorage.setItem(PREFS_KEY, JSON.stringify({
       fullOrder: state.fullOrder,
       active: state.active,
-      gaps: state.gaps,
       verP: state.verP,
       verR: state.verR,
       talkEnabled: state.talkEnabled,
@@ -549,7 +558,10 @@ function renderColHeader(){
 function renderRows(){
   renderColHeader();
   const rows = document.getElementById("rows");
-  const codes = state.fullOrder.filter(c=>state.active.includes(c));
+  const codes = state.fullOrder.filter(c=>isGap(c) || state.active.includes(c));
+  // Los huecos al principio o al final de la lista no se muestran.
+  while (codes.length && isGap(codes[0])) codes.shift();
+  while (codes.length && isGap(codes[codes.length-1])) codes.pop();
 
   if (!codes.length){
     rows.innerHTML = `<div class="empty">No hay aparcamientos seleccionados.<br><b>Ajustes → Ordenar y seleccionar</b></div>`;
@@ -559,6 +571,7 @@ function renderRows(){
   const twoCols = state.verP && state.verR;
 
   rows.innerHTML = codes.map((code,i)=>{
+    if (isGap(code)) return `<div class="rowgap"></div>`;
     const info = NAME_BY_CODE[code];
     const d = state.data[code] || {p:null,r:null};
     const primaryVal = state.verP ? d.p : d.r;
@@ -576,11 +589,10 @@ function renderRows(){
       const wide = (typeof v === "number" && v >= 100) ? " wide3" : "";
       cells += `<div class="cell ${cls}${wide}">${v===null?"—":v}</div>`;
     }
-    const gap = (state.gaps.includes(code) && i < codes.length-1) ? `<div class="rowgap"></div>` : "";
     return `<div class="row ${rowClass}">
       <div class="name">${info.name}</div>
       ${cells}
-    </div>${gap}`;
+    </div>`;
   }).join("");
 }
 
@@ -683,12 +695,11 @@ function toggleTalk(){
 /* =========================================================
    MODALES / AJUSTES
    ========================================================= */
-let draftOrder = [], draftActive = [], draftGaps = [], draftP = true, draftR = false, draftFreq = 60;
+let draftOrder = [], draftActive = [], draftP = true, draftR = false, draftFreq = 60;
 
 function openSettings(){
   draftOrder = [...state.fullOrder];
   draftActive = [...state.active];
-  draftGaps = [...state.gaps];
   draftP = state.verP; draftR = state.verR; draftFreq = state.refreshSeconds;
   renderFreqSeg(); renderToggles(); renderPlist();
   document.getElementById("ovSettings").classList.add("open");
@@ -716,14 +727,24 @@ document.getElementById("toggleR").addEventListener("click", ()=>{ draftR = !dra
 function renderPlist(){
   const el = document.getElementById("plist");
   el.innerHTML = draftOrder.map((code,i)=>{
+    const first = i===0, last = i===draftOrder.length-1;
+    if (isGap(code)){
+      return `<div class="prow gaprow" data-code="${code}" data-idx="${i}">
+      <div class="gapname">Espacio (30px)</div>
+      <div class="arrow" data-act="up" ${first?'style="visibility:hidden"':''}>↑</div>
+      <div class="arrow" data-act="down" ${last?'style="visibility:hidden"':''}>↓</div>
+      <div class="arrow gapbtn" data-act="delgap" title="Quitar este espacio">✕</div>
+    </div>`;
+    }
     const info = NAME_BY_CODE[code];
     const on = draftActive.includes(code);
+    const gapBelow = isGap(draftOrder[i+1]);
     return `<div class="prow" data-code="${code}" data-idx="${i}">
       <div class="pname ${on?"on":""}" data-act="toggle">${info.name}</div>
-      <div class="arrow" data-act="up" ${i===0?'style="visibility:hidden"':''}>↑</div>
-      <div class="arrow" data-act="down" ${i===draftOrder.length-1?'style="visibility:hidden"':''}>↓</div>
-      <div class="arrow gapbtn ${draftGaps.includes(code)?"on":""}" data-act="gap" title="Espacio de 30px debajo" ${i===draftOrder.length-1?'style="visibility:hidden"':''}>⇕</div>
-    </div>${(draftGaps.includes(code) && i<draftOrder.length-1) ? `<div class="gapmark"></div>` : ""}`;
+      <div class="arrow" data-act="up" ${first?'style="visibility:hidden"':''}>↑</div>
+      <div class="arrow" data-act="down" ${last?'style="visibility:hidden"':''}>↓</div>
+      <div class="arrow gapbtn ${gapBelow?"on":""}" data-act="gap" title="Espacio de 30px debajo" ${last?'style="visibility:hidden"':''}>⇕</div>
+    </div>`;
   }).join("");
 }
 /* Reordena con animación lenta (técnica FLIP): cada fila se desliza desde
@@ -759,8 +780,11 @@ document.getElementById("plist").addEventListener("click", (e)=>{
     else draftActive.push(code);
     renderPlist();
   } else if (act === "gap"){
-    if (draftGaps.includes(code)) draftGaps = draftGaps.filter(c=>c!==code);
-    else draftGaps.push(code);
+    if (isGap(draftOrder[idx+1])) draftOrder.splice(idx+1, 1);
+    else draftOrder.splice(idx+1, 0, newGapId());
+    renderPlist();
+  } else if (act === "delgap"){
+    draftOrder.splice(idx, 1);
     renderPlist();
   } else if (act === "up" && idx > 0){
     renderPlistAnimated(()=>{ [draftOrder[idx-1], draftOrder[idx]] = [draftOrder[idx], draftOrder[idx-1]]; });
@@ -773,7 +797,6 @@ document.getElementById("btnSaveSettings").addEventListener("click", ()=>{
   const freqChanged = draftFreq !== state.refreshSeconds;
   state.fullOrder = [...draftOrder];
   state.active = [...draftActive];
-  state.gaps = [...draftGaps];
   state.verP = draftP; state.verR = draftR;
   state.refreshSeconds = draftFreq;
   if (freqChanged) scheduleAutoRefresh();
