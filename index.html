@@ -645,9 +645,14 @@ async function fetchParkingHTML(){
 let retryTimeoutId = null;
 
 async function refresh(opts={}){
-  if (state.refreshing) return;
+  if (state.refreshing){
+    // Ya hay una petición en curso: que locute con sus datos cuando lleguen.
+    if (opts.talk) state.talkAfter = true;
+    return;
+  }
   state.refreshing = true;
   const shouldTalk = opts.talk === undefined ? state.talkEnabled : !!opts.talk;
+  let gotData = false;
 
   try{
     const html = await fetchParkingHTML();
@@ -656,6 +661,7 @@ async function refresh(opts={}){
     if (anyData){
       state.data = parsed;
       state.lastSuccess = Date.now();
+      gotData = true;
       if (opts.flash) flash();   // parpadeo al recibir los datos nuevos
       state.timerOff = false;   // ...y vuelve a 0:00 al recibir respuesta
       tickTimer();
@@ -675,7 +681,10 @@ async function refresh(opts={}){
   }finally{
     state.refreshing = false;
     renderRows();
-    if (shouldTalk) speakAll();
+    // Solo locuta cuando ya han llegado datos nuevos (nunca los anteriores).
+    const talkNow = (shouldTalk || state.talkAfter) && gotData;
+    state.talkAfter = false;
+    if (talkNow) speakAll();
   }
 }
 
@@ -904,8 +913,14 @@ function toggleTalk(){
   savePrefs();
   if (!state.talkEnabled){
     window.speechSynthesis.cancel();
+    state.talkAfter = false;
     return;
   }
+  // Primero se refrescan los datos; la voz empieza cuando llegan.
+  // (Se "desbloquea" la síntesis dentro del gesto con un enunciado vacío:
+  //  algunos móviles no dejan hablar si no se inició desde un toque.)
+  try{ window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance("")); }catch(e){}
+  state.timerOff = true; tickTimer();
   refresh({talk:true, flash:true});
 }
 
