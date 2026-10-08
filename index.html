@@ -26,8 +26,8 @@
     --accent-dim:rgba(47,124,224,0.15);
     --green:#1E8E3E;
     --green-dim:rgba(30,142,62,0.16);
-    --amber:#E8A317;
-    --amber-dim:rgba(232,163,23,0.16);
+    --orange:#F08A24;
+    --yellow:#F2CB05;
     --red:#D5302F;
     --red-dim:rgba(213,48,47,0.16);
     --gray:#2B2B2D;
@@ -96,7 +96,8 @@
   }
   .rowgap{ height:30px; flex-shrink:0; }
   .row.red{ background:var(--red); color:#fff; }
-  .row.amber{ background:var(--amber); color:#1a1200; }
+  .row.orange{ background:var(--orange); color:#1f0e00; }
+  .row.yellow{ background:var(--yellow); color:#1a1600; }
   .row.green{ background:var(--green); color:#fff; }
   .row.twocols{ background:var(--gray); color:var(--muted); }
   .row .name{
@@ -120,7 +121,8 @@
   .cell.wide3{ font-size:32px; }
   .cell.plain{ background:transparent; }
   .cell.chip.green{ background:var(--green); color:#fff; }
-  .cell.chip.amber{ background:var(--amber); color:#1a1200; }
+  .cell.chip.orange{ background:var(--orange); color:#1f0e00; }
+  .cell.chip.yellow{ background:var(--yellow); color:#1a1600; }
   .cell.chip.red{ background:var(--red); color:#fff; }
   .cell.chip.gray{ background:rgba(255,255,255,0.08); color:var(--muted); }
   .cell .u{ font-size:10px; margin-left:2px; opacity:.7; font-family:'Inter'; font-weight:600;}
@@ -215,7 +217,8 @@
   #compass.flipped{ top:auto; left:auto; bottom:8px; right:8px; }
   .pk{ fill:#4a4a4d; fill-opacity:.82; stroke:#2b2b2d; stroke-width:1.5; stroke-linejoin:round; }
   .pk.green{ fill:#1E8E3E; stroke:#0f5a26; }
-  .pk.amber{ fill:#E8A317; stroke:#8f5f00; }
+  .pk.orange{ fill:#F08A24; stroke:#8f4a00; }
+  .pk.yellow{ fill:#F2CB05; stroke:#8a7400; }
   .pk.red{ fill:#D5302F; stroke:#7d1514; }
   .pk.gray{ fill:#8a8f96; stroke:#5d6269; }
   .pn{ font-family:'Space Grotesk','Inter',system-ui,sans-serif !important; font-weight:700; fill:#fff; stroke:#1d2a35; stroke-linejoin:round; paint-order:stroke fill; }
@@ -718,7 +721,8 @@ function tickTimer(){
 function classify(val){
   if (typeof val !== "number") return "";
   if (val <= 0) return "red";
-  if (val <= 5) return "amber";
+  if (val <= 4) return "orange";
+  if (val <= 9) return "yellow";
   return "green";
 }
 
