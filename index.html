@@ -221,7 +221,8 @@
   .pk.yellow{ fill:#F2CB05; stroke:#8a7400; }
   .pk.red{ fill:#D5302F; stroke:#7d1514; }
   .pk.gray{ fill:#8a8f96; stroke:#5d6269; }
-  .pn{ font-family:'Space Grotesk','Inter',system-ui,sans-serif !important; font-weight:700; fill:#fff; stroke:#1d2a35; stroke-linejoin:round; paint-order:stroke fill; }
+  .pn{ font-family:'Space Grotesk','Inter',system-ui,sans-serif !important; font-weight:700; fill:#8a949d; stroke:#fff; stroke-linejoin:round; paint-order:stroke fill; }
+  .pn.green{ fill:#1E8E3E; } .pn.orange{ fill:#F08A24; } .pn.yellow{ fill:#F2CB05; } .pn.red{ fill:#D5302F; }
   .pl{ fill:#33414d; }
   .lbl-f{ display:none; }
   #campusMap.flipped .lbl-n{ display:none; }
@@ -810,10 +811,11 @@ function renderMap(){
     const txt = typeof v === "number" ? String(v) : "—";
     pn.textContent = txt;
     // Cuantas menos cifras, más grande.
-    const fs = txt === "—" ? 28 : (txt.length <= 1 ? 46 : txt.length === 2 ? 31 : 23);
+    const fs = txt === "—" ? 38 : (txt.length <= 1 ? 66 : txt.length === 2 ? 44 : 32);
     const cy = parseFloat(pn.dataset.cy);
     pn.setAttribute("font-size", fs);
-    pn.setAttribute("stroke-width", (fs*0.14).toFixed(1));
+    pn.setAttribute("stroke-width", (fs*0.16).toFixed(1));
+    pn.setAttribute("class", "pn " + (classify(v) || "gray"));
     pn.setAttribute("y", (cy + fs*0.36).toFixed(1));
     pl.setAttribute("y", (cy - fs*0.5 - 1).toFixed(1));
   });
