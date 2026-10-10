@@ -247,7 +247,7 @@
     <button class="icon-btn" id="btnSettings" aria-label="Ajustes">☰</button>
     <button class="icon-btn" id="btnInfo" aria-label="Info">ⓘ</button>
     <button class="icon-btn" id="btnTalk" aria-label="Voz">🔊</button>
-    <button class="icon-btn" id="btnView" aria-label="Cambiar entre lista y mapa">🗺️</button>
+    <div class="mseg" id="viewSeg" role="group" aria-label="Lista o mapa"><button data-v="list" aria-label="Ver la lista">📋</button><button data-v="map" aria-label="Ver el mapa">🗺️</button></div>
     <div class="title">APARCAMIENTOS<small>UNIVERSIDAD DE NAVARRA</small></div>
     <div class="spacer"></div>
     <div class="timer" id="timer">0:00</div>
@@ -856,9 +856,7 @@ function applyView(){
   document.getElementById("colheader").style.display = map ? "none" : "";
   document.getElementById("listWrap").style.display = map ? "none" : "";
   document.getElementById("mapWrap").classList.toggle("on", map);
-  const b = document.getElementById("btnView");
-  b.textContent = map ? "📋" : "🗺️";
-  b.setAttribute("aria-label", map ? "Ver la lista" : "Ver el mapa");
+  document.querySelectorAll("#viewSeg button").forEach(b=>b.classList.toggle("on", b.dataset.v === state.view));
 }
 
 /* =========================================================
@@ -1195,8 +1193,9 @@ document.getElementById("closeInfo").addEventListener("click", ()=>document.getE
 document.getElementById("ovInfo").addEventListener("click", (e)=>{ if(e.target.id==="ovInfo") document.getElementById("ovInfo").classList.remove("open"); });
 
 document.getElementById("btnTalk").addEventListener("click", toggleTalk);
-document.getElementById("btnView").addEventListener("click", ()=>{
-  state.view = state.view === "map" ? "list" : "map";
+document.getElementById("viewSeg").addEventListener("click", (e)=>{
+  const b = e.target.closest("button"); if (!b) return;
+  state.view = b.dataset.v;
   applyView(); savePrefs();
 });
 document.getElementById("mapMetric").addEventListener("click", (e)=>{
