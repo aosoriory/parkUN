@@ -613,30 +613,39 @@ function parseParkingHTML(html){
 
 /* Fetch a través de proxies CORS (unav.edu no envía cabeceras CORS) */
 async function fetchParkingHTML(){
+  // Devuelve {text, staleAge}: staleAge (s) solo si el Worker sirvió su última copia
+  // porque la UNAV no respondía.
   const proxies = [
-    { name:"worker propio", url:"https://park-proxy.aosoriory.workers.dev/" },
-    { name:"allorigins", url:"https://api.allorigins.win/raw?url=" + encodeURIComponent(TARGET_URL) },
-    { name:"corsproxy.io", url:"https://corsproxy.io/?url=" + encodeURIComponent(TARGET_URL) },
-    { name:"codetabs", url:"https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(TARGET_URL) },
+    { name:"worker propio", url:"https://park-proxy.aosoriory.workers.dev/", ms:12000 },
+    { name:"allorigins", url:"https://api.allorigins.win/raw?url=" + encodeURIComponent(TARGET_URL), ms:8000 },
+    { name:"codetabs", url:"https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(TARGET_URL), ms:8000 },
   ];
   const attempts = [];
   for (const p of proxies){
+    const ctl = new AbortController();
+    const timer = setTimeout(()=>ctl.abort(), p.ms);   // que una vía colgada no bloquee a las demás
     try{
-      const res = await fetch(p.url, { cache:"no-store" });
+      const res = await fetch(p.url, { cache:"no-store", signal: ctl.signal });
       if (!res.ok){
-        attempts.push(`${p.name}: HTTP ${res.status}`);
+        let why = "";
+        try{ why = (await res.text()).slice(0,80); }catch(_){}
+        attempts.push(`${p.name}: HTTP ${res.status}${why ? " · " + why : ""}`);
         continue;
       }
       const text = await res.text();
       if (text && text.length > 500){
-        return text;
+        const age = res.headers.get("X-Stale-Age");
+        return { text, staleAge: age !== null ? Number(age) : null };
       }
       attempts.push(`${p.name}: respuesta demasiado corta (${text ? text.length : 0} car.)`);
     }catch(e){
-      attempts.push(`${p.name}: ${e.message || e}`);
+      attempts.push(`${p.name}: ${e.name === "AbortError" ? "sin respuesta a tiempo" : (e.message || e)}`);
+    }finally{
+      clearTimeout(timer);
     }
   }
-  throw new Error(attempts.join(" | ") || "No se pudo obtener la página");
+  const off = (typeof navigator !== "undefined" && navigator.onLine === false) ? "Sin conexión a internet. " : "";
+  throw new Error(off + (attempts.join(" | ") || "No se pudo obtener la página"));
 }
 
 /* =========================================================
@@ -655,17 +664,17 @@ async function refresh(opts={}){
   let gotData = false;
 
   try{
-    const html = await fetchParkingHTML();
-    const parsed = parseParkingHTML(html);
+    const got = await fetchParkingHTML();
+    const parsed = parseParkingHTML(got.text);
     const anyData = Object.values(parsed).some(v => v.p !== null || v.r !== null);
     if (anyData){
       state.data = parsed;
-      state.lastSuccess = Date.now();
+      state.lastSuccess = Date.now() - (got.staleAge ? got.staleAge*1000 : 0);   // el contador refleja la edad real
       gotData = true;
       if (opts.flash) flash();   // parpadeo al recibir los datos nuevos
       state.timerOff = false;   // ...y vuelve a 0:00 al recibir respuesta
       tickTimer();
-      setStatus(null);
+      setStatus(got.staleAge ? `La web de la UNAV no responde: se muestran los últimos datos recibidos (hace ${Math.max(1,Math.round(got.staleAge/60))} min).` : null);
       if (retryTimeoutId){ clearTimeout(retryTimeoutId); retryTimeoutId = null; }
     } else {
       setStatus("Datos recibidos, pero no se reconoció ningún aparcamiento (puede que la UNAV haya cambiado el formato de la página).");
@@ -1237,6 +1246,14 @@ async function requestWakeLock(){
 }
 requestWakeLock();
 document.addEventListener("visibilitychange", requestWakeLock);
+// Al volver a la app o recuperar la red, refresca si no hay datos recientes
+// (tras estar en segundo plano la conexión suele tardar en despertar).
+function refreshIfStale(){
+  if (document.visibilityState === "hidden") return;
+  if (!state.lastSuccess || Date.now() - state.lastSuccess > 60000) refresh();
+}
+document.addEventListener("visibilitychange", refreshIfStale);
+window.addEventListener("online", ()=>refresh());
 // Algunos navegadores solo lo conceden tras una interacción: reintenta en el primer toque.
 document.addEventListener("pointerdown", requestWakeLock, { passive:true });
 
