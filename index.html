@@ -613,7 +613,7 @@ function parseParkingHTML(html){
 
 /* Fetch a través de proxies CORS (unav.edu no envía cabeceras CORS) */
 // URL del proxy de Vercel (p. ej. "https://parkun.vercel.app/api/park"). Vacío = desactivado.
-const VERCEL_PROXY_URL = "";
+const VERCEL_PROXY_URL = "https://parkun.vercel.app/api/park";
 const BACKUP_URL = "https://raw.githubusercontent.com/aosoriory/parkUN/data/data.json";
 const BACKUP_MAX_AGE_S = 30*60;   // una copia de más de 30 min ya no se muestra
 
