@@ -612,38 +612,67 @@ function parseParkingHTML(html){
 }
 
 /* Fetch a través de proxies CORS (unav.edu no envía cabeceras CORS) */
-async function fetchParkingHTML(){
-  // Devuelve {text, staleAge}: staleAge (s) solo si el Worker sirvió su última copia
-  // porque la UNAV no respondía.
-  const proxies = [
-    { name:"worker propio", url:"https://park-proxy.aosoriory.workers.dev/", ms:12000 },
-    { name:"allorigins", url:"https://api.allorigins.win/raw?url=" + encodeURIComponent(TARGET_URL), ms:8000 },
-    { name:"codetabs", url:"https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(TARGET_URL), ms:8000 },
-  ];
-  const attempts = [];
-  for (const p of proxies){
-    const ctl = new AbortController();
-    const timer = setTimeout(()=>ctl.abort(), p.ms);   // que una vía colgada no bloquee a las demás
-    try{
-      const res = await fetch(p.url, { cache:"no-store", signal: ctl.signal });
-      if (!res.ok){
-        let why = "";
-        try{ why = (await res.text()).slice(0,80); }catch(_){}
-        attempts.push(`${p.name}: HTTP ${res.status}${why ? " · " + why : ""}`);
-        continue;
-      }
-      const text = await res.text();
-      if (text && text.length > 500){
-        const age = res.headers.get("X-Stale-Age");
-        return { text, staleAge: age !== null ? Number(age) : null };
-      }
-      attempts.push(`${p.name}: respuesta demasiado corta (${text ? text.length : 0} car.)`);
-    }catch(e){
-      attempts.push(`${p.name}: ${e.name === "AbortError" ? "sin respuesta a tiempo" : (e.message || e)}`);
-    }finally{
-      clearTimeout(timer);
+const BACKUP_URL = "https://raw.githubusercontent.com/aosoriory/parkUN/data/data.json";
+const BACKUP_MAX_AGE_S = 30*60;   // una copia de más de 30 min ya no se muestra
+
+async function fetchWithTimeout(url, ms){
+  const ctl = new AbortController();
+  const timer = setTimeout(()=>ctl.abort(), ms);   // que una vía colgada no bloquee a las demás
+  try{ return await fetch(url, { cache:"no-store", signal: ctl.signal }); }
+  finally{ clearTimeout(timer); }
+}
+
+async function tryProxy(p){
+  try{
+    const res = await fetchWithTimeout(p.url, p.ms);
+    if (!res.ok){
+      let why = "";
+      try{ why = (await res.text()).slice(0,80); }catch(_){}
+      throw new Error(`${p.name}: HTTP ${res.status}${why ? " · " + why : ""}`);
     }
+    const text = await res.text();
+    if (!text || text.length <= 500) throw new Error(`${p.name}: respuesta demasiado corta (${text ? text.length : 0} car.)`);
+    const age = res.headers.get("X-Stale-Age");
+    return { text, staleAge: age !== null ? Number(age) : null };
+  }catch(e){
+    if (e.message && e.message.startsWith(p.name + ":")) throw e;
+    throw new Error(`${p.name}: ${e.name === "AbortError" ? "sin respuesta a tiempo" : (e.message || e)}`);
   }
+}
+
+// Copia publicada cada ~5 min en GitHub (rama "data"): sirve cuando las operadoras bloquean
+// IPs de Cloudflare (partidos de LaLiga) y el Worker y los proxies no se alcanzan.
+async function fetchBackup(){
+  try{
+    const res = await fetchWithTimeout(BACKUP_URL + "?t=" + Date.now(), 8000);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const j = await res.json();
+    const age = Math.max(0, Math.round(Date.now()/1000 - j.t));
+    if (!j.html || j.html.length <= 500) throw new Error("copia vacía");
+    if (age > BACKUP_MAX_AGE_S) throw new Error("copia de hace " + Math.round(age/60) + " min");
+    return { text: j.html, staleAge: age };
+  }catch(e){
+    throw new Error("copia de seguridad: " + (e.name === "AbortError" ? "sin respuesta a tiempo" : (e.message || e)));
+  }
+}
+
+async function fetchParkingHTML(){
+  // Devuelve {text, staleAge}: staleAge (s) solo si los datos no son en directo.
+  const attempts = [];
+  const backup = fetchBackup();            // se pide ya, en paralelo; solo se usa si lo demás falla
+  backup.catch(()=>{});
+  try{
+    return await tryProxy({ name:"worker propio", url:"https://park-proxy.aosoriory.workers.dev/", ms:8000 });
+  }catch(e){ attempts.push(e.message); }
+  try{
+    return await Promise.any([
+      tryProxy({ name:"allorigins", url:"https://api.allorigins.win/raw?url=" + encodeURIComponent(TARGET_URL), ms:6000 }),
+      tryProxy({ name:"codetabs", url:"https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(TARGET_URL), ms:6000 }),
+    ]);
+  }catch(agg){ (agg.errors || []).forEach(x=>attempts.push(x.message)); }
+  try{
+    return await backup;
+  }catch(e){ attempts.push(e.message); }
   const off = (typeof navigator !== "undefined" && navigator.onLine === false) ? "Sin conexión a internet. " : "";
   throw new Error(off + (attempts.join(" | ") || "No se pudo obtener la página"));
 }
@@ -674,7 +703,7 @@ async function refresh(opts={}){
       if (opts.flash) flash();   // parpadeo al recibir los datos nuevos
       state.timerOff = false;   // ...y vuelve a 0:00 al recibir respuesta
       tickTimer();
-      setStatus(got.staleAge ? `La web de la UNAV no responde: se muestran los últimos datos recibidos (hace ${Math.max(1,Math.round(got.staleAge/60))} min).` : null);
+      setStatus(got.staleAge ? `Sin conexión en directo: se muestran datos de hace ${Math.max(1,Math.round(got.staleAge/60))} min.` : null);
       if (retryTimeoutId){ clearTimeout(retryTimeoutId); retryTimeoutId = null; }
     } else {
       setStatus("Datos recibidos, pero no se reconoció ningún aparcamiento (puede que la UNAV haya cambiado el formato de la página).");

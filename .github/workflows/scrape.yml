@@ -1,0 +1,43 @@
+# Copia de seguridad de los datos: cada ~5 min descarga la página de aparcamientos de la UNAV
+# y la publica en la rama "data" (data.json). La app la usa solo si no puede llegar al Worker
+# de Cloudflare ni a los proxies (p. ej. cuando las operadoras bloquean IPs de Cloudflare
+# durante los partidos de LaLiga). github.io / raw.githubusercontent.com no suelen estar afectados.
+name: Copia de datos UNAV
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: scrape
+  cancel-in-progress: false
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Descargar la página
+        run: |
+          for i in 1 2 3; do
+            curl -fsSL --max-time 25 -A "Mozilla/5.0" -H "Accept-Language: es-ES,es;q=0.9" \
+              -o page.html "https://www.unav.edu/web/gestion-de-espacios/aparcamientos" || true
+            [ "$(wc -c < page.html 2>/dev/null || echo 0)" -gt 500 ] && break
+            sleep 5
+          done
+          test "$(wc -c < page.html)" -gt 500
+      - name: Publicar en la rama data
+        run: |
+          python3 - <<'PY'
+          import json, time
+          html = open("page.html", encoding="utf-8", errors="replace").read()
+          json.dump({"t": int(time.time()), "html": html}, open("data.json", "w", encoding="utf-8"), ensure_ascii=False)
+          PY
+          git init -q -b data out
+          cp data.json out/
+          cd out
+          git config user.name "parkun-bot"
+          git config user.email "parkun-bot@users.noreply.github.com"
+          git add data.json
+          git commit -qm "data $(date -u +%FT%TZ)"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" data
