@@ -1,0 +1,3 @@
+{
+  "functions": { "api/park.js": { "maxDuration": 30 } }
+}

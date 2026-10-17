@@ -612,6 +612,8 @@ function parseParkingHTML(html){
 }
 
 /* Fetch a través de proxies CORS (unav.edu no envía cabeceras CORS) */
+// URL del proxy de Vercel (p. ej. "https://parkun.vercel.app/api/park"). Vacío = desactivado.
+const VERCEL_PROXY_URL = "";
 const BACKUP_URL = "https://raw.githubusercontent.com/aosoriory/parkUN/data/data.json";
 const BACKUP_MAX_AGE_S = 30*60;   // una copia de más de 30 min ya no se muestra
 
@@ -661,9 +663,13 @@ async function fetchParkingHTML(){
   const attempts = [];
   const backup = fetchBackup();            // se pide ya, en paralelo; solo se usa si lo demás falla
   backup.catch(()=>{});
+  // Primera vía: Worker de Cloudflare y (si está configurado) proxy de Vercel, a la vez;
+  // gana el que responda antes. Así, si un proveedor está bloqueado, el otro cubre.
+  const first = [{ name:"worker propio", url:"https://park-proxy.aosoriory.workers.dev/", ms:8000 }];
+  if (VERCEL_PROXY_URL) first.push({ name:"vercel", url:VERCEL_PROXY_URL, ms:8000 });
   try{
-    return await tryProxy({ name:"worker propio", url:"https://park-proxy.aosoriory.workers.dev/", ms:8000 });
-  }catch(e){ attempts.push(e.message); }
+    return await Promise.any(first.map(tryProxy));
+  }catch(agg){ (agg.errors || []).forEach(x=>attempts.push(x.message)); }
   try{
     return await Promise.any([
       tryProxy({ name:"allorigins", url:"https://api.allorigins.win/raw?url=" + encodeURIComponent(TARGET_URL), ms:6000 }),
