@@ -39,6 +39,9 @@
     font-family:'Inter',system-ui,sans-serif;
     overscroll-behavior-y:contain;
   }
+  /* Sin selección de texto: así un toque para refrescar no abre «Toca para buscar» (Android) ni el diccionario. */
+  html,body{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+  input,textarea,select{ -webkit-user-select:text; user-select:text; }
   #app{
     display:flex; flex-direction:column; height:100dvh;
     padding-top:env(safe-area-inset-top);
@@ -625,6 +628,8 @@ const BACKUP_MAX_AGE_S = 30*60;   // una copia de más de 30 min ya no se muestr
 // Modo autónomo: si la app se sirve desde Vercel, pide los datos solo a su propia función
 // (/api/park, misma dirección). La función ya prueba la UNAV, proxies públicos y su copia en memoria.
 // Si falla, se muestra la última lectura buena guardada en este móvil (máx. 30 min).
+document.addEventListener("selectstart", e=>{ if (!(e.target && e.target.closest && e.target.closest("input,textarea,select"))) e.preventDefault(); });
+document.addEventListener("contextmenu", e=>{ if (!(e.target && e.target.closest && e.target.closest("input,textarea,select"))) e.preventDefault(); });
 const AUTONOMOUS = /(^|\.)vercel\.app$/.test(location.hostname);
 const LAST_KEY = "aparcamientos_unav_last_v1";
 // Aviso en la copia de GitHub Pages: anima a usar la dirección de Vercel (se puede cerrar hasta la próxima visita).
