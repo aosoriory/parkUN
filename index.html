@@ -1150,7 +1150,7 @@ function renderPlist(){
     const first = i===0, last = i===draftOrder.length-1;
     if (isGap(code)){
       return `<div class="prow gaprow" data-code="${code}" data-idx="${i}">
-      <div class="gapname">Espacio (30px)</div>
+      <div class="gapname">Espacio</div>
       <div class="arrow" data-act="up" ${first?'style="visibility:hidden"':''}>↑</div>
       <div class="arrow" data-act="down" ${last?'style="visibility:hidden"':''}>↓</div>
       <div class="arrow gapbtn" data-act="delgap" title="Quitar este espacio">✕</div>
