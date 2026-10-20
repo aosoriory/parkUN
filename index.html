@@ -253,6 +253,12 @@
     <div class="timer" id="timer">0:00</div>
   </div>
 
+  <div id="moveBanner" style="display:none; padding:10px 14px; font-size:13px; line-height:1.35; color:#fff; background:var(--accent); border-bottom:1px solid var(--line); align-items:center; gap:10px;">
+    <div style="flex:1">📢 <b>Hay una dirección nueva y más sencilla.</b> Te animamos a usar <b>parkun.vercel.app</b>. Al abrirla tendrás que instalarla de nuevo y volver a elegir tus ajustes.</div>
+    <a href="https://parkun.vercel.app/" style="flex-shrink:0; color:var(--accent); background:#fff; font-weight:700; text-decoration:none; padding:7px 11px; border-radius:8px;">Abrir</a>
+    <button id="moveClose" aria-label="Cerrar aviso" style="flex-shrink:0; background:none; border:0; color:#fff; font-size:18px; padding:2px 6px;">✕</button>
+  </div>
+
   <div id="statusBanner" style="display:none; padding:10px 18px; font-size:12.5px; color:var(--red); background:var(--red-dim); border-bottom:1px solid var(--line);"></div>
 
   <div class="colheader" id="colheader">
@@ -621,6 +627,15 @@ const BACKUP_MAX_AGE_S = 30*60;   // una copia de más de 30 min ya no se muestr
 // Si falla, se muestra la última lectura buena guardada en este móvil (máx. 30 min).
 const AUTONOMOUS = /(^|\.)vercel\.app$/.test(location.hostname);
 const LAST_KEY = "aparcamientos_unav_last_v1";
+// Aviso en la copia de GitHub Pages: anima a usar la dirección de Vercel (se puede cerrar hasta la próxima visita).
+(function(){
+  if (!/(^|\.)github\.io$/.test(location.hostname)) return;
+  const el = document.getElementById("moveBanner");
+  if (!el) return;
+  el.style.display = "flex";
+  el.addEventListener("click", e=>e.stopPropagation());
+  document.getElementById("moveClose").addEventListener("click", ()=>{ el.style.display = "none"; });
+})();
 function saveLast(parsed){
   try{ localStorage.setItem(LAST_KEY, JSON.stringify({ t: Date.now(), data: parsed })); }catch(_){}
 }
