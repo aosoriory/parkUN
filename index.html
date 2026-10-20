@@ -616,6 +616,22 @@ function parseParkingHTML(html){
 const VERCEL_PROXY_URL = "https://parkun.vercel.app/api/park";
 const BACKUP_URL = "https://raw.githubusercontent.com/aosoriory/parkUN/data/data.json";
 const BACKUP_MAX_AGE_S = 30*60;   // una copia de más de 30 min ya no se muestra
+// Modo autónomo: si la app se sirve desde Vercel, pide los datos solo a su propia función
+// (/api/park, misma dirección). La función ya prueba la UNAV, proxies públicos y su copia en memoria.
+// Si falla, se muestra la última lectura buena guardada en este móvil (máx. 30 min).
+const AUTONOMOUS = /(^|\.)vercel\.app$/.test(location.hostname);
+const LAST_KEY = "aparcamientos_unav_last_v1";
+function saveLast(parsed){
+  try{ localStorage.setItem(LAST_KEY, JSON.stringify({ t: Date.now(), data: parsed })); }catch(_){}
+}
+function loadLast(){
+  try{
+    const j = JSON.parse(localStorage.getItem(LAST_KEY) || "null");
+    if (!j || !j.data || !j.t) return null;
+    const age = Math.max(0, Math.round((Date.now() - j.t)/1000));
+    return age <= BACKUP_MAX_AGE_S ? { data: j.data, t: j.t, age } : null;
+  }catch(_){ return null; }
+}
 
 async function fetchWithTimeout(url, ms){
   const ctl = new AbortController();
@@ -660,6 +676,14 @@ async function fetchBackup(){
 
 async function fetchParkingHTML(){
   // Devuelve {text, staleAge}: staleAge (s) solo si los datos no son en directo.
+  if (AUTONOMOUS){
+    try{
+      return await tryProxy({ name:"servidor de la app", url:"/api/park", ms:20000 });
+    }catch(e){
+      const off = (typeof navigator !== "undefined" && navigator.onLine === false) ? "Sin conexión a internet. " : "";
+      throw new Error(off + e.message);
+    }
+  }
   const attempts = [];
   const backup = fetchBackup();            // se pide ya, en paralelo; solo se usa si lo demás falla
   backup.catch(()=>{});
@@ -704,6 +728,7 @@ async function refresh(opts={}){
     const anyData = Object.values(parsed).some(v => v.p !== null || v.r !== null);
     if (anyData){
       state.data = parsed;
+      if (AUTONOMOUS && !got.staleAge) saveLast(parsed);
       state.lastSuccess = Date.now() - (got.staleAge ? got.staleAge*1000 : 0);   // el contador refleja la edad real
       gotData = true;
       if (opts.flash) flash();   // parpadeo al recibir los datos nuevos
@@ -716,7 +741,16 @@ async function refresh(opts={}){
     }
   }catch(e){
     console.warn("Refresh error:", e);
-    setStatus("No se pudieron cargar los datos: " + e.message);
+    const last = AUTONOMOUS ? loadLast() : null;
+    if (last){
+      // Sin conexión en directo: se muestra la última lectura buena de este móvil (no se locuta).
+      state.data = last.data;
+      state.lastSuccess = last.t;
+      tickTimer();
+      setStatus(`Sin conexión en directo: se muestran datos de hace ${Math.max(1,Math.round(last.age/60))} min. (${e.message})`);
+    } else {
+      setStatus("No se pudieron cargar los datos: " + e.message);
+    }
     // Fallo transitorio probable (red, proxy caído un instante): reintenta
     // pronto en vez de esperar al próximo refresco programado.
     if (!retryTimeoutId){
