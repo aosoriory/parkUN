@@ -134,6 +134,12 @@
   .empty b{ color:var(--text); }
 
   /* ---- Flash on refresh ---- */
+  /* Parpadeo al refrescar: los números desaparecen 0,25 s; si aún no hay datos nuevos, vuelven en gris */
+  body.blink .cell, body.blink .row .name .sub{ color:transparent !important; }
+  body.blink .pn{ opacity:0; }
+  body.stale .row, body.stale .cell.chip{ background:#4a4f57 !important; color:#c9cdd1 !important; }
+  body.stale .pk{ fill:#8a8f96 !important; stroke:#5d6269 !important; }
+  body.stale .pn{ fill:#8a8f96 !important; }
   #flash{ position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none; transition:opacity .12s ease; z-index:50;}
   #flash.on{ opacity:.18; }
 
@@ -724,6 +730,7 @@ async function refresh(opts={}){
     return;
   }
   state.refreshing = true;
+  if (opts.flash) blinkNumbers();   // al tocar: los números desaparecen y vuelven en 0,25 s
   const shouldTalk = opts.talk === undefined ? state.talkEnabled : !!opts.talk;
   let gotData = false;
 
@@ -736,7 +743,8 @@ async function refresh(opts={}){
       if (AUTONOMOUS && !got.staleAge) saveLast(parsed);
       state.lastSuccess = Date.now() - (got.staleAge ? got.staleAge*1000 : 0);   // el contador refleja la edad real
       gotData = true;
-      if (opts.flash) flash();   // parpadeo al recibir los datos nuevos
+      state.fresh = true;
+      document.body.classList.remove("stale");   // datos nuevos: recuperan el color
       state.timerOff = false;   // ...y vuelve a 0:00 al recibir respuesta
       tickTimer();
       setStatus(got.staleAge ? `Sin conexión en directo: se muestran datos de hace ${Math.max(1,Math.round(got.staleAge/60))} min.` : null);
@@ -780,6 +788,16 @@ function setStatus(msg){
   } else {
     el.style.display = "none";
   }
+}
+
+function blinkNumbers(){
+  state.fresh = false;
+  document.body.classList.add("blink");
+  setTimeout(()=>{
+    document.body.classList.remove("blink");
+    // Si pasado el parpadeo aún no han llegado datos nuevos, los antiguos se ven en gris.
+    if (!state.fresh) document.body.classList.add("stale");
+  }, 250);
 }
 
 function flash(){
