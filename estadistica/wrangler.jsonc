@@ -2,6 +2,7 @@
   "name": "park-estadistica",
   "main": "index.js",
   "compatibility_date": "2026-11-01",
+  "observability": { "enabled": true },
   "triggers": { "crons": ["* * * * *"] },
   "d1_databases": [
     { "binding": "DB", "database_name": "parkun-estadistica", "database_id": "697af563-0272-4fef-9743-ae67432d42e8" }
