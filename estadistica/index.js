@@ -48,6 +48,7 @@ function interpretar(html) {
 
 async function registrar(env, ts) {
   const { fecha, hora } = madrid(ts);
+  let resultado = "";
   try {
     let html = "", err = "";
     for (let i = 0; i < 2 && !html; i++) {
@@ -63,13 +64,16 @@ async function registrar(env, ts) {
     const { gen, ele } = interpretar(html);
     const codes = [...new Set([...Object.keys(gen), ...Object.keys(ele)])].sort();
     if (!codes.length) throw new Error("no se reconoció ningún aparcamiento");
+    resultado = codes.length + " parkings guardados: " + codes.join(",");
     await env.DB.batch(codes.map(c =>
       env.DB.prepare("INSERT INTO lecturas (ts, fecha, hora, code, libres, electricas) VALUES (?,?,?,?,?,?)")
         .bind(Math.floor(ts / 1000), fecha, hora, c, gen[c] ?? null, ele[c] ?? null)));
   } catch (e) {
     await env.DB.prepare("INSERT INTO errores (ts, fecha, hora, mensaje) VALUES (?,?,?,?)")
       .bind(Math.floor(ts / 1000), fecha, hora, String((e && e.message) || e)).run();
+    resultado = "ERROR: " + String((e && e.message) || e);
   }
+  return resultado;
 }
 
 export default {
@@ -79,7 +83,11 @@ export default {
     if (min < DESDE_MIN || min > HASTA_MIN) return;   // fuera de horario: no hace nada
     ctx.waitUntil(registrar(env, ts));
   },
-  async fetch() {
+  async fetch(request, env) {
+    // /probar: una lectura de prueba a cualquier hora (guarda una fila por parking y dice qué pasó).
+    if (new URL(request.url).pathname === "/probar") {
+      return new Response(await registrar(env, Date.now()) + "\n", { headers: { "Content-Type": "text/plain; charset=utf-8" } });
+    }
     return new Response("park-estadistica: solo guarda datos; no hay nada que ver aquí.", { status: 404 });
   },
 };
