@@ -83,11 +83,7 @@ export default {
     if (min < DESDE_MIN || min > HASTA_MIN) return;   // fuera de horario: no hace nada
     ctx.waitUntil(registrar(env, ts));
   },
-  async fetch(request, env) {
-    // /probar: una lectura de prueba a cualquier hora (guarda una fila por parking y dice qué pasó).
-    if (new URL(request.url).pathname === "/probar") {
-      return new Response(await registrar(env, Date.now()) + "\n", { headers: { "Content-Type": "text/plain; charset=utf-8" } });
-    }
+  async fetch() {
     return new Response("park-estadistica: solo guarda datos; no hay nada que ver aquí.", { status: 404 });
   },
 };
