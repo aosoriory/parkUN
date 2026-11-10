@@ -83,4 +83,3 @@ export default {
     return new Response("park-estadistica: solo guarda datos; no hay nada que ver aquí.", { status: 404 });
   },
 };
-export { interpretar, madrid };
