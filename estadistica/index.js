@@ -101,47 +101,61 @@ async function leer() {
 
 const dormir = ms => new Promise(r => setTimeout(r, ms));
 
-// Dentro de un minuto: lee cada 2 s y apunta solo lo que cambia. Escribe una sola vez al final.
+// Dentro de un minuto: lee cada 2 s, guarda TODAS las lecturas del minuto en una fila (tabla minutos) y,
+// aparte, solo los cambios con su segundo exacto (tabla cambios). Pocas sentencias por ejecución (límite de D1).
 async function rapida(env, t0) {
-  const previo = new Map();
+  let previo = {};
   try {
-    const { results } = await env.DB.prepare("SELECT code, libres, electricas, ts_ms FROM estado").all();
-    for (const f of results || []) if (t0 - f.ts_ms < 10 * 60 * 1000) previo.set(f.code, f);
+    const f = await env.DB.prepare("SELECT v, ts_ms FROM estado2 WHERE k='todos'").first();
+    if (f && t0 - f.ts_ms < 10 * 60 * 1000) previo = JSON.parse(f.v);
   } catch (e) { /* sin estado previo: la primera lectura será el punto de partida */ }
-  const ahora = new Map(previo);
+  const ahora = { ...previo };
   const cambios = [];
-  let ultimo = null, fallos = 0, ultimoError = "";
+  const muestras = [];
+  let ultimo = null, ultimoObj = null, fallos = 0, ultimoError = "";
   for (let i = 0; i < LECTURAS_POR_MINUTO; i++) {
     const espera = t0 + i * PASO_MS - Date.now();
     if (espera > 0) await dormir(espera);
     const t = Date.now();
     try {
       const html = await leer();
+      const ms = Date.now() - t;
       const b = bloque(html);
       if (!b) throw new Error("página sin lista de parkings");
-      if (b === ultimo) continue;          // nada ha cambiado: no se analiza (ahorra CPU)
+      if (b === ultimo) { muestras.push([t - t0, ms, "="]); continue; }   // igual que la anterior: no se analiza (ahorra CPU)
       ultimo = b;
       const { gen, ele } = interpretar(b);
+      const obj = {};
       const { fecha, horaSeg } = madrid(t);
       for (const c of new Set([...Object.keys(gen), ...Object.keys(ele)])) {
-        const l = gen[c] ?? null, e = ele[c] ?? null, p = ahora.get(c);
-        if (!p || p.libres !== l || p.electricas !== e) {
-          cambios.push([t, fecha, horaSeg, c, l, e, p ? p.libres : null]);
-          ahora.set(c, { code: c, libres: l, electricas: e, ts_ms: t });
+        const l = gen[c] ?? null, e = ele[c] ?? null, p = ahora[c];
+        obj[c] = [l, e];
+        if (!p || p[0] !== l || p[1] !== e) {
+          cambios.push([t, fecha, horaSeg, c, l, e, p ? p[0] : null]);
+          ahora[c] = [l, e];
         }
       }
-    } catch (e) { fallos++; ultimoError = String((e && e.message) || e); }
+      ultimoObj = obj;
+      muestras.push([t - t0, ms, obj]);
+    } catch (e) { fallos++; ultimoError = String((e && e.message) || e); muestras.push([t - t0, Date.now() - t, "ERR: " + ultimoError]); }
   }
-  const sentencias = cambios.map(c => env.DB.prepare(
-    "INSERT INTO cambios (ts_ms, fecha, hora, code, libres, electricas, libres_antes) VALUES (?,?,?,?,?,?,?)").bind(...c));
-  for (const [c, v] of ahora) sentencias.push(env.DB.prepare(
-    "INSERT OR REPLACE INTO estado (code, libres, electricas, ts_ms) VALUES (?,?,?,?)").bind(c, v.libres, v.electricas, Date.now()));
+  const m = madrid(t0);
+  const sentencias = [
+    env.DB.prepare("INSERT INTO minutos (ts_ms, fecha, hora, lecturas, fallos, muestras) VALUES (?,?,?,?,?,?)")
+      .bind(t0, m.fecha, m.hora, muestras.length, fallos, JSON.stringify(muestras)),
+    env.DB.prepare("INSERT OR REPLACE INTO estado2 (k, v, ts_ms) VALUES ('todos', ?, ?)").bind(JSON.stringify(ahora), Date.now()),
+  ];
+  for (let i = 0; i < cambios.length; i += 14) {   // máx. 100 parámetros por sentencia
+    const trozo = cambios.slice(i, i + 14);
+    sentencias.push(env.DB.prepare(
+      "INSERT INTO cambios (ts_ms, fecha, hora, code, libres, electricas, libres_antes) VALUES " + trozo.map(() => "(?,?,?,?,?,?,?)").join(",")
+    ).bind(...trozo.flat()));
+  }
   if (fallos >= LECTURAS_POR_MINUTO / 2) {
-    const m = madrid(t0);
     sentencias.push(env.DB.prepare("INSERT INTO errores (ts, fecha, hora, mensaje) VALUES (?,?,?,?)")
       .bind(Math.floor(t0 / 1000), m.fecha, m.hora, "franja rápida: " + fallos + " lecturas fallidas (" + ultimoError + ")"));
   }
-  if (sentencias.length) await env.DB.batch(sentencias);
+  await env.DB.batch(sentencias);
 }
 
 export default {
