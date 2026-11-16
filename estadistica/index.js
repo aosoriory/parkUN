@@ -11,13 +11,22 @@ const RAPIDA_HASTA = 9 * 60 + 30;   // 9:30 (incluida)
 const PASO_MS = 2000;               // una lectura cada 2 s
 const LECTURAS_POR_MINUTO = 28;     // 28 × 2 s = 56 s; el límite gratuito es de 50 peticiones por ejecución
 const SIN_ELECTRICAS = ["P06", "P07", "P13"];
+// Sábados, domingos y festivos no se lee nada (orden de Al, 16 nov 2026).
+// Festivos de Pamplona (calendario de la Comunidad Foral + locales), según pamplona.es:
+// 2026: https://www.pamplona.es/en/node/21697 · 2027: https://www.pamplona.es/en/node/15434
+// (2027: falta el festivo local de Pamplona, pendiente de publicar en el BON; añadirlo cuando salga).
+const FESTIVOS = new Set([
+  "2026-11-30", "2026-12-03", "2026-12-08", "2026-12-25",
+  "2027-01-01", "2027-01-06", "2027-03-19", "2027-03-25", "2027-03-26", "2027-03-29",
+  "2027-05-01", "2027-10-12", "2027-11-01", "2027-12-03", "2027-12-06", "2027-12-08", "2027-12-25",
+]);
 
 function madrid(ts) {
   const p = Object.fromEntries(new Intl.DateTimeFormat("en-CA", {
     timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23",
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23", weekday: "short",
   }).formatToParts(new Date(ts)).map(x => [x.type, x.value]));
-  return { fecha: `${p.year}-${p.month}-${p.day}`, hora: `${p.hour}:${p.minute}`, horaSeg: `${p.hour}:${p.minute}:${p.second}`, min: Number(p.hour) * 60 + Number(p.minute) };
+  return { fecha: `${p.year}-${p.month}-${p.day}`, hora: `${p.hour}:${p.minute}`, horaSeg: `${p.hour}:${p.minute}:${p.second}`, min: Number(p.hour) * 60 + Number(p.minute), finde: p.weekday === "Sat" || p.weekday === "Sun" };
 }
 
 function texto(html) {
@@ -161,8 +170,9 @@ async function rapida(env, t0) {
 export default {
   async scheduled(event, env, ctx) {
     const ts = event.scheduledTime || Date.now();
-    const { min } = madrid(ts);
+    const { min, fecha, finde } = madrid(ts);
     if (min < DESDE_MIN || min > HASTA_MIN) return;   // fuera de horario: no hace nada
+    if (finde || FESTIVOS.has(fecha)) return;         // sábado, domingo o festivo: no hace nada
     ctx.waitUntil(registrar(env, ts));
     if (min >= RAPIDA_DESDE && min <= RAPIDA_HASTA) ctx.waitUntil(rapida(env, Date.now()));
   },
