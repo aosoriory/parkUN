@@ -1,13 +1,15 @@
 // Cloudflare Worker "park-estadistica": cada minuto (entre las 6:00 y las 21:00, hora de Madrid)
 // lee la página de aparcamientos de la UNAV y guarda en D1 las plazas libres de cada parking (tabla lecturas).
-// Franja rápida (8:45–9:30): además, dentro de cada minuto lee la página cada 2 s y anota solo los CAMBIOS,
+// Franja rápida (8:00–9:59): además, dentro de cada minuto lee la página cada 2 s y anota solo los CAMBIOS,
 // con el segundo exacto (tabla cambios), para ver cuándo entran y salen coches.
 // Necesita: un enlace (binding) a la base D1 "parkun-estadistica" con el nombre DB, y un Cron Trigger "* * * * *".
 const TARGET = "https://www.unav.edu/web/gestion-de-espacios/aparcamientos";
 const DESDE_MIN = 6 * 60;      // 6:00
 const HASTA_MIN = 21 * 60;     // 21:00 (incluida)
-const RAPIDA_DESDE = 8 * 60 + 45;   // 8:45
-const RAPIDA_HASTA = 9 * 60 + 30;   // 9:30 (incluida)
+// Antes 8:45–9:30 (pensada para Ismael y Arquitectura); desde el 19 nov 2026, 8:00–9:59 para incluir Cima (P08).
+// Se anotan los cambios de todos los parkings, así que Ismael y Arquitectura también quedan cubiertos de 8 a 10.
+const RAPIDA_DESDE = 8 * 60;        // 8:00
+const RAPIDA_HASTA = 9 * 60 + 59;   // 9:59 (incluida)
 const PASO_MS = 2000;               // una lectura cada 2 s
 const LECTURAS_POR_MINUTO = 28;     // 28 × 2 s = 56 s; el límite gratuito es de 50 peticiones por ejecución
 const SIN_ELECTRICAS = ["P06", "P07", "P13"];
