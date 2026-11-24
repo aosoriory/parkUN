@@ -243,6 +243,70 @@
   .mseg button.on{ background:var(--accent); }
 
   ::-webkit-scrollbar{ width:0; height:0; }
+
+  /* ---- Pantallas: inicio, parkings y espacios ---- */
+  .screen{ display:none; flex:1; flex-direction:column; min-height:0; }
+  .screen.on{ display:flex; }
+  .citybtn{
+    height:44px; padding:0 14px; border-radius:10px;
+    border:1px solid rgba(255,255,255,.30); background:#3B3F47; color:var(--text);
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px;
+    display:flex; align-items:center; gap:6px; cursor:pointer;
+  }
+  .citybtn:active{ background:#4B505A; }
+  #homeGrid{
+    flex:1; display:grid; grid-template-columns:1fr 1fr; grid-auto-rows:1fr; gap:12px;
+    padding:6px 14px 18px; min-height:0;
+  }
+  .bigbtn{
+    border:1px solid rgba(255,255,255,.18); border-radius:20px; background:var(--panel);
+    color:var(--text); display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:10px; padding:10px; cursor:pointer; min-height:0;
+  }
+  .bigbtn:active{ background:var(--panel-2); }
+  .bigbtn .ic{ font-size:54px; line-height:1; }
+  .bigbtn .lb{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:21px; text-align:center; line-height:1.15; }
+  .bigbtn .sm{ font-size:12px; color:var(--muted); text-align:center; min-height:15px; }
+  .scrtitle{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:19px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+  .tseg{ display:flex; border-radius:10px; overflow:hidden; background:#3B3F47; border:1px solid rgba(255,255,255,.30); flex-shrink:0; }
+  .tseg button{ height:42px; padding:0 12px; border:none; background:transparent; color:var(--text); font-size:14px; font-weight:700; font-family:'Inter'; cursor:pointer; }
+  .tseg button.on{ background:var(--accent); }
+  #spWrap{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; position:relative; }
+  .srow{
+    display:flex; align-items:stretch; background:var(--gray); color:var(--muted);
+    border-bottom:2px solid #000; min-height:72px;
+  }
+  .srow .info{ flex:1; min-width:0; padding:9px 14px; display:flex; flex-direction:column; justify-content:center; gap:3px; }
+  .srow .t1{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:22px; line-height:1.1; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .srow .t2{ font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .srow .t3{ font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .srow .st-open{ color:#7ee29a; }
+  .srow .st-closed{ color:#ff8a87; }
+  .srow .pct{
+    width:96px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:30px; line-height:1;
+    border-left:2px solid rgba(0,0,0,0.3); background:rgba(255,255,255,0.06); color:var(--muted);
+  }
+  .srow .pct small{ font-family:'Inter'; font-size:10px; font-weight:600; margin-top:4px; opacity:.85; letter-spacing:.04em; }
+  .srow .pct.green{ background:var(--green); color:#fff; }
+  .srow .pct.yellow{ background:var(--yellow); color:#1a1600; }
+  .srow .pct.orange{ background:var(--orange); color:#1f0e00; }
+  .srow .pct.red{ background:var(--red); color:#fff; }
+  body.stale .srow .pct{ background:#4a4f57 !important; color:#c9cdd1 !important; }
+  .city-opts{ display:flex; flex-direction:column; gap:10px; }
+  .city-opts button{
+    padding:16px; border-radius:12px; border:1px solid #B8BDC7; background:#fff; color:#14171C;
+    font-family:'Space Grotesk'; font-weight:700; font-size:18px; text-align:left;
+  }
+  .city-opts button.on{ background:#2F7CE0; border-color:#1F5FB8; color:#fff; }
+  .sheet.small{ height:auto; max-height:80dvh; }
+  .blist{ display:flex; flex-direction:column; gap:6px; }
+  .blist .bcity{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#4B5563; font-weight:700; margin:10px 0 2px; }
+  .blist .bname{ padding:12px; border-radius:10px; border:1px solid #B8BDC7; background:#fff; color:#6B7280; font-weight:600; font-size:14px; }
+  .blist .bname.on{ color:#fff; border-color:#1F5FB8; background:#2F7CE0; }
+  .blist .bname small{ display:block; font-weight:500; font-size:11.5px; opacity:.85; margin-top:2px; }
+  .settings-group{ font-family:'Space Grotesk'; font-weight:700; font-size:16px; color:#14171C; margin:18px 0 8px; }
+  .settings-group:first-child{ margin-top:0; }
 </style>
 </head>
 <body>
@@ -250,7 +314,42 @@
 <div id="flash"></div>
 <div id="app">
 
+<!-- ===== Inicio: 4 tipos de espacio ===== -->
+<div class="screen" id="scrHome">
   <div class="topbar">
+    <button class="icon-btn" id="btnSettingsHome" aria-label="Ajustes">☰</button>
+    <button class="citybtn" id="btnCity" aria-label="Elegir ciudad">📍 <span id="cityName">Pamplona</span></button>
+    <div class="spacer"></div>
+    <button class="icon-btn" id="btnInfoHome" aria-label="Info">ⓘ</button>
+  </div>
+  <div id="homeGrid">
+    <button class="bigbtn" data-go="parking"><div class="ic">🅿️</div><div class="lb">Parkings</div><div class="sm" id="sumParking"></div></button>
+    <button class="bigbtn" data-go="salas"><div class="ic">📚</div><div class="lb">Salas de estudio</div><div class="sm" id="sumSalas"></div></button>
+    <button class="bigbtn" data-go="cafeterias"><div class="ic">☕</div><div class="lb">Cafeterías</div><div class="sm" id="sumCafeterias"></div></button>
+    <button class="bigbtn" data-go="meeting"><div class="ic">🤝</div><div class="lb">Meeting points</div><div class="sm" id="sumMeeting"></div></button>
+  </div>
+</div>
+
+<!-- ===== Salas de estudio / cafeterías / meeting points ===== -->
+<div class="screen" id="scrSpaces">
+  <div class="topbar">
+    <button class="icon-btn" id="btnBackSp" aria-label="Volver al inicio">←</button>
+    <div class="tseg" id="spMode" role="group" aria-label="Favoritas o todas"><button data-m="fav">Favoritas</button><button data-m="all">Todas</button></div>
+    <div class="spacer"></div>
+    <div class="timer" id="timerSp">0:00</div>
+  </div>
+  <div class="colheader"><div class="name" id="spTitle">Salas de estudio</div></div>
+  <div id="statusBannerSp" style="display:none; padding:10px 18px; font-size:12.5px; color:var(--red); background:var(--red-dim); border-bottom:1px solid var(--line);"></div>
+  <div id="spWrap">
+    <div class="pull" id="pullIndicatorSp">↓ Sigue tirando para recargar</div>
+    <div id="spRows"></div>
+  </div>
+</div>
+
+<!-- ===== Parkings (la app de siempre) ===== -->
+<div class="screen" id="scrParking">
+  <div class="topbar">
+    <button class="icon-btn" id="btnBack" aria-label="Volver al inicio">←</button>
     <button class="icon-btn" id="btnSettings" aria-label="Ajustes">☰</button>
     <button class="icon-btn" id="btnInfo" aria-label="Info">ⓘ</button>
     <button class="icon-btn" id="btnTalk" aria-label="Voz">🔊</button>
@@ -399,6 +498,22 @@
       <button class="mbtn" id="btnFlip" aria-label="Girar el mapa">🔄</button>
     </div>
   </div>
+</div><!-- /scrParking -->
+</div>
+
+<!-- Elegir ciudad -->
+<div class="overlay" id="ovCity">
+  <div class="sheet small">
+    <div class="sheet-head">
+      <div class="sheet-title">¿Dónde estás?</div>
+      <button class="icon-btn" id="closeCity">✕</button>
+    </div>
+    <div class="city-opts" id="cityOpts">
+      <button data-c="pamplona">Pamplona</button>
+      <button data-c="madrid">Madrid</button>
+      <button data-c="sansebastian">San Sebastián</button>
+    </div>
+  </div>
 </div>
 
 <!-- Settings modal -->
@@ -419,19 +534,21 @@
           </div>
         </div>
 
-        <div>
-          <div class="section-label">Tipo de plazas</div>
-          <div class="toggles">
-            <div class="toggle-card" id="toggleP"><div class="ic">🅿️</div><div class="lb">PARKING</div></div>
-            <div class="toggle-card" id="toggleR"><div class="ic">⚡</div><div class="lb">RECARGA</div></div>
-          </div>
-        </div>
-
-        <div class="section-label" style="margin-bottom:0">Ordenar y seleccionar</div>
       </div>
 
       <div class="plist-scroll">
+        <div class="settings-group">🅿️ Parkings</div>
+        <div class="section-label">Tipo de plazas</div>
+        <div class="toggles" style="margin-bottom:14px">
+          <div class="toggle-card" id="toggleP"><div class="ic">🅿️</div><div class="lb">PARKING</div></div>
+          <div class="toggle-card" id="toggleR"><div class="ic">⚡</div><div class="lb">RECARGA</div></div>
+        </div>
+        <div class="section-label">Parkings favoritos: ordenar y seleccionar</div>
         <div class="plist" id="plist"></div>
+
+        <div class="settings-group">🏛️ Edificios favoritos</div>
+        <div class="section-label">Salas de estudio, cafeterías y meeting points</div>
+        <div class="blist" id="blist"></div>
       </div>
 
       <button class="btn-primary" id="btnSaveSettings">Guardar</button>
@@ -448,11 +565,12 @@
     </div>
     <div class="sheet-body">
       <div class="info-text">
-        <b>Plazas libres en los aparcamientos de la UNAV.</b><br>
-        Esta es una página privada que muestra las plazas libres en los aparcamientos de la UNAV. La información se obtiene de la página de Gestión de Espacios (<a href="https://www.unav.edu/web/gestion-de-espacios/aparcamientos" target="_blank" rel="noopener" style="color:#1F5FB8; word-break:break-all;">https://www.unav.edu/web/gestion-de-espacios/aparcamientos</a>).
+        <b>Parkings y espacios libres de la UNAV.</b><br>
+        Esta es una página privada que muestra las plazas libres en los aparcamientos de la UNAV y la ocupación de las salas de estudio, cafeterías y meeting points. Los parkings salen de la página de Gestión de Espacios (<a href="https://www.unav.edu/web/gestion-de-espacios/aparcamientos" target="_blank" rel="noopener" style="color:#1F5FB8; word-break:break-all;">https://www.unav.edu/web/gestion-de-espacios/aparcamientos</a>); los demás espacios, de <a href="https://unav.quodus.ai/" target="_blank" rel="noopener" style="color:#1F5FB8;">unav.quodus.ai</a>.
         <br><br>
-        • Toca la pantalla para actualizar las plazas. Desliza hacia abajo (desde arriba del todo) para recargar la app.<br>
-        • En Ajustes eliges la frecuencia de actualización, qué tipo de plazas ver (parking y/o recarga eléctrica) y qué aparcamientos mostrar, en qué orden, y si quieres un espacio de separación (botón ⇕) debajo de alguno.<br>
+        • El botón 📍 elige la ciudad: solo se ven los parkings y espacios de esa ciudad.<br>
+        • Toca la pantalla para actualizar los datos. Desliza hacia abajo (desde arriba del todo) para recargar la app.<br>
+        • En Ajustes eliges la frecuencia de actualización, qué tipo de plazas ver (parking y/o recarga eléctrica), qué aparcamientos mostrar, en qué orden, y si quieres un espacio de separación (botón ⇕) debajo de alguno; y tus edificios favoritos, que deciden qué salas, cafeterías y meeting points salen en «Favoritas».<br>
         • El icono del altavoz activa la lectura en voz alta de las plazas libres tras cada actualización.
         <span class="note">Tus ajustes se guardan en este dispositivo y navegador, y se mantienen la próxima vez que abras la app. Añade esta página a la pantalla de inicio para usarla como una app.</span>
       </div>
@@ -503,7 +621,21 @@ const state = {
   view: "list",       // "list" | "map"
   mapMetric: "p",    // en el mapa: "p" plazas de parking · "r" puntos de recarga
   mapFlip: false,     // false: Este arriba (N a la izquierda) · true: Oeste arriba (N a la derecha)
+  // --- Inicio y espacios (salas, cafeterías, meeting points) ---
+  screen: "home",     // "home" | "parking" | "salas" | "cafeterias" | "meeting" (al abrir, siempre "home")
+  city: "pamplona",   // "pamplona" | "madrid" | "sansebastian"
+  favBuildings: [],   // nombres de edificio tal como los da Quodus ("Edificio Amigos")
+  spaceMode: "fav",   // "fav" | "all"
+  spaces: [],         // lista de /api/espacios
+  spacesLastSuccess: null,
+  spacesRefreshing: false,
 };
+
+/* Ciudades. Los parkings de cada ciudad salen del código (P10 Madrid, P11–P13 San Sebastián). */
+const CITIES = { pamplona:"Pamplona", madrid:"Madrid", sansebastian:"San Sebastián" };
+const CITY_OF_PARKING = c => c === "P10" ? "madrid" : (["P11","P12","P13"].includes(c) ? "sansebastian" : "pamplona");
+const KIND_TITLES = { salas:"Salas de estudio", cafeterias:"Cafeterías", meeting:"Meeting points" };
+const SPACE_KINDS = Object.keys(KIND_TITLES);
 
 let refreshIntervalId = null;
 let timerIntervalId = null;
@@ -539,6 +671,9 @@ async function loadPrefs(){
       if (p.view === "map" || p.view === "list") state.view = p.view;
       if (typeof p.mapFlip === "boolean") state.mapFlip = p.mapFlip;
       if (p.mapMetric === "p" || p.mapMetric === "r") state.mapMetric = p.mapMetric;
+      if (CITIES[p.city]) state.city = p.city;
+      if (Array.isArray(p.favBuildings)) state.favBuildings = p.favBuildings.filter(b=>typeof b === "string");
+      if (p.spaceMode === "fav" || p.spaceMode === "all") state.spaceMode = p.spaceMode;
     }
   }catch(e){
     // Navegación privada u otro bloqueo de localStorage: seguimos sin persistencia.
@@ -558,6 +693,9 @@ async function savePrefs(){
       view: state.view,
       mapFlip: state.mapFlip,
       mapMetric: state.mapMetric,
+      city: state.city,
+      favBuildings: state.favBuildings,
+      spaceMode: state.spaceMode,
     }));
     storageAvailable = true;
   }catch(e){
@@ -721,14 +859,14 @@ async function fetchParkingHTML(){
    ========================================================= */
 let retryTimeoutId = null;
 
-async function refresh(opts={}){
+async function refreshParking(opts={}){
   if (state.refreshing){
     // Ya hay una petición en curso: que locute con sus datos cuando lleguen.
     if (opts.talk) state.talkAfter = true;
     return;
   }
   state.refreshing = true;
-  document.body.classList.add("stale");   // en gris hasta que lleguen datos nuevos
+  if (state.screen === "parking") document.body.classList.add("stale");   // en gris hasta que lleguen datos nuevos
   const shouldTalk = opts.talk === undefined ? state.talkEnabled : !!opts.talk;
   let gotData = false;
 
@@ -764,13 +902,14 @@ async function refresh(opts={}){
     // Fallo transitorio probable (red, proxy caído un instante): reintenta
     // pronto en vez de esperar al próximo refresco programado.
     if (!retryTimeoutId){
-      retryTimeoutId = setTimeout(()=>{ retryTimeoutId = null; refresh(); }, 8000);
+      retryTimeoutId = setTimeout(()=>{ retryTimeoutId = null; refreshParking(); }, 8000);
     }
   }finally{
     state.refreshing = false;
     renderRows();
+    renderHomeSummary();
     // Solo locuta cuando ya han llegado datos nuevos (nunca los anteriores).
-    const talkNow = (shouldTalk || state.talkAfter) && gotData;
+    const talkNow = (shouldTalk || state.talkAfter) && gotData && state.screen === "parking";
     state.talkAfter = false;
     if (talkNow) speakAll();
   }
@@ -794,10 +933,225 @@ function flash(){
 }
 
 function manualRefresh(){
-  state.timerOff = true;   // el contador se apaga al instante...
+  // El contador de la pantalla actual se apaga al instante...
+  if (isSpaceScreen()) state.spTimerOff = true; else state.timerOff = true;
   tickTimer();
-  refresh({talk:undefined, flash:true});
+  refresh({flash:true});
 }
+
+/* Qué se refresca depende de la pantalla: en el inicio, todo (para los resúmenes);
+   en parkings, solo parkings; en salas, cafeterías o meeting points, solo los espacios. */
+function isSpaceScreen(){ return SPACE_KINDS.includes(state.screen); }
+function refresh(opts={}){
+  const ps = [];
+  if (state.screen !== "parking") ps.push(refreshSpaces());
+  if (!isSpaceScreen()) ps.push(refreshParking(opts));
+  return Promise.all(ps);
+}
+
+/* =========================================================
+   ESPACIOS (salas de estudio, cafeterías, meeting points)
+   Datos de Quodus a través de la función /api/espacios.
+   ========================================================= */
+const SPACES_URL = AUTONOMOUS ? "/api/espacios" : "https://parkun.vercel.app/api/espacios";
+const SPACES_LAST_KEY = "parkun_espacios_last_v1";
+let spRetryId = null;
+
+async function refreshSpaces(){
+  if (state.spacesRefreshing) return;
+  state.spacesRefreshing = true;
+  if (isSpaceScreen()) document.body.classList.add("stale");
+  try{
+    const res = await fetchWithTimeout(SPACES_URL, 20000);
+    if (!res.ok){
+      let why = ""; try{ why = (await res.text()).slice(0,100); }catch(_){}
+      throw new Error("HTTP " + res.status + (why ? " · " + why : ""));
+    }
+    const j = await res.json();
+    if (!j || !Array.isArray(j.spaces) || !j.spaces.length) throw new Error("lista vacía");
+    const stale = Number(res.headers.get("X-Stale-Age")) || 0;
+    state.spaces = j.spaces;
+    state.spacesLastSuccess = Date.now() - stale*1000;
+    if (!stale){ try{ localStorage.setItem(SPACES_LAST_KEY, JSON.stringify({ t: Date.now(), spaces: j.spaces })); }catch(_){} }
+    if (isSpaceScreen()) document.body.classList.remove("stale");
+    state.spTimerOff = false;
+    setStatusSp(stale ? `Sin conexión en directo: se muestran datos de hace ${Math.max(1,Math.round(stale/60))} min.` : null);
+    if (spRetryId){ clearTimeout(spRetryId); spRetryId = null; }
+  }catch(e){
+    const msg = e.name === "AbortError" ? "sin respuesta a tiempo" : (e.message || String(e));
+    let last = null;
+    try{ last = JSON.parse(localStorage.getItem(SPACES_LAST_KEY) || "null"); }catch(_){}
+    const age = last && last.t ? Math.round((Date.now() - last.t)/1000) : null;
+    if (last && Array.isArray(last.spaces) && age <= BACKUP_MAX_AGE_S){
+      state.spaces = last.spaces;
+      state.spacesLastSuccess = last.t;
+      setStatusSp(`Sin conexión en directo: se muestran datos de hace ${Math.max(1,Math.round(age/60))} min. (${msg})`);
+    } else {
+      setStatusSp("No se pudieron cargar los espacios: " + msg);
+    }
+    if (!spRetryId) spRetryId = setTimeout(()=>{ spRetryId = null; if (state.screen !== "parking") refreshSpaces(); }, 8000);
+  }finally{
+    state.spacesRefreshing = false;
+    tickTimer();
+    renderSpaces();
+    renderHomeSummary();
+  }
+}
+
+function setStatusSp(msg){
+  const el = document.getElementById("statusBannerSp");
+  if (!el) return;
+  el.textContent = msg || "";
+  el.style.display = msg ? "block" : "none";
+}
+
+/* Color por % de ocupación: verde < 50 · amarillo 50–79 · naranja 80–94 · rojo ≥ 95 */
+function classifyPct(p){
+  if (typeof p !== "number") return "";
+  if (p >= 95) return "red";
+  if (p >= 80) return "orange";
+  if (p >= 50) return "yellow";
+  return "green";
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+// "Edificio de Arquitectura" -> "Arquitectura"; "Edificio ICS - Instituto Cultura y Sociedad" -> "ICS"
+const BUILDING_NAMES = { "ISB":"Ismael Sánchez Bella" };
+function shortBuilding(b){
+  const s = String(b || "").replace(/^Edificio\s+(de\s+)?/i, "").replace(/\s+-\s+.*$/, "").trim() || String(b || "");
+  return BUILDING_NAMES[s] || s;
+}
+// "AMI-Cafetería" -> "Cafetería"; "FEC-Meeting Point-ALU" -> "Meeting Point (ALU)"; "CEN-Faustino" -> "Faustino"
+function shortSpaceName(n, building){
+  // "Biblioteca de Ciencias Sala 1" en el edificio Biblioteca de Ciencias -> "Sala 1"
+  const sb = building ? shortBuilding(building) : "";
+  if (sb && String(n).toLowerCase().startsWith(sb.toLowerCase() + " ")) n = String(n).slice(sb.length + 1);
+  const parts = String(n || "").split("-").map(x=>x.trim()).filter(Boolean);
+  if (parts.length >= 2 && /^[A-ZÁÉÍÓÚ]{2,5}$/.test(parts[0])){
+    parts.shift();
+    return parts.length > 1 ? `${parts[0]} (${parts.slice(1).join(" · ")})` : parts[0];
+  }
+  return String(n || "");
+}
+const hhmm = ms => { const d = new Date(ms); return d.getHours() + ":" + String(d.getMinutes()).padStart(2,"0"); };
+const DIAS = ["dom","lun","mar","mié","jue","vie","sáb"];
+function whenText(ms){
+  const d = new Date(ms), now = new Date();
+  const days = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 86400000);
+  if (days <= 0) return hhmm(ms);
+  if (days === 1) return "mañana " + hhmm(ms);
+  return DIAS[d.getDay()] + " " + hhmm(ms);
+}
+// Texto de horario: "Abierta · hasta 21:00" o "Cerrada · abre mañana 8:00"
+function openText(sp, fem){
+  const now = Date.now();
+  const tt = (sp.timetable || []).filter(t => t.open && t.to > now).sort((a,b)=>a.from-b.from);
+  const cur = tt.find(t => t.from <= now && t.to > now);
+  const next = tt.find(t => t.from > now);
+  const ab = fem ? "Abierta" : "Abierto", ce = fem ? "Cerrada" : "Cerrado";
+  if (sp.isOpen) return { open:true, txt: ab + (cur ? " · hasta " + whenText(cur.to) : "") };
+  return { open:false, txt: ce + (next ? " · abre " + whenText(next.from) : "") };
+}
+
+function visibleSpaces(kind){
+  let list = state.spaces.filter(s => s.kind === kind && s.city === state.city);
+  if (state.spaceMode === "fav") list = list.filter(s => state.favBuildings.includes(s.building));
+  return list.sort((a,b)=> shortBuilding(a.building).localeCompare(shortBuilding(b.building), "es") || a.name.localeCompare(b.name, "es"));
+}
+
+function renderSpaces(){
+  if (!isSpaceScreen()) return;
+  const kind = state.screen;
+  document.getElementById("spTitle").textContent = KIND_TITLES[kind] + " · " + CITIES[state.city];
+  document.querySelectorAll("#spMode button").forEach(b=>b.classList.toggle("on", b.dataset.m === state.spaceMode));
+  const el = document.getElementById("spRows");
+  if (!state.spaces.length){
+    el.innerHTML = `<div class="empty">${state.spacesRefreshing ? "Cargando…" : "Sin datos todavía."}</div>`;
+    return;
+  }
+  const list = visibleSpaces(kind);
+  if (!list.length){
+    const anyInCity = state.spaces.some(s => s.kind === kind && s.city === state.city);
+    el.innerHTML = !anyInCity
+      ? `<div class="empty">No hay ${KIND_TITLES[kind].toLowerCase()} en ${CITIES[state.city]}.</div>`
+      : `<div class="empty">Ninguno de tus edificios favoritos tiene ${KIND_TITLES[kind].toLowerCase()} en ${CITIES[state.city]}.<br><br>Toca <b>Todas</b> o elige edificios en <b>Ajustes → Edificios favoritos</b>.</div>`;
+    return;
+  }
+  const fem = kind !== "meeting";   // la sala, la cafetería / el meeting point
+  el.innerHTML = list.map(sp=>{
+    const o = openText(sp, fem);
+    const pct = typeof sp.percentage === "number" ? Math.round(sp.percentage) : null;
+    const cls = o.open ? classifyPct(pct) : "";
+    const occ = (typeof sp.occupancy === "number" && typeof sp.capacity === "number")
+      ? `${sp.occupancy}/${sp.capacity}` : (typeof sp.capacity === "number" ? `cap. ${sp.capacity}` : "");
+    const extra = o.open ? occ : (typeof sp.capacity === "number" ? "cap. " + sp.capacity : "");
+    return `<div class="srow">
+      <div class="info">
+        <div class="t1">${esc(shortBuilding(sp.building))}</div>
+        <div class="t2">${esc(shortSpaceName(sp.name, sp.building))}</div>
+        <div class="t3"><span class="${o.open ? "st-open" : "st-closed"}">${esc(o.txt)}</span>${extra ? " · " + esc(extra) : ""}</div>
+      </div>
+      <div class="pct ${cls}">${o.open && pct !== null ? pct + "%" : "—"}<small>${o.open ? "OCUPADO" : "CERRADO"}</small></div>
+    </div>`;
+  }).join("");
+}
+
+/* Resúmenes pequeños bajo cada botón del inicio */
+function renderHomeSummary(){
+  const set = (id, t) => { const e = document.getElementById(id); if (e) e.textContent = t; };
+  const pk = state.fullOrder.filter(c => !isGap(c) && state.active.includes(c) && CITY_OF_PARKING(c) === state.city);
+  const libres = pk.map(c => (state.data[c] || {}).p).filter(v => typeof v === "number");
+  set("sumParking", libres.length ? `${libres.reduce((a,b)=>a+b,0)} plazas libres` : (pk.length ? "" : "Sin favoritos aquí"));
+  SPACE_KINDS.forEach(k=>{
+    const id = "sum" + k[0].toUpperCase() + k.slice(1);
+    const all = state.spaces.filter(s => s.kind === k && s.city === state.city);
+    if (!state.spaces.length){ set(id, ""); return; }
+    if (!all.length){ set(id, "No hay en " + CITIES[state.city]); return; }
+    const open = all.filter(s => s.isOpen).length;
+    set(id, open ? `${open} de ${all.length} abiert${k === "meeting" ? "os" : "as"}` : "Todo cerrado");
+  });
+}
+
+/* =========================================================
+   NAVEGACIÓN ENTRE PANTALLAS
+   Al entrar en una pantalla se añade una entrada al historial,
+   para que el botón «atrás» del móvil vuelva al inicio.
+   ========================================================= */
+function showScreen(name, push){
+  const prev = state.screen;
+  state.screen = name;
+  document.getElementById("scrHome").classList.toggle("on", name === "home");
+  document.getElementById("scrParking").classList.toggle("on", name === "parking");
+  document.getElementById("scrSpaces").classList.toggle("on", isSpaceScreen());
+  document.body.classList.remove("stale");
+  if (name !== "parking" && state.talkEnabled && "speechSynthesis" in window) window.speechSynthesis.cancel();
+  if (push && name !== "home" && prev === "home"){ try{ history.pushState({ scr:name }, ""); }catch(_){} }
+  if (name === "parking"){ applyCity(); renderRows(); }
+  if (isSpaceScreen()){ document.getElementById("spWrap").scrollTop = 0; renderSpaces(); }
+  if (name === "home") renderHomeSummary();
+  tickTimer();
+  // Datos de más de 1 min (o ninguno): se piden ya al entrar
+  const last = isSpaceScreen() ? state.spacesLastSuccess : (name === "parking" ? state.lastSuccess : null);
+  if (name !== "home" && (!last || Date.now() - last > 60000)) manualRefresh();
+  else if (name === "parking" && state.talkEnabled) speakAll();
+}
+window.addEventListener("popstate", ()=>{ if (state.screen !== "home") showScreen("home", false); });
+function goHome(){
+  if (history.state && history.state.scr){ history.back(); }   // así no se acumulan entradas
+  else showScreen("home", false);
+}
+
+/* Ciudad: filtra los parkings de la lista y los espacios. El mapa solo existe para Pamplona. */
+function applyCity(){
+  document.getElementById("cityName").textContent = CITIES[state.city];
+  const hasMap = state.city === "pamplona";
+  document.getElementById("viewSeg").style.display = hasMap ? "" : "none";
+  applyView();
+}
+function openCity(){
+  document.querySelectorAll("#cityOpts button").forEach(b=>b.classList.toggle("on", b.dataset.c === state.city));
+  document.getElementById("ovCity").classList.add("open");
+}
+function closeCity(){ document.getElementById("ovCity").classList.remove("open"); }
 
 function scheduleAutoRefresh(){
   if (refreshIntervalId) clearInterval(refreshIntervalId);
@@ -805,12 +1159,16 @@ function scheduleAutoRefresh(){
 }
 
 function tickTimer(){
-  const el = document.getElementById("timer");
-  el.style.visibility = state.timerOff ? "hidden" : "";
-  if (state.timerOff) return;
-  if (!state.lastSuccess){ el.textContent = "0:00"; return; }
-  const s = Math.floor((Date.now()-state.lastSuccess)/1000);
-  el.textContent = Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
+  const put = (id, off, last) => {
+    const el = document.getElementById(id);
+    el.style.visibility = off ? "hidden" : "";
+    if (off) return;
+    if (!last){ el.textContent = "0:00"; return; }
+    const s = Math.floor((Date.now()-last)/1000);
+    el.textContent = Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
+  };
+  put("timer", state.timerOff, state.lastSuccess);
+  put("timerSp", state.spTimerOff, state.spacesLastSuccess);
 }
 
 /* =========================================================
@@ -837,13 +1195,16 @@ function renderRows(){ renderList(); renderMap(); }
 function renderList(){
   renderColHeader();
   const rows = document.getElementById("rows");
-  const codes = state.fullOrder.filter(c=>isGap(c) || state.active.includes(c));
+  // Solo los parkings de la ciudad elegida; los huecos seguidos se juntan en uno.
+  const codes = state.fullOrder
+    .filter(c=>isGap(c) || (state.active.includes(c) && CITY_OF_PARKING(c) === state.city))
+    .filter((c,i,arr)=>!(isGap(c) && isGap(arr[i-1])));
   // Los huecos al principio o al final de la lista no se muestran.
   while (codes.length && isGap(codes[0])) codes.shift();
   while (codes.length && isGap(codes[codes.length-1])) codes.pop();
 
   if (!codes.length){
-    rows.innerHTML = `<div class="empty">No hay aparcamientos seleccionados.<br><b>Ajustes → Ordenar y seleccionar</b></div>`;
+    rows.innerHTML = `<div class="empty">No hay aparcamientos favoritos en ${CITIES[state.city]}.<br><b>Ajustes → Parkings favoritos</b></div>`;
     return;
   }
 
@@ -940,11 +1301,11 @@ function applyMetric(){
 }
 
 function applyView(){
-  const map = state.view === "map";
+  const map = state.view === "map" && state.city === "pamplona";   // el mapa solo es de Pamplona
   document.getElementById("colheader").style.display = map ? "none" : "";
   document.getElementById("listWrap").style.display = map ? "none" : "";
   document.getElementById("mapWrap").classList.toggle("on", map);
-  document.querySelectorAll("#viewSeg button").forEach(b=>b.classList.toggle("on", b.dataset.v === state.view));
+  document.querySelectorAll("#viewSeg button").forEach(b=>b.classList.toggle("on", b.dataset.v === (map ? "map" : "list")));
 }
 
 /* =========================================================
@@ -957,7 +1318,7 @@ let speechGen = 0;
 function buildSpeechQueue(){
   const q = [];
   state.fullOrder.forEach(code=>{
-    if (!state.active.includes(code)) return;
+    if (!state.active.includes(code) || CITY_OF_PARKING(code) !== state.city) return;
     const d = state.data[code] || {p:null,r:null};
     const hasP = state.verP && typeof d.p === "number";
     const hasR = state.verR && typeof d.r === "number";
@@ -1007,7 +1368,7 @@ function toggleTalk(){
   //  algunos móviles no dejan hablar si no se inició desde un toque.)
   try{ window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance("")); }catch(e){}
   state.timerOff = true; tickTimer();
-  refresh({talk:true, flash:true});
+  refreshParking({talk:true, flash:true});
 }
 
 /* =========================================================
@@ -1159,15 +1520,49 @@ function setMapZoom(k, x, y){
 /* =========================================================
    MODALES / AJUSTES
    ========================================================= */
-let draftOrder = [], draftActive = [], draftP = true, draftR = false, draftFreq = 60;
+let draftOrder = [], draftActive = [], draftP = true, draftR = false, draftFreq = 60, draftFav = [];
 
 function openSettings(){
   draftOrder = [...state.fullOrder];
   draftActive = [...state.active];
   draftP = state.verP; draftR = state.verR; draftFreq = state.refreshSeconds;
-  renderFreqSeg(); renderToggles(); renderPlist();
+  draftFav = [...state.favBuildings];
+  renderFreqSeg(); renderToggles(); renderPlist(); renderBlist();
+  document.querySelector("#ovSettings .plist-scroll").scrollTop = 0;
   document.getElementById("ovSettings").classList.add("open");
+  // Sin la lista de espacios no se conocen los edificios: se pide y se repinta al llegar.
+  if (!state.spaces.length) refreshSpaces().then(()=>{ if (document.getElementById("ovSettings").classList.contains("open")) renderBlist(); });
 }
+
+/* Edificios favoritos: los que tienen salas, cafeterías o meeting points, por ciudad
+   (primero la elegida). Debajo de cada uno, qué tipos de espacio tiene. */
+function renderBlist(){
+  const el = document.getElementById("blist");
+  const byB = {};
+  state.spaces.forEach(sp=>{
+    const b = byB[sp.building] || (byB[sp.building] = { city: sp.city, kinds: new Set() });
+    b.kinds.add(sp.kind);
+  });
+  draftFav.forEach(b=>{ if (!byB[b]) byB[b] = { city: null, kinds: new Set() }; });   // favoritos que hoy no salen
+  const names = Object.keys(byB);
+  if (!names.length){ el.innerHTML = `<div class="empty" style="padding:16px">Cargando edificios…</div>`; return; }
+  const cityOrder = [state.city, ...Object.keys(CITIES).filter(c=>c !== state.city), null];
+  const KS = { salas:"Salas de estudio", cafeterias:"Cafetería", meeting:"Meeting point" };
+  el.innerHTML = cityOrder.map(c=>{
+    const bs = names.filter(n => byB[n].city === c).sort((a,b)=>shortBuilding(a).localeCompare(shortBuilding(b), "es"));
+    if (!bs.length) return "";
+    return `<div class="bcity">${c ? CITIES[c] : "Sin datos ahora"}</div>` + bs.map(n=>{
+      const kinds = SPACE_KINDS.filter(k=>byB[n].kinds.has(k)).map(k=>KS[k]).join(" · ");
+      return `<div class="bname ${draftFav.includes(n) ? "on" : ""}" data-b="${esc(n)}">${esc(shortBuilding(n))}${kinds ? `<small>${kinds}</small>` : ""}</div>`;
+    }).join("");
+  }).join("");
+}
+document.getElementById("blist").addEventListener("click", (e)=>{
+  const b = e.target.closest(".bname"); if (!b) return;
+  const n = b.dataset.b;
+  draftFav = draftFav.includes(n) ? draftFav.filter(x=>x !== n) : [...draftFav, n];
+  b.classList.toggle("on", draftFav.includes(n));
+});
 function closeSettings(){ document.getElementById("ovSettings").classList.remove("open"); }
 
 function renderFreqSeg(){
@@ -1263,9 +1658,11 @@ document.getElementById("btnSaveSettings").addEventListener("click", ()=>{
   state.active = [...draftActive];
   state.verP = draftP; state.verR = draftR;
   state.refreshSeconds = draftFreq;
+  state.favBuildings = [...draftFav];
   if (freqChanged) scheduleAutoRefresh();
   closeSettings();
-  manualRefresh();
+  renderSpaces(); renderHomeSummary();
+  if (state.screen !== "home") manualRefresh(); else renderRows();
   savePrefs();
 });
 
@@ -1273,6 +1670,28 @@ document.getElementById("btnSaveSettings").addEventListener("click", ()=>{
    EVENTOS GLOBALES
    ========================================================= */
 document.getElementById("btnSettings").addEventListener("click", openSettings);
+document.getElementById("btnSettingsHome").addEventListener("click", openSettings);
+document.getElementById("btnInfoHome").addEventListener("click", ()=>document.getElementById("ovInfo").classList.add("open"));
+document.getElementById("homeGrid").addEventListener("click", (e)=>{
+  const b = e.target.closest("[data-go]"); if (!b) return;
+  showScreen(b.dataset.go, true);
+});
+document.getElementById("btnBack").addEventListener("click", goHome);
+document.getElementById("btnBackSp").addEventListener("click", goHome);
+document.getElementById("spMode").addEventListener("click", (e)=>{
+  const b = e.target.closest("button"); if (!b) return;
+  state.spaceMode = b.dataset.m;
+  renderSpaces(); savePrefs();
+});
+document.getElementById("btnCity").addEventListener("click", openCity);
+document.getElementById("closeCity").addEventListener("click", closeCity);
+document.getElementById("ovCity").addEventListener("click", (e)=>{ if (e.target.id === "ovCity") closeCity(); });
+document.getElementById("cityOpts").addEventListener("click", (e)=>{
+  const b = e.target.closest("button"); if (!b) return;
+  state.city = b.dataset.c;
+  closeCity(); applyCity(); renderRows(); renderSpaces(); renderHomeSummary(); savePrefs();
+});
+initGestures(document.getElementById("spWrap"), document.getElementById("pullIndicatorSp"));
 document.getElementById("closeSettings").addEventListener("click", closeSettings);
 document.getElementById("ovSettings").addEventListener("click", (e)=>{ if(e.target.id==="ovSettings") closeSettings(); });
 
@@ -1304,11 +1723,12 @@ document.getElementById("btnFlip").addEventListener("click", ()=>{
   await loadPrefs();
   document.getElementById("btnTalk").classList.toggle("active", state.talkEnabled);
   document.getElementById("btnTalk").textContent = state.talkEnabled ? "🔊" : "🔇";
-  applyView(); applyFlip(); applyMetric();
+  applyCity(); applyFlip(); applyMetric();
+  showScreen("home", false);
   renderRows();
   timerIntervalId = setInterval(tickTimer, 1000);
   scheduleAutoRefresh();
-  setTimeout(()=>refresh({talk: state.talkEnabled ? true : undefined}), 400);
+  setTimeout(()=>refresh(), 400);
 })();
 
 /* Mantiene la pantalla encendida mientras la app está abierta (Screen Wake Lock).
@@ -1329,7 +1749,8 @@ document.addEventListener("visibilitychange", requestWakeLock);
 // (tras estar en segundo plano la conexión suele tardar en despertar).
 function refreshIfStale(){
   if (document.visibilityState === "hidden") return;
-  if (!state.lastSuccess || Date.now() - state.lastSuccess > 60000) refresh();
+  const last = isSpaceScreen() ? state.spacesLastSuccess : state.lastSuccess;
+  if (!last || Date.now() - last > 60000) refresh();
 }
 document.addEventListener("visibilitychange", refreshIfStale);
 window.addEventListener("online", ()=>refresh());
