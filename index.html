@@ -302,6 +302,11 @@
   .srow .pct.orange{ background:var(--orange); color:#1f0e00; }
   .srow .pct.red{ background:var(--red); color:#fff; }
   body.stale .srow .pct{ background:#4a4f57 !important; color:#c9cdd1 !important; }
+  #detail{ position:fixed; inset:0; z-index:50; background:#000; display:none; flex-direction:column; }
+  #detail.open{ display:flex; }
+  #detail iframe{ flex:1; width:100%; border:0; background:#fff; }
+  .srow{ cursor:pointer; }
+  .srow:active{ filter:brightness(1.25); }
   .city-opts{ display:flex; flex-direction:column; gap:10px; }
   .city-opts button{
     padding:16px; border-radius:12px; border:1px solid #B8BDC7; background:#fff; color:#14171C;
@@ -512,6 +517,14 @@
     </div>
   </div>
 </div><!-- /scrParking -->
+</div>
+
+<!-- Detalle de un espacio: la página de Quodus dentro de la app -->
+<div id="detail" aria-hidden="true">
+  <div class="topbar">
+    <button class="icon-btn" id="btnDetailBack" aria-label="Volver a la lista">←</button>
+    <div class="scrtitle" id="detailTitle"></div>
+  </div>
 </div>
 
 <!-- Elegir ciudad -->
@@ -1120,7 +1133,7 @@ function renderSpaces(){
       ? `<div class="t1">${esc(shortSpaceName(sp.name, sp.building))}</div>`
       : `<div class="t1">${esc(shortBuilding(sp.building))}</div>
         <div class="t2">${esc(shortSpaceName(sp.name, sp.building))}</div>`;
-    return head + `<div class="srow ${grouped ? "ingroup" : ""}">
+    return head + `<div class="srow ${grouped ? "ingroup" : ""}" data-id="${sp.id}">
       <div class="info">
         ${lines}
         <div class="t3"><span class="${o.open ? "st-open" : "st-closed"}">${esc(o.txt)}</span>${extra ? " · " + esc(extra) : ""}</div>
@@ -1177,7 +1190,40 @@ function showScreen(name, push){
   if (name !== "home" && (!last || Date.now() - last > 60000)) manualRefresh();
   else if (name === "parking" && state.talkEnabled) speakAll();
 }
-window.addEventListener("popstate", ()=>{ if (state.screen !== "home") showScreen("home", false); });
+window.addEventListener("popstate", ()=>{
+  if (document.getElementById("detail").classList.contains("open")){ closeDetail(); return; }
+  if (state.screen !== "home") showScreen("home", false);
+});
+
+/* Detalle de un espacio: su página de Quodus (plano de puestos, disponibles, ocupación,
+   servicios y ocupación semanal) dentro de la app. «←» o el «atrás» del móvil vuelven a la lista. */
+const QUODUS_SPACE_URL = id => "https://unav.quodus.ai/building/space/" + encodeURIComponent(id);
+function openDetail(id){
+  const sp = state.spaces.find(x => String(x.id) === String(id));
+  if (!sp) return;
+  document.getElementById("detailTitle").textContent = shortBuilding(sp.building) + " · " + shortSpaceName(sp.name, sp.building);
+  // El marco se crea de cero con su dirección ya puesta: así su carga no añade pasos al
+  // historial y el «atrás» del móvil (o «←») cierra el detalle en vez de navegar dentro de Quodus.
+  const d = document.getElementById("detail");
+  const old = document.getElementById("detailFrame"); if (old) old.remove();
+  const f = document.createElement("iframe");
+  f.id = "detailFrame"; f.title = "Información del espacio";
+  f.src = QUODUS_SPACE_URL(sp.id);
+  d.appendChild(f);
+  d.classList.add("open"); d.setAttribute("aria-hidden", "false");
+  try{ history.pushState({ scr: state.screen, detail: sp.id }, ""); }catch(_){}
+}
+function closeDetail(){
+  const d = document.getElementById("detail");
+  d.classList.remove("open"); d.setAttribute("aria-hidden", "true");
+  const f = document.getElementById("detailFrame"); if (f) f.remove();
+}
+document.getElementById("btnDetailBack").addEventListener("click", ()=>{
+  if (history.state && history.state.detail) history.back(); else closeDetail();
+});
+document.getElementById("spRows").addEventListener("click", (e)=>{
+  const r = e.target.closest(".srow"); if (r) openDetail(r.dataset.id);
+});
 function goHome(){
   if (history.state && history.state.scr){ history.back(); }   // así no se acumulan entradas
   else showScreen("home", false);
@@ -1444,7 +1490,7 @@ function initGestures(wrap, indicator){
     }
   }, {passive:true});
 
-  wrap.addEventListener("touchend", ()=>{
+  wrap.addEventListener("touchend", (e)=>{
     if (!active) return;
     const reload = atTop && dragAmt >= RELOAD_PULL;
     const tap = !reload && maxMove <= TAP_SLOP;
@@ -1453,7 +1499,7 @@ function initGestures(wrap, indicator){
     indicator.textContent = "↓ Sigue tirando para recargar";
     active = false; dragAmt = 0;
     if (reload){ location.reload(); }
-    else if (tap){ manualRefresh(); }   // un toque: actualiza solo los datos
+    else if (tap && !(e.target.closest && e.target.closest(".srow"))){ manualRefresh(); }   // un toque: actualiza solo los datos (en una fila de espacio, abre su detalle)
   }, {passive:true});
 
   wrap.addEventListener("touchcancel", ()=>{
