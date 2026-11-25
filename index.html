@@ -87,6 +87,9 @@
     background:var(--panel);
   }
   .colheader .name{ flex:1; padding-left:14px; }
+  .colheader .ctrls{ flex:1; min-width:0; display:flex; align-items:center; gap:8px; padding:0 12px 0 14px; }
+  .colheader .cols{ display:flex; }
+  #colheader{ padding:8px 0; }
   .colheader .col{ width:92px; flex-shrink:0; padding-left:2px; box-sizing:border-box; text-align:center; color:var(--accent); font-size:28px; font-weight:700; line-height:1; }
 
   /* ---- List ---- */
@@ -376,18 +379,17 @@
 
 <!-- ===== Parkings (la app de siempre) ===== -->
 <div class="screen" id="scrParking">
-  <div class="topbar">
-    <button class="icon-btn" id="btnTalk" aria-label="Voz">🔊</button>
-    <div class="mseg" id="viewSeg" role="group" aria-label="Lista o mapa"><button data-v="list" aria-label="Ver la lista">📋</button><button data-v="map" aria-label="Ver el mapa">🗺️</button></div>
-    <div class="title">APARCAMIENTOS<small>UNIVERSIDAD DE NAVARRA</small></div>
-    <div class="spacer"></div>
-    <div class="timer" id="timer">0:00</div>
-  </div>
-
   <div id="statusBanner" style="display:none; padding:10px 18px; font-size:12.5px; color:var(--red); background:var(--red-dim); border-bottom:1px solid var(--line);"></div>
 
+  <!-- Una sola franja: voz, lista/mapa y contador; a la derecha, la cabecera de columnas (P / ⚡) en la lista -->
   <div class="colheader" id="colheader">
-    <div class="name">Aparcamiento</div>
+    <div class="ctrls">
+      <button class="icon-btn" id="btnTalk" aria-label="Voz">🔊</button>
+      <div class="mseg" id="viewSeg" role="group" aria-label="Lista o mapa"><button data-v="list" aria-label="Ver la lista">📋</button><button data-v="map" aria-label="Ver el mapa">🗺️</button></div>
+      <div class="spacer"></div>
+      <div class="timer" id="timer">0:00</div>
+    </div>
+    <div class="cols" id="colsBox"></div>
   </div>
 
   <div id="listWrap">
@@ -1279,7 +1281,7 @@ function classify(val){
 function renderColHeader(){
   const el = document.getElementById("colheader");
   el.classList.toggle("twocols", state.verP && state.verR);
-  el.innerHTML = `<div class="name">Aparcamiento</div>` +
+  document.getElementById("colsBox").innerHTML =
     (state.verP ? `<div class="col">P</div>` : "") +
     (state.verR ? `<div class="col">⚡</div>` : "");
 }
@@ -1396,7 +1398,7 @@ function applyMetric(){
 
 function applyView(){
   const map = state.view === "map" && state.city === "pamplona";   // el mapa solo es de Pamplona
-  document.getElementById("colheader").style.display = map ? "none" : "";
+  document.getElementById("colsBox").style.display = map ? "none" : "";   // en el mapa, la franja sin columnas
   document.getElementById("listWrap").style.display = map ? "none" : "";
   document.getElementById("mapWrap").classList.toggle("on", map);
   document.querySelectorAll("#viewSeg button").forEach(b=>b.classList.toggle("on", b.dataset.v === (map ? "map" : "list")));
