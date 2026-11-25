@@ -244,30 +244,33 @@
 
   ::-webkit-scrollbar{ width:0; height:0; }
 
-  /* ---- Pantallas: inicio, parkings y espacios ---- */
+  /* ---- Cabecera y pestañas ---- */
+  #appHead{
+    display:flex; align-items:center; gap:8px; padding:8px 12px 8px 16px;
+    background:#1B1E24; border-bottom:1px solid #000; flex-shrink:0;
+  }
+  #appHead .appname{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:24px; letter-spacing:-.01em; white-space:nowrap; }
+  .hbtn{
+    height:44px; min-width:44px; padding:0 10px; border-radius:22px;
+    border:none; background:#2E323A; color:var(--text);
+    font-size:20px; display:flex; align-items:center; justify-content:center; gap:4px; cursor:pointer;
+  }
+  .hbtn:active{ background:#4B505A; }
+  #btnCity{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; padding:0 12px 0 8px; }
+  #tabs{ display:flex; background:#fff; border-bottom:1px solid #C9CDD4; flex-shrink:0; }
+  .tab{
+    flex:1; min-width:0; border:none; background:transparent; color:#4B5563;
+    padding:7px 2px 6px; display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer;
+    border-radius:14px 14px 0 0;
+  }
+  .tab .ic{ font-size:24px; line-height:1.1; }
+  .tab .lb{ font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+  .tab.on{ background:var(--bg); color:#fff; }
+  .tab.on .lb{ font-weight:800; }
+
+  /* ---- Pantallas: parkings y espacios ---- */
   .screen{ display:none; flex:1; flex-direction:column; min-height:0; }
   .screen.on{ display:flex; }
-  .citybtn{
-    height:44px; padding:0 14px; border-radius:10px;
-    border:1px solid rgba(255,255,255,.30); background:#3B3F47; color:var(--text);
-    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px;
-    display:flex; align-items:center; gap:6px; cursor:pointer;
-  }
-  .citybtn:active{ background:#4B505A; }
-  #homeGrid{
-    flex:1; display:grid; grid-template-columns:1fr 1fr; grid-auto-rows:1fr; gap:12px;
-    padding:6px 14px 18px; min-height:0;
-  }
-  #homeGrid.onecol{ grid-template-columns:1fr; }
-  .bigbtn{
-    border:1px solid rgba(255,255,255,.18); border-radius:20px; background:var(--panel);
-    color:var(--text); display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:10px; padding:10px; cursor:pointer; min-height:0;
-  }
-  .bigbtn:active{ background:var(--panel-2); }
-  .bigbtn .ic{ font-size:54px; line-height:1; }
-  .bigbtn .lb{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:21px; text-align:center; line-height:1.15; }
-  .bigbtn .sm{ font-size:12px; color:var(--muted); text-align:center; min-height:15px; }
   .scrtitle{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:19px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
   .tseg{ display:flex; border-radius:10px; overflow:hidden; background:#3B3F47; border:1px solid rgba(255,255,255,.30); flex-shrink:0; }
   .tseg button{ height:42px; padding:0 12px; border:none; background:transparent; color:var(--text); font-size:14px; font-weight:700; font-family:'Inter'; cursor:pointer; }
@@ -333,26 +336,26 @@
 <div id="flash"></div>
 <div id="app">
 
-<!-- ===== Inicio: 4 tipos de espacio ===== -->
-<div class="screen" id="scrHome">
-  <div class="topbar">
-    <button class="icon-btn" id="btnSettingsHome" aria-label="Ajustes">⚙️</button>
-    <button class="citybtn" id="btnCity" aria-label="Elegir ciudad">📍 <span id="cityName">Pamplona</span></button>
-    <div class="spacer"></div>
-    <button class="icon-btn" id="btnInfoHome" aria-label="Info">ⓘ</button>
-  </div>
-  <div id="homeGrid">
-    <button class="bigbtn" data-go="parking"><div class="ic">🅿️</div><div class="lb">Parkings</div><div class="sm" id="sumParking"></div></button>
-    <button class="bigbtn" data-go="salas"><div class="ic">📚</div><div class="lb">Salas de estudio</div><div class="sm" id="sumSalas"></div></button>
-    <button class="bigbtn" data-go="cafeterias"><div class="ic">☕</div><div class="lb">Cafeterías</div><div class="sm" id="sumCafeterias"></div></button>
-    <button class="bigbtn" data-go="meeting"><div class="ic">🤝</div><div class="lb">Meeting points</div><div class="sm" id="sumMeeting"></div></button>
-  </div>
+<!-- ===== Cabecera fija: nombre de la app y botones ===== -->
+<div id="appHead">
+  <div class="appname">Espacios UN</div>
+  <div class="spacer"></div>
+  <button class="hbtn" id="btnInfo" aria-label="Info">ⓘ</button>
+  <button class="hbtn" id="btnSettings" aria-label="Ajustes">⚙️</button>
+  <button class="hbtn citybtn" id="btnCity" aria-label="Elegir ciudad">📍<span id="cityName">PNA</span></button>
+</div>
+
+<!-- ===== Pestañas: un tipo de espacio cada una ===== -->
+<div id="tabs" role="tablist">
+  <button class="tab" data-go="parking" role="tab"><span class="ic">🅿️</span><span class="lb">Parkings</span></button>
+  <button class="tab" data-go="salas" role="tab"><span class="ic">📚</span><span class="lb">Salas</span></button>
+  <button class="tab" data-go="cafeterias" role="tab"><span class="ic">☕</span><span class="lb">Cafeterías</span></button>
+  <button class="tab" data-go="meeting" role="tab"><span class="ic">🤝</span><span class="lb">Meeting</span></button>
 </div>
 
 <!-- ===== Salas de estudio / cafeterías / meeting points ===== -->
 <div class="screen" id="scrSpaces">
-  <div class="topbar">
-    <button class="icon-btn" id="btnBackSp" aria-label="Volver al inicio">🏠</button>
+  <div class="topbar" id="spBar">
     <div class="tseg" id="spMode" role="group" aria-label="Favoritas o todas"><button data-m="fav">Favoritas</button><button data-m="all">Todas</button></div>
     <div class="spacer"></div>
   </div>
@@ -367,9 +370,6 @@
 <!-- ===== Parkings (la app de siempre) ===== -->
 <div class="screen" id="scrParking">
   <div class="topbar">
-    <button class="icon-btn" id="btnBack" aria-label="Volver al inicio">🏠</button>
-    <button class="icon-btn" id="btnSettings" aria-label="Ajustes">⚙️</button>
-    <button class="icon-btn" id="btnInfo" aria-label="Info">ⓘ</button>
     <button class="icon-btn" id="btnTalk" aria-label="Voz">🔊</button>
     <div class="mseg" id="viewSeg" role="group" aria-label="Lista o mapa"><button data-v="list" aria-label="Ver la lista">📋</button><button data-v="map" aria-label="Ver el mapa">🗺️</button></div>
     <div class="title">APARCAMIENTOS<small>UNIVERSIDAD DE NAVARRA</small></div>
@@ -654,8 +654,8 @@ const state = {
   view: "list",       // "list" | "map"
   mapMetric: "p",    // en el mapa: "p" plazas de parking · "r" puntos de recarga
   mapFlip: false,     // false: Este arriba (N a la izquierda) · true: Oeste arriba (N a la derecha)
-  // --- Inicio y espacios (salas, cafeterías, meeting points) ---
-  screen: "home",     // "home" | "parking" | "salas" | "cafeterias" | "meeting" (al abrir, siempre "home")
+  // --- Pestañas y espacios (salas, cafeterías, meeting points) ---
+  screen: "parking",  // pestaña abierta: "parking" | "salas" | "cafeterias" | "meeting" (al abrir, siempre "parking")
   city: "pamplona",   // "pamplona" | "madrid" | "sansebastian"
   favBuildings: [],   // nombres de edificio tal como los da Quodus ("Edificio Amigos")
   spaceMode: "fav",   // "fav" | "all"
@@ -666,6 +666,7 @@ const state = {
 
 /* Ciudades. Los parkings de cada ciudad salen del código (P10 Madrid, P11–P13 San Sebastián). */
 const CITIES = { pamplona:"Pamplona", madrid:"Madrid", sansebastian:"San Sebastián" };
+const CITY_ABBR = { pamplona:"PNA", madrid:"MAD", sansebastian:"SS" };
 const FAV_CITY = "pamplona";   // solo en Pamplona se eligen favoritos; en Madrid y San Sebastián se ve todo
 const usesFavs = () => state.city === FAV_CITY;
 const showParking = c => CITY_OF_PARKING(c) === state.city && (!usesFavs() || state.active.includes(c));
@@ -943,7 +944,7 @@ async function refreshParking(opts={}){
   }finally{
     state.refreshing = false;
     renderRows();
-    renderHomeSummary();
+    renderTabs();
     // Solo locuta cuando ya han llegado datos nuevos (nunca los anteriores).
     const talkNow = (shouldTalk || state.talkAfter) && gotData && state.screen === "parking";
     state.talkAfter = false;
@@ -975,7 +976,7 @@ function manualRefresh(){
   refresh({flash:true});
 }
 
-/* Qué se refresca depende de la pantalla: en el inicio, todo (para los resúmenes);
+/* Qué se refresca depende de la pestaña:
    en parkings, solo parkings; en salas, cafeterías o meeting points, solo los espacios. */
 function isSpaceScreen(){ return SPACE_KINDS.includes(state.screen); }
 function refresh(opts={}){
@@ -1029,7 +1030,7 @@ async function refreshSpaces(){
     state.spacesRefreshing = false;
     tickTimer();
     renderSpaces();
-    renderHomeSummary();
+    renderTabs();
   }
 }
 
@@ -1100,7 +1101,7 @@ function renderSpaces(){
   const kind = state.screen;
   document.getElementById("spTitle").textContent = KIND_TITLES[kind] + " · " + CITIES[state.city];
   document.querySelectorAll("#spMode button").forEach(b=>b.classList.toggle("on", b.dataset.m === state.spaceMode));
-  document.getElementById("spMode").style.display = usesFavs() ? "" : "none";
+  document.getElementById("spBar").style.display = usesFavs() ? "" : "none";   // en Madrid y San Sebastián no hay favoritos
   const el = document.getElementById("spRows");
   if (!state.spaces.length || !state.spacesLastSuccess){   // la lista guardada al arrancar no se enseña como si fuera actual
     el.innerHTML = `<div class="empty">${state.spacesRefreshing ? "Cargando…" : "Sin datos todavía."}</div>`;
@@ -1143,56 +1144,37 @@ function renderSpaces(){
   }).join("");
 }
 
-/* Resúmenes pequeños bajo cada botón del inicio */
-function renderHomeSummary(){
-  const set = (id, t) => { const e = document.getElementById(id); if (e) e.textContent = t; };
-  const pk = state.fullOrder.filter(c => !isGap(c) && showParking(c));
-  const libres = pk.map(c => (state.data[c] || {}).p).filter(v => typeof v === "number");
-  set("sumParking", libres.length ? `${libres.reduce((a,b)=>a+b,0)} plazas libres` : (pk.length ? "" : "Sin favoritos aquí"));
-  // Un tipo de espacio que no existe en la ciudad no tiene botón (si aún no hay datos, se ven todos).
-  let shown = 1;
+/* Pestañas: un tipo de espacio que no existe en la ciudad no tiene pestaña
+   (si aún no hay datos, se ven todas). Si la pestaña abierta desaparece, se vuelve a Parkings. */
+function renderTabs(){
   SPACE_KINDS.forEach(k=>{
     const has = !state.spaces.length || state.spaces.some(s => s.kind === k && s.city === state.city);
-    document.querySelector(`#homeGrid [data-go="${k}"]`).style.display = has ? "" : "none";
-    if (has) shown++;
+    document.querySelector(`#tabs [data-go="${k}"]`).style.display = has ? "" : "none";
+    if (!has && state.screen === k) showScreen("parking");
   });
-  document.getElementById("homeGrid").classList.toggle("onecol", shown < 4);
-  SPACE_KINDS.forEach(k=>{
-    const id = "sum" + k[0].toUpperCase() + k.slice(1);
-    const all = state.spaces.filter(s => s.kind === k && s.city === state.city);
-    if (!state.spaces.length){ set(id, ""); return; }
-    if (!all.length){ set(id, "No hay en " + CITIES[state.city]); return; }
-    const open = all.filter(s => s.isOpen).length;
-    set(id, open ? `${open} de ${all.length} abiert${k === "meeting" ? "os" : "as"}` : "Todo cerrado");
-  });
+  document.querySelectorAll("#tabs .tab").forEach(t=>t.classList.toggle("on", t.dataset.go === state.screen));
 }
 
 /* =========================================================
-   NAVEGACIÓN ENTRE PANTALLAS
-   Al entrar en una pantalla se añade una entrada al historial,
-   para que el botón «atrás» del móvil vuelva al inicio.
+   PESTAÑAS (no hay pantalla de inicio: la app abre en Parkings)
    ========================================================= */
-function showScreen(name, push){
-  const prev = state.screen;
+function showScreen(name){
   state.screen = name;
-  document.getElementById("scrHome").classList.toggle("on", name === "home");
   document.getElementById("scrParking").classList.toggle("on", name === "parking");
   document.getElementById("scrSpaces").classList.toggle("on", isSpaceScreen());
+  document.querySelectorAll("#tabs .tab").forEach(t=>t.classList.toggle("on", t.dataset.go === name));
   document.body.classList.remove("stale");
   if (name !== "parking" && state.talkEnabled && "speechSynthesis" in window) window.speechSynthesis.cancel();
-  if (push && name !== "home" && prev === "home"){ try{ history.pushState({ scr:name }, ""); }catch(_){} }
   if (name === "parking"){ applyCity(); renderRows(); }
   if (isSpaceScreen()){ document.getElementById("spWrap").scrollTop = 0; renderSpaces(); }
-  if (name === "home") renderHomeSummary();
   tickTimer();
   // Datos de más de 1 min (o ninguno): se piden ya al entrar
-  const last = isSpaceScreen() ? state.spacesLastSuccess : (name === "parking" ? state.lastSuccess : null);
-  if (name !== "home" && (!last || Date.now() - last > 60000)) manualRefresh();
+  const last = isSpaceScreen() ? state.spacesLastSuccess : state.lastSuccess;
+  if (!last || Date.now() - last > 60000) manualRefresh();
   else if (name === "parking" && state.talkEnabled) speakAll();
 }
 window.addEventListener("popstate", ()=>{
   if (document.getElementById("detail").classList.contains("open")){ closeDetail(); return; }
-  if (state.screen !== "home") showScreen("home", false);
 });
 
 /* Detalle de un espacio: su página de Quodus (plano de puestos, disponibles, ocupación,
@@ -1224,14 +1206,10 @@ document.getElementById("btnDetailBack").addEventListener("click", ()=>{
 document.getElementById("spRows").addEventListener("click", (e)=>{
   const r = e.target.closest(".srow"); if (r) openDetail(r.dataset.id);
 });
-function goHome(){
-  if (history.state && history.state.scr){ history.back(); }   // así no se acumulan entradas
-  else showScreen("home", false);
-}
 
 /* Ciudad: filtra los parkings de la lista y los espacios. El mapa solo existe para Pamplona. */
 function applyCity(){
-  document.getElementById("cityName").textContent = CITIES[state.city];
+  document.getElementById("cityName").textContent = CITY_ABBR[state.city];
   const hasMap = state.city === "pamplona";
   document.getElementById("viewSeg").style.display = hasMap ? "" : "none";
   applyView();
@@ -1244,7 +1222,7 @@ function closeCity(){ document.getElementById("ovCity").classList.remove("open")
 
 function scheduleAutoRefresh(){
   if (refreshIntervalId) clearInterval(refreshIntervalId);
-  // Solo los parkings se refrescan solos (en el inicio y en su pantalla). Salas, cafeterías y
+  // Solo los parkings se refrescan solos (en su pestaña). Salas, cafeterías y
   // meeting points se piden al entrar (si los datos tienen más de 1 min) o al tocar la pantalla.
   refreshIntervalId = setInterval(()=>{ if (!isSpaceScreen()) refreshParking(); }, state.refreshSeconds*1000);
 }
@@ -1771,8 +1749,8 @@ document.getElementById("btnSaveSettings").addEventListener("click", ()=>{
   state.favBuildings = [...draftFav];
   if (freqChanged) scheduleAutoRefresh();
   closeSettings();
-  renderSpaces(); renderHomeSummary();
-  if (state.screen !== "home") manualRefresh(); else renderRows();
+  renderSpaces(); renderTabs();
+  manualRefresh();
   savePrefs();
 });
 
@@ -1780,14 +1758,10 @@ document.getElementById("btnSaveSettings").addEventListener("click", ()=>{
    EVENTOS GLOBALES
    ========================================================= */
 document.getElementById("btnSettings").addEventListener("click", openSettings);
-document.getElementById("btnSettingsHome").addEventListener("click", openSettings);
-document.getElementById("btnInfoHome").addEventListener("click", ()=>document.getElementById("ovInfo").classList.add("open"));
-document.getElementById("homeGrid").addEventListener("click", (e)=>{
-  const b = e.target.closest("[data-go]"); if (!b) return;
-  showScreen(b.dataset.go, true);
+document.getElementById("tabs").addEventListener("click", (e)=>{
+  const b = e.target.closest("[data-go]"); if (!b || b.dataset.go === state.screen) return;
+  showScreen(b.dataset.go);
 });
-document.getElementById("btnBack").addEventListener("click", goHome);
-document.getElementById("btnBackSp").addEventListener("click", goHome);
 document.getElementById("spMode").addEventListener("click", (e)=>{
   const b = e.target.closest("button"); if (!b) return;
   state.spaceMode = b.dataset.m;
@@ -1799,7 +1773,7 @@ document.getElementById("ovCity").addEventListener("click", (e)=>{ if (e.target.
 document.getElementById("cityOpts").addEventListener("click", (e)=>{
   const b = e.target.closest("button"); if (!b) return;
   state.city = b.dataset.c;
-  closeCity(); applyCity(); renderRows(); renderSpaces(); renderHomeSummary(); savePrefs();
+  closeCity(); applyCity(); renderRows(); renderSpaces(); renderTabs(); savePrefs();
 });
 initGestures(document.getElementById("spWrap"), document.getElementById("pullIndicatorSp"));
 document.getElementById("closeSettings").addEventListener("click", closeSettings);
@@ -1838,7 +1812,8 @@ document.getElementById("btnFlip").addEventListener("click", ()=>{
     if (last && Array.isArray(last.spaces)) state.spaces = last.spaces;   // sin lastSuccess: se piden datos nuevos igualmente
   }catch(_){}
   applyCity(); applyFlip(); applyMetric();
-  showScreen("home", false);
+  showScreen("parking");
+  refreshSpaces();   // en segundo plano: para saber qué pestañas hay en cada ciudad
   renderRows();
   timerIntervalId = setInterval(tickTimer, 1000);
   scheduleAutoRefresh();
