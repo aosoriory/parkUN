@@ -3,14 +3,19 @@
 // de cada campus: [{ city, t, days, label, building, note }]. days: 0 = domingo … 6 = sábado;
 // note: { día: "en inglés" }. La página tiene una tabla grande por campus (fila = hora,
 // columnas = lunes…domingo) y, además, tablas pequeñas para el móvil, que se ignoran.
-// Orden: página de la UNAV (2 intentos) -> última copia buena en memoria (hasta 24 h) -> 502.
-// Si la lectura no tiene buena pinta (pocas misas en Pamplona), se da por fallida y la app
-// usa su horario copiado a mano.
+// Además lee las misas de la Clínica (CUN) en Pamplona y Madrid, de cun.es.
+// Cada fuente va por su lado: la que falle sale como null (y la app usa su copia a mano),
+// con la última copia buena en memoria (hasta 24 h). Solo da 502 si fallan todas.
+// Si una lectura no tiene buena pinta (pocas misas), se da por fallida.
 const TARGET = "https://www.unav.edu/web/capellania/oratorios-y-misas";
 const STALE_MAX_S = 24 * 3600;
 const HEADERS = { "User-Agent": "Mozilla/5.0", "Accept": "text/html", "Accept-Language": "es-ES,es;q=0.9" };
 
-let last = null; // { t: ms, body }
+const CUN = {
+  pamplona: { url: "https://www.cun.es/servicios-pacientes-familiares", building: "CUN", label: "CUN" },
+  madrid: { url: "https://www.cun.es/servicios-pacientes-familiares-madrid", building: "CUN Madrid", label: "CUN Madrid" },
+};
+const lastGood = {}; // fuente -> { t, data }
 
 // Nombre que pone la Capellanía -> edificio de Quodus (para los favoritos) y cómo se llama en la app.
 const PLACES = {
@@ -91,18 +96,62 @@ function parse(html) {
   return Object.values(out).map((e) => (Object.keys(e.note).length ? e : (delete e.note, e)));
 }
 
-async function getHtml() {
+// Página de la CUN: bloque «Misas» con renglones «Días laborables: 7:25, 8:00, 13:30, 19:00*»,
+// «Sábados, domingos y festivos: …», «Sábados: …», «Domingos y festivos: …» y notas con «*».
+function parseCun(html, city) {
+  const i = html.search(/<strong>\s*Misas\s*<\/strong>/i);
+  if (i < 0) return [];
+  const block = html.slice(i, html.indexOf("</section>", i) > 0 ? html.indexOf("</section>", i) : i + 3000);
+  const text = decode(block.replace(/<br\s*\/?>/gi, " | ").replace(/<\/p>/gi, " || "));
+  // nota del asterisco
+  const fm = text.match(/\*\s*([^|*]*verano[^|*]*)/i);
+  let star = null;
+  if (fm) {
+    const h = fm[1].match(/a las (\d{1,2})(?:[:.](\d{2}))?\s*h/i);
+    star = h ? "en verano, a las " + h[1] + ":" + (h[2] || "00") : fm[1].trim();
+  }
+  const out = {};
+  const re = /(d[ií]as laborables|s[aá]bados(?:,\s*domingos)?(?:\s*y\s*festivos)?|domingos(?:\s*y\s*festivos)?)\s*:[\s|]*([0-9:.,\s*y]+)/gi;
+  let m;
+  while ((m = re.exec(text))) {
+    const lab = norm(m[1]);
+    const days = lab.startsWith("dias laborables") ? [1, 2, 3, 4, 5] : [
+      ...(lab.includes("sabados") ? [6] : []), ...(lab.includes("domingos") ? [0] : [])];
+    for (const tm of m[2].matchAll(/(\d{1,2})[:.](\d{2})(\*?)/g)) {
+      const t = Number(tm[1]) + ":" + tm[2];
+      const e = out[t] || (out[t] = { city, t, days: [], label: CUN[city].label, building: CUN[city].building, note: {} });
+      days.forEach((d) => { if (!e.days.includes(d)) e.days.push(d); if (tm[3] && star) e.note[d] = star; });
+    }
+  }
+  return Object.values(out).map((e) => (Object.keys(e.note).length ? e : (delete e.note, e)));
+}
+
+async function getHtml(url = TARGET) {
   let err = "";
   for (let i = 0; i < 2; i++) {
     try {
-      const r = await fetch(TARGET, { headers: HEADERS, signal: AbortSignal.timeout(8000) });
+      const r = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(8000) });
       if (!r.ok) throw new Error("HTTP " + r.status);
       return await r.text();
     } catch (e) {
       err = String((e && e.message) || e);
     }
   }
-  throw new Error("unav: " + err);
+  throw new Error(url + ": " + err);
+}
+
+// Lee una fuente; si falla o no tiene buena pinta, la última buena (hasta 24 h) o null.
+async function source(key, read, min) {
+  try {
+    const data = await read();
+    if (data.length < min) throw new Error("pocas misas (" + data.length + ")");
+    lastGood[key] = { t: Date.now(), data };
+    return { data, error: null };
+  } catch (e) {
+    const g = lastGood[key];
+    if (g && Date.now() - g.t <= STALE_MAX_S * 1000) return { data: g.data, error: "copia de hace " + Math.round((Date.now() - g.t) / 60000) + " min" };
+    return { data: null, error: String(e.message || e) };
+  }
 }
 
 async function handler(req, res) {
@@ -115,25 +164,29 @@ async function handler(req, res) {
     res.status(204).end();
     return;
   }
-  try {
-    const misas = parse(await getHtml());
-    if (misas.filter((m) => m.city === "pamplona").length < 5) throw new Error("la tabla no tiene buena pinta (" + misas.length + " misas)");
-    const body = JSON.stringify({ t: Date.now(), source: TARGET, misas });
-    last = { t: Date.now(), body };
-    res.setHeader("Content-Type", "application/json; charset=utf-8");
-    res.status(200).send(body);
-  } catch (e) {
-    const age = last ? Math.round((Date.now() - last.t) / 1000) : null;
-    if (last && age <= STALE_MAX_S) {
-      res.setHeader("X-Stale-Age", String(age));
-      res.setHeader("Content-Type", "application/json; charset=utf-8");
-      res.status(200).send(last.body);
-      return;
-    }
+  const [cap, cunP, cunM] = await Promise.all([
+    source("capellania", async () => {
+      const m = parse(await getHtml());
+      if (m.filter((x) => x.city === "pamplona").length < 5) throw new Error("la tabla no tiene buena pinta (" + m.length + " misas)");
+      return m;
+    }, 1),
+    source("cun-pamplona", async () => parseCun(await getHtml(CUN.pamplona.url), "pamplona"), 3),
+    source("cun-madrid", async () => parseCun(await getHtml(CUN.madrid.url), "madrid"), 2),
+  ]);
+  if (!cap.data && !cunP.data && !cunM.data) {
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
-    res.status(502).send("No se pudo leer el horario de misas (" + e.message + ")");
+    res.status(502).send("No se pudo leer ningún horario de misas (" + [cap.error, cunP.error, cunM.error].join("; ") + ")");
+    return;
   }
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.status(200).send(JSON.stringify({
+    t: Date.now(), source: TARGET,
+    misas: cap.data,                                   // Capellanía (null si falla)
+    cun: { pamplona: cunP.data, madrid: cunM.data },   // CUN (null la que falle)
+    errores: { capellania: cap.error, cunPamplona: cunP.error, cunMadrid: cunM.error },
+  }));
 }
 
 module.exports = handler;
 module.exports.parse = parse; // para las pruebas
+module.exports.parseCun = parseCun;

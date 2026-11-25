@@ -1245,27 +1245,40 @@ const MISAS_CUN = [
 ];
 const CUN_URL = { pamplona:"https://www.cun.es/servicios-pacientes-familiares", madrid:"https://www.cun.es/servicios-pacientes-familiares-madrid" };
 // Todas las misas: las de la Capellanía (de la web o de la copia) y las de la CUN
-const misasAll = () => [...misasSrc.list, ...MISAS_CUN];
+// Todas las misas: Capellanía (web, guardado o copia) + CUN de cada ciudad (web, guardado o copia)
+const misasAll = () => [...misasSrc.list, ...["pamplona","madrid"].flatMap(c => cunSrc[c].list || MISAS_CUN.filter(m => m.city === c))];
 const MISAS_API = AUTONOMOUS ? "/api/misas" : "https://parkun.vercel.app/api/misas";
 const MISAS_KEY = "parkun_misas_v1";
 const MISAS_MAX_AGE = 6 * 3600 * 1000;
 let misasSrc = { list: MISAS, t: null, from: "copia" };   // from: "web" | "guardado" | "copia"
+const cunSrc = { pamplona: { list: null, t: null, from: "copia" }, madrid: { list: null, t: null, from: "copia" } };
 try{
   const c = JSON.parse(localStorage.getItem(MISAS_KEY) || "null");
   if (c && Array.isArray(c.misas) && c.misas.length) misasSrc = { list: c.misas, t: c.t, from: "guardado" };
+  ["pamplona","madrid"].forEach(k=>{
+    const g = c && c.cun && c.cun[k];
+    if (g && Array.isArray(g.list) && g.list.length) cunSrc[k] = { list: g.list, t: g.t, from: "guardado" };
+  });
 }catch(_){}
 let misasLoading = false;
 async function refreshMisas(force){
   if (misasLoading) return;
-  if (!force && misasSrc.t && Date.now() - misasSrc.t < MISAS_MAX_AGE) return;
+  const lastT = Math.min(misasSrc.t || 0, cunSrc.pamplona.t || 0, cunSrc.madrid.t || 0);   // la fuente más vieja
+  if (!force && lastT && Date.now() - lastT < MISAS_MAX_AGE) return;
   misasLoading = true;
   try{
     const r = await fetchWithTimeout(MISAS_API, 20000);
     if (!r.ok) throw new Error("HTTP " + r.status);
     const j = await r.json();
-    if (!j || !Array.isArray(j.misas) || !j.misas.length) throw new Error("vacío");
-    misasSrc = { list: j.misas, t: j.t || Date.now(), from: "web" };
-    try{ localStorage.setItem(MISAS_KEY, JSON.stringify({ t: misasSrc.t, misas: j.misas })); }catch(_){}
+    if (!j) throw new Error("vacío");
+    const t = j.t || Date.now();
+    if (Array.isArray(j.misas) && j.misas.length) misasSrc = { list: j.misas, t, from: "web" };
+    ["pamplona","madrid"].forEach(k=>{
+      const l = j.cun && j.cun[k];
+      if (Array.isArray(l) && l.length) cunSrc[k] = { list: l, t, from: "web" };
+    });
+    try{ localStorage.setItem(MISAS_KEY, JSON.stringify({ t: misasSrc.t, misas: misasSrc.from === "copia" ? null : misasSrc.list,
+      cun: { pamplona: cunSrc.pamplona.list ? cunSrc.pamplona : null, madrid: cunSrc.madrid.list ? cunSrc.madrid : null } })); }catch(_){}
   }catch(_){ /* se queda con lo guardado o con la copia a mano */ }
   finally{ misasLoading = false; renderMisas(); renderTabs(); }
 }
@@ -1320,7 +1333,9 @@ function renderMisas(){
   const cuando = hh ? `el ${hh.getDate()}/${hh.getMonth()+1} a las ${hhmm(misasSrc.t)}` : "";
   const origen = misasSrc.from === "copia" ? "copiado a mano el 25/11/2026 (no se ha podido leer la web)"
     : `leído de la web ${cuando}`;
-  const cun = CUN_URL[state.city] ? ` Clínica (<a href="${CUN_URL[state.city]}" target="_blank" rel="noopener">CUN</a>): copiado a mano el 25/11/2026.` : "";
+  const cs = cunSrc[state.city];
+  const cun = CUN_URL[state.city] ? ` Clínica (<a href="${CUN_URL[state.city]}" target="_blank" rel="noopener">CUN</a>): ${
+    cs.from === "copia" ? "copiado a mano el 25/11/2026 (no se ha podido leer su web)" : "leído de su web" + (cs.t ? ` el ${new Date(cs.t).getDate()}/${new Date(cs.t).getMonth()+1} a las ${hhmm(cs.t)}` : "")}.` : "";
   const foot = `<div class="misafoot">Horario general de la <a href="${MISAS_URL}" target="_blank" rel="noopener">Capellanía</a>, ${origen}.${cun} En festivos se usa el horario de los domingos; las vacaciones no se tienen en cuenta.</div>`;
   if (!list.length){
     const anyToday = ALL.some(m => m.city === state.city && m.days.includes(dow));
