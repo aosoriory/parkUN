@@ -1001,7 +1001,7 @@ function manualRefresh(){
    en parkings, solo parkings; en salas, cafeterías o meeting points, solo los espacios. */
 function isSpaceScreen(){ return SPACE_KINDS.includes(state.screen); }
 function refresh(opts={}){
-  if (state.screen === "misas"){ renderMisas(); return Promise.resolve(); }   // horarios fijos: no se piden
+  if (state.screen === "misas"){ renderMisas(); return refreshMisas(false); }   // el horario se vuelve a leer cada 6 h
   const ps = [];
   if (state.screen !== "parking") ps.push(refreshSpaces());
   if (!isSpaceScreen()) ps.push(refreshParking(opts));
@@ -1195,8 +1195,10 @@ function fitNames(root){
 window.addEventListener("resize", ()=>{ if (isSpaceScreen()) fitNames(document.getElementById("spRows")); });
 
 /* =========================================================
-   MISAS: horarios de https://www.unav.edu/web/capellania/oratorios-y-misas
-   copiados a mano el 25 nov 2026 (si cambian, hay que actualizarlos aquí).
+   MISAS: la app lee el horario de https://www.unav.edu/web/capellania/oratorios-y-misas
+   a través de /api/misas (al abrir la pestaña, si el guardado tiene más de 6 h).
+   Si no se puede, usa la última lectura guardada en el móvil y, si no hay, este
+   horario copiado a mano el 25 nov 2026 (MISAS).
    days: 0 = domingo … 6 = sábado. building: nombre del edificio en Quodus,
    para los favoritos. label: cómo se llama en la lista.
    ========================================================= */
@@ -1220,6 +1222,29 @@ const MISAS = [
   { city:"madrid", t:"8:10",  days:[1,2,3,4,5,6], building:"Edificio Alumni",                   label:"Alumni" },
   { city:"madrid", t:"13:15", days:[1,5],         building:"Edificio Alumni",                   label:"Alumni" },
 ];
+const MISAS_API = AUTONOMOUS ? "/api/misas" : "https://parkun.vercel.app/api/misas";
+const MISAS_KEY = "parkun_misas_v1";
+const MISAS_MAX_AGE = 6 * 3600 * 1000;
+let misasSrc = { list: MISAS, t: null, from: "copia" };   // from: "web" | "guardado" | "copia"
+try{
+  const c = JSON.parse(localStorage.getItem(MISAS_KEY) || "null");
+  if (c && Array.isArray(c.misas) && c.misas.length) misasSrc = { list: c.misas, t: c.t, from: "guardado" };
+}catch(_){}
+let misasLoading = false;
+async function refreshMisas(force){
+  if (misasLoading) return;
+  if (!force && misasSrc.t && Date.now() - misasSrc.t < MISAS_MAX_AGE) return;
+  misasLoading = true;
+  try{
+    const r = await fetchWithTimeout(MISAS_API, 20000);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const j = await r.json();
+    if (!j || !Array.isArray(j.misas) || !j.misas.length) throw new Error("vacío");
+    misasSrc = { list: j.misas, t: j.t || Date.now(), from: "web" };
+    try{ localStorage.setItem(MISAS_KEY, JSON.stringify({ t: misasSrc.t, misas: j.misas })); }catch(_){}
+  }catch(_){ /* se queda con lo guardado o con la copia a mano */ }
+  finally{ misasLoading = false; renderMisas(); renderTabs(); }
+}
 const DIAS_LARGOS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
 const toMin = t => { const [h,m] = t.split(":").map(Number); return h*60 + m; };
 
@@ -1230,12 +1255,17 @@ function renderMisas(){
   const seg = !usesFavs() ? "" : `<div class="tseg spMode" role="group" aria-label="Favoritas o todas">${
     [["fav","Favoritas"],["all","Todas"]].map(([m,t])=>`<button data-m="${m}" class="${state.spaceMode === m ? "on" : ""}">${t}</button>`).join("")}</div>`;
   const head = `<div class="bhead"><span class="bn">${DIAS_LARGOS[dow][0].toUpperCase() + DIAS_LARGOS[dow].slice(1)} ${now.getDate()}</span>${seg}</div>`;
-  let list = MISAS.filter(m => m.city === state.city && m.days.includes(dow));
+  const ALL = misasSrc.list;
+  let list = ALL.filter(m => m.city === state.city && m.days.includes(dow));
   if (usesFavs() && state.spaceMode === "fav") list = list.filter(m => state.favBuildings.includes(m.building));
   list.sort((a,b)=> toMin(a.t) - toMin(b.t) || a.label.localeCompare(b.label, "es"));
-  const foot = `<div class="misafoot">Horario general de la <a href="${MISAS_URL}" target="_blank" rel="noopener">Capellanía</a>; no tiene en cuenta festivos ni vacaciones.</div>`;
+  const hh = misasSrc.t ? new Date(misasSrc.t) : null;
+  const cuando = hh ? `el ${hh.getDate()}/${hh.getMonth()+1} a las ${hhmm(misasSrc.t)}` : "";
+  const origen = misasSrc.from === "copia" ? "copiado a mano el 25/11/2026 (no se ha podido leer la web)"
+    : `leído de la web ${cuando}`;
+  const foot = `<div class="misafoot">Horario general de la <a href="${MISAS_URL}" target="_blank" rel="noopener">Capellanía</a>, ${origen}. No tiene en cuenta festivos ni vacaciones.</div>`;
   if (!list.length){
-    const anyToday = MISAS.some(m => m.city === state.city && m.days.includes(dow));
+    const anyToday = ALL.some(m => m.city === state.city && m.days.includes(dow));
     el.innerHTML = head + `<div class="empty">${!anyToday ? "Hoy no hay misas en " + CITIES[state.city] + "."
       : "Hoy no hay misas en tus edificios favoritos.<br><br>Toca <b>Todas</b> o elige edificios en <b>⚙️ Ajustes → Edificios</b>."}</div>` + foot;
     return;
@@ -1259,7 +1289,7 @@ function renderTabs(){
     if (!has && state.screen === k) showScreen("parking");
   });
   // Misas: en las tres ciudades hay
-  const hasMisas = MISAS.some(m => m.city === state.city);
+  const hasMisas = misasSrc.list.some(m => m.city === state.city);
   document.querySelector('#tabs [data-go="misas"]').style.display = hasMisas ? "" : "none";
   if (!hasMisas && state.screen === "misas") showScreen("parking");
   document.querySelectorAll("#tabs .tab").forEach(t=>t.classList.toggle("on", t.dataset.go === state.screen));
@@ -1277,7 +1307,7 @@ function showScreen(name){
   if (name !== "parking" && state.talkEnabled && "speechSynthesis" in window) window.speechSynthesis.cancel();
   if (name === "parking"){ applyCity(); renderRows(); }
   if (isSpaceScreen()){ document.getElementById("spWrap").scrollTop = 0; renderSpaces(); }
-  if (name === "misas"){ document.getElementById("spWrap").scrollTop = 0; renderMisas(); setStatusSp(null); tickTimer(); return; }
+  if (name === "misas"){ document.getElementById("spWrap").scrollTop = 0; renderMisas(); setStatusSp(null); tickTimer(); refreshMisas(false); return; }
   tickTimer();
   // Datos de más de 1 min (o ninguno): se piden ya al entrar
   const last = isSpaceScreen() ? state.spacesLastSuccess : state.lastSuccess;
