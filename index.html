@@ -303,7 +303,7 @@
   .bhead .tseg button{ height:38px; padding:0 11px; font-size:13.5px; }
   .srow.ingroup{ border-left:6px solid #5A6070; min-height:64px; }
   .srow.ingroup .info{ padding-left:12px; }
-  .srow.ingroup .t1{ font-size:20px; white-space:normal; }
+  .srow.ingroup .t1{ font-size:20px; }   /* una sola línea: abreviado y, si aún no cabe, letra algo menor (fitNames) */
   .srow .st-open{ color:#7ee29a; }
   .srow .st-closed{ color:#ff8a87; }
   .srow .pct{
@@ -1064,6 +1064,14 @@ function shortBuilding(b){
   return BUILDING_NAMES[s] || s;
 }
 // "AMI-Cafetería" -> "Cafetería"; "FEC-Meeting Point-ALU" -> "Meeting Point (ALU)"; "CEN-Faustino" -> "Faustino"
+// Abreviaturas para que el nombre de un espacio quepa en una línea
+const NAME_ABBR = [
+  [/^Sala de Lectura\.?(?=\s|$)/i, "S. Lectura"],
+  [/^Sala de estudio\.?(?=\s|$)/i, "S. Estudio"],
+  [/^Sala Estudio\b/i, "S. Estudio"],
+  [/\bPlanta\b/gi, "Pl."],
+];
+function abbrSpaceName(n){ return NAME_ABBR.reduce((t,[re,r]) => t.replace(re, r), String(n)).replace(/\s{2,}/g, " ").trim(); }
 function shortSpaceName(n, building){
   // "Biblioteca de Ciencias Sala 1" en el edificio Biblioteca de Ciencias -> "Sala 1"
   const sb = building ? shortBuilding(building) : "";
@@ -1139,7 +1147,7 @@ function renderSpaces(){
       ? `${sp.occupancy}/${sp.capacity}` : (typeof sp.capacity === "number" ? `cap. ${sp.capacity}` : "");
     const extra = o.open ? occ : (typeof sp.capacity === "number" ? "cap. " + sp.capacity : "");
     const lines = grouped
-      ? `<div class="t1">${esc(shortSpaceName(sp.name, sp.building))}</div>`
+      ? `<div class="t1">${esc(abbrSpaceName(shortSpaceName(sp.name, sp.building)))}</div>`
       : `<div class="t1">${esc(shortBuilding(sp.building))}</div>
         <div class="t2">${esc(shortSpaceName(sp.name, sp.building))}</div>`;
     return head + `<div class="srow ${grouped ? "ingroup" : ""}" data-id="${sp.id}">
@@ -1150,7 +1158,17 @@ function renderSpaces(){
       <div class="pct ${cls}">${o.open && pct !== null ? pct + "%" : "—"}<small>${o.open ? "OCUPADO" : "CERRADO"}</small></div>
     </div>`;
   }).join("");
+  fitNames(el);
 }
+// Si un nombre aún no cabe en una línea, se reduce su letra (hasta 15 px); si ni así, puntos suspensivos.
+function fitNames(root){
+  root.querySelectorAll(".t1").forEach(t=>{
+    t.style.fontSize = "";
+    let fs = parseFloat(getComputedStyle(t).fontSize);
+    while (t.scrollWidth > t.clientWidth + 1 && fs > 15){ fs -= 1; t.style.fontSize = fs + "px"; }
+  });
+}
+window.addEventListener("resize", ()=>{ if (isSpaceScreen()) fitNames(document.getElementById("spRows")); });
 
 /* Pestañas: un tipo de espacio que no existe en la ciudad no tiene pestaña
    (si aún no hay datos, se ven todas). Si la pestaña abierta desaparece, se vuelve a Parkings. */
