@@ -1339,15 +1339,33 @@ let misasDayPicker = false;
 let misasPickMonth = null;   // mes que enseña el calendario (primer día del mes)
 // Verano astronómico (21 jun – 22 sep): la CUN no dice qué fechas son «verano», así que la nota
 // «en verano, a las 20:00» sale todos esos días, sin mover la misa.
-/* Cierres de la Universidad: esos días solo hay misas en la CUN. Fechas mes-día, valen
-   para cualquier año (el intervalo puede cruzar de año). Lo revisa la tarea programada
-   «Revisión de misas y cierres ParkUN» con los PDF de Gestión de Espacios. */
+/* Cierres de la Universidad: esos días solo hay misas en la CUN.
+   - Fechas "MM-DD": valen para cualquier año (el intervalo puede cruzar de año).
+   - Fechas "AAAA-MM-DD": solo ese año (p. ej. las que publique Gestión de Espacios).
+   - ciudades (opcional): ["pamplona","madrid","sansebastian"]; sin ella, todas.
+   Si una regla con fechas completas cubre el día, manda sobre las genéricas.
+   Lo revisa la tarea programada «Revisión de misas y cierres ParkUN» con los PDF de
+   Gestión de Espacios. Regla de Al (25 nov 2026), mientras no haya PDF: 23 dic – 6 ene. */
 const CIERRES_UN = [
   { desde:"12-23", hasta:"01-06", motivo:"Navidad" },
 ];
-function cierreUN(d){
-  const md = String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
-  return CIERRES_UN.find(c => c.desde <= c.hasta ? (md >= c.desde && md <= c.hasta) : (md >= c.desde || md <= c.hasta)) || null;
+function cierreUN(d, city = state.city){
+  const y = d.getFullYear();
+  const ymd = y + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  const md = ymd.slice(5);
+  const aplica = c => !c.ciudades || c.ciudades.includes(city);
+  const concretas = CIERRES_UN.filter(c => c.desde.length === 10 && aplica(c));
+  const hit = concretas.find(c => ymd >= c.desde && ymd <= c.hasta);
+  if (hit) return hit;
+  for (const c of CIERRES_UN.filter(c => c.desde.length === 5 && aplica(c))){
+    const cruza = c.desde > c.hasta;
+    if (!(cruza ? (md >= c.desde || md <= c.hasta) : (md >= c.desde && md <= c.hasta))) continue;
+    const temporada = cruza && md <= c.hasta ? y - 1 : y;   // año en que empieza este cierre
+    // Si para esa temporada hay fechas oficiales con el mismo motivo, mandan ellas (y este día no está)
+    if (concretas.some(k => k.motivo === c.motivo && Number(k.desde.slice(0,4)) === temporada)) continue;
+    return c;
+  }
+  return null;
 }
 const esCUN = m => /^CUN/.test(m.building || "");
 const esVerano = d => { const md = (d.getMonth()+1)*100 + d.getDate(); return md >= 621 && md <= 922; };
