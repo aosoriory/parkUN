@@ -1360,7 +1360,21 @@ const CIERRES_UN = [
   // Cuando haya datos oficiales de ese verano, se añade una entrada con fechas completas y motivo "Verano"
   // (con cierra:false si los edificios no cierran, y nota:"…" si hay algo que contar).
   { desde:"05-20", hasta:"08-31", motivo:"Verano", cierra:false },
+  // Semana Santa (Al, 25 nov 2026), en días respecto al domingo de Pascua de cada año:
+  // del Jueves Santo al Miércoles de Pascua, seguramente cerrada; Lunes-Miércoles Santo y
+  // Jueves-Viernes de Pascua, todas las misas con aviso.
+  { pascua:[-3, 3],  motivo:"Semana Santa" },
+  { pascua:[-6, -4], motivo:"Semana Santa", cierra:false },
+  { pascua:[4, 5],   motivo:"Semana Santa", cierra:false },
 ];
+// Domingo de Pascua (algoritmo gregoriano anónimo)
+function domingoPascua(y){
+  const a = y % 19, b = Math.floor(y/100), c = y % 100, d = Math.floor(b/4), e = b % 4;
+  const f = Math.floor((b+8)/25), g = Math.floor((b-f+1)/3), h = (19*a + b - d - g + 15) % 30;
+  const i = Math.floor(c/4), k = c % 4, l = (32 + 2*e + 2*i - h - k) % 7, m = Math.floor((a + 11*h + 22*l)/451);
+  const mes = Math.floor((h + l - 7*m + 114)/31), dia = ((h + l - 7*m + 114) % 31) + 1;
+  return new Date(y, mes - 1, dia);
+}
 // Regla de cierre/aviso que afecta a ese día: { ...regla, oficial } o null.
 // oficial = viene de fechas completas (información publicada); si no, es la regla genérica de Al.
 function cierreUN(d, city = state.city){
@@ -1368,10 +1382,17 @@ function cierreUN(d, city = state.city){
   const ymd = y + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
   const md = ymd.slice(5);
   const aplica = c => !c.ciudades || c.ciudades.includes(city);
-  const concretas = CIERRES_UN.filter(c => c.desde.length === 10 && aplica(c));
+  const concretas = CIERRES_UN.filter(c => c.desde && c.desde.length === 10 && aplica(c));
   const hit = concretas.find(c => ymd >= c.desde && ymd <= c.hasta);
   if (hit) return { ...hit, oficial: true };
-  for (const c of CIERRES_UN.filter(c => c.desde.length === 5 && aplica(c))){
+  // Reglas respecto a Pascua (Semana Santa)
+  const pas = domingoPascua(y), dif = Math.round((new Date(y, d.getMonth(), d.getDate()) - pas) / 86400000);
+  for (const c of CIERRES_UN.filter(c => c.pascua && aplica(c))){
+    if (dif < c.pascua[0] || dif > c.pascua[1]) continue;
+    if (concretas.some(k => k.motivo === c.motivo && Number(k.desde.slice(0,4)) === y)) continue;   // hay fechas oficiales de ese año
+    return { ...c, oficial: false };
+  }
+  for (const c of CIERRES_UN.filter(c => c.desde && c.desde.length === 5 && aplica(c))){
     const cruza = c.desde > c.hasta;
     if (!(cruza ? (md >= c.desde || md <= c.hasta) : (md >= c.desde && md <= c.hasta))) continue;
     // año en que empieza esta temporada (la de Navidad empieza en diciembre)
