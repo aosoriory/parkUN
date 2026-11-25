@@ -404,7 +404,11 @@
   .hbtn{ border-radius:12px; background:rgba(255,255,255,.13); color:#fff; }
   .hbtn:active{ background:rgba(255,255,255,.25); }
   #appHead .applogo{ width:34px; height:34px; flex-shrink:0; margin-right:2px; }
-  #btnCity{ background:#fff; color:var(--text); font-family:'Manrope',sans-serif; font-weight:800; font-size:15px; padding:0 12px 0 10px; gap:5px; }
+  #btnCity{ background:#fff; color:var(--text); font-family:'Manrope',sans-serif; font-weight:800; font-size:15px; padding:0 14px; gap:6px; justify-content:center; min-width:82px; }
+  /* Los botones nunca se encogen ni se salen de la pantalla: si falta sitio, se acorta el nombre */
+  #appHead .hbtn{ flex-shrink:0; }
+  #appHead .appname{ min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  #appHead .spacer{ min-width:4px; }
 
   /* Pestañas: la elegida, en azul con raya debajo */
   #tabs{ background:#fff; border-bottom:1px solid #D9DEE6; }
