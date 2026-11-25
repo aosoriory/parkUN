@@ -330,13 +330,9 @@
   .misafoot{ padding:14px 16px 24px; font-size:12.5px; color:var(--muted); line-height:1.45; }
   .misafoot a{ color:#7ec8ff; }
   .bhead .bn{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  /* Al desplazar la lista, el selector Favoritas/Todas queda fijo arriba a la derecha (capa de alto 0).
-     Detrás, una franja oscura fija tapa las filas que pasan por debajo; las cabeceras de edificio pasan
-     por encima de la franja (se desplazan con normalidad) y por debajo del selector. */
+  /* Al desplazar la lista, solo el selector Favoritas/Todas queda fijo arriba a la derecha (capa de alto 0, sin franja):
+     todo lo demás (cabeceras de edificio y espacios) se desplaza con normalidad por debajo de él. */
   #spRows.hasseg .bhead.first{ padding-right:176px; }
-  #spRows .bhead{ position:relative; z-index:5; }
-  .segband{ position:sticky; top:0; z-index:3; height:0; }
-  .segband::before{ content:""; position:absolute; left:0; right:0; top:0; height:58px; background:#111316; border-bottom:2px solid #000; }
   .segfix{ position:sticky; top:0; z-index:6; height:0; display:flex; justify-content:flex-end; align-items:flex-start; pointer-events:none; }
   .segfix .tseg{ pointer-events:auto; margin:10px 10px 0 0; }
   /* Misas: la fecha, el calendario y los avisos quedan fijos arriba */
@@ -1207,7 +1203,7 @@ function renderSpaces(){
   // y cada espacio lleva su propio nombre en grande (también si el edificio tiene uno solo).
   let prevB = null;
   el.classList.toggle("hasseg", !!seg);
-  el.innerHTML = (seg ? `<div class="segband"></div><div class="segfix">${seg}</div>` : "") + list.map(sp=>{
+  el.innerHTML = (seg ? `<div class="segfix">${seg}</div>` : "") + list.map(sp=>{
     const grouped = true;
     const head = grouped && sp.building !== prevB
       ? `<div class="bhead${prevB === null ? " first" : ""}"><span class="bn">${esc(shortBuilding(sp.building))}</span></div>` : "";
