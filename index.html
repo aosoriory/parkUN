@@ -939,6 +939,14 @@ async function fetchParkingHTML(){
    ========================================================= */
 let retryTimeoutId = null;
 
+// Parpadeo del refresco automático: gris durante un instante, lo justo para notar que hubo refresco.
+const BLINK_MS = 140;
+let blinkTimer = null, manualInFlight = false;
+function blinkParking(){
+  document.body.classList.add("stale");
+  clearTimeout(blinkTimer);
+  blinkTimer = setTimeout(()=>{ if (!manualInFlight) document.body.classList.remove("stale"); }, BLINK_MS);
+}
 async function refreshParking(opts={}){
   if (state.refreshing){
     // Ya hay una petición en curso: que locute con sus datos cuando lleguen.
@@ -946,7 +954,11 @@ async function refreshParking(opts={}){
     return;
   }
   state.refreshing = true;
-  if (state.screen === "parking") document.body.classList.add("stale");   // en gris hasta que lleguen datos nuevos
+  // Refresco pedido (toque, entrar en la pestaña): en gris hasta que lleguen datos nuevos.
+  // Refresco automático: nada al empezar; solo un parpadeo muy breve cuando llegan los datos.
+  const manual = !!opts.flash;
+  manualInFlight = manual;
+  if (manual && state.screen === "parking"){ clearTimeout(blinkTimer); document.body.classList.add("stale"); }
   const shouldTalk = opts.talk === undefined ? state.talkEnabled : !!opts.talk;
   let gotData = false;
 
@@ -959,7 +971,8 @@ async function refreshParking(opts={}){
       if (AUTONOMOUS && !got.staleAge) saveLast(parsed);
       state.lastSuccess = Date.now() - (got.staleAge ? got.staleAge*1000 : 0);   // el contador refleja la edad real
       gotData = true;
-      document.body.classList.remove("stale");   // datos nuevos: recuperan el color
+      if (manual){ manualInFlight = false; document.body.classList.remove("stale"); }   // datos nuevos: recuperan el color
+      else if (state.screen === "parking") blinkParking();
       state.timerOff = false;   // ...y vuelve a 0:00 al recibir respuesta
       tickTimer();
       setStatus(got.staleAge ? `Sin conexión en directo: se muestran datos de hace ${Math.max(1,Math.round(got.staleAge/60))} min.` : null);
@@ -986,6 +999,7 @@ async function refreshParking(opts={}){
     }
   }finally{
     state.refreshing = false;
+    manualInFlight = false;
     renderRows();
     renderTabs();
     // Solo locuta cuando ya han llegado datos nuevos (nunca los anteriores).
