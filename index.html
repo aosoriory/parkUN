@@ -281,6 +281,14 @@
   .srow .t1{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:22px; line-height:1.1; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .srow .t2{ font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .srow .t3{ font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bhead{
+    padding:12px 14px 8px; background:#111316; color:var(--text);
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:22px; line-height:1.1;
+    border-top:2px solid #000;
+  }
+  .srow.ingroup{ border-left:6px solid #5A6070; min-height:64px; }
+  .srow.ingroup .info{ padding-left:12px; }
+  .srow.ingroup .t1{ font-size:20px; white-space:normal; }
   .srow .st-open{ color:#7ee29a; }
   .srow .st-closed{ color:#ff8a87; }
   .srow .pct{
@@ -1096,17 +1104,29 @@ function renderSpaces(){
     return;
   }
   const fem = kind !== "meeting";   // la sala, la cafetería / el meeting point
+  // Edificios con varios espacios: el nombre del edificio sale una vez, como cabecera,
+  // y cada sala lleva su propio nombre en grande. Con un solo espacio, la fila de siempre.
+  const count = {};
+  list.forEach(sp => { count[sp.building] = (count[sp.building] || 0) + 1; });
+  let prevB = null;
   el.innerHTML = list.map(sp=>{
+    const grouped = count[sp.building] > 1;
+    const head = grouped && sp.building !== prevB
+      ? `<div class="bhead">${esc(shortBuilding(sp.building))}</div>` : "";
+    prevB = sp.building;
     const o = openText(sp, fem);
     const pct = typeof sp.percentage === "number" ? Math.round(sp.percentage) : null;
     const cls = o.open ? classifyPct(pct) : "";
     const occ = (typeof sp.occupancy === "number" && typeof sp.capacity === "number")
       ? `${sp.occupancy}/${sp.capacity}` : (typeof sp.capacity === "number" ? `cap. ${sp.capacity}` : "");
     const extra = o.open ? occ : (typeof sp.capacity === "number" ? "cap. " + sp.capacity : "");
-    return `<div class="srow">
+    const lines = grouped
+      ? `<div class="t1">${esc(shortSpaceName(sp.name, sp.building))}</div>`
+      : `<div class="t1">${esc(shortBuilding(sp.building))}</div>
+        <div class="t2">${esc(shortSpaceName(sp.name, sp.building))}</div>`;
+    return head + `<div class="srow ${grouped ? "ingroup" : ""}">
       <div class="info">
-        <div class="t1">${esc(shortBuilding(sp.building))}</div>
-        <div class="t2">${esc(shortSpaceName(sp.name, sp.building))}</div>
+        ${lines}
         <div class="t3"><span class="${o.open ? "st-open" : "st-closed"}">${esc(o.txt)}</span>${extra ? " · " + esc(extra) : ""}</div>
       </div>
       <div class="pct ${cls}">${o.open && pct !== null ? pct + "%" : "—"}<small>${o.open ? "OCUPADO" : "CERRADO"}</small></div>
