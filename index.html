@@ -390,7 +390,7 @@
     --brand:#A50F15;   /* rojo del escudo: solo la cabecera */
     --navy:#1F2329;    /* gris casi negro: pestaña elegida, botones activos, nombres (no compite con el rojo de «lleno») */
     --accent:#1F2329; --accent-dim:rgba(31,35,41,.10);
-    --green:#1E8E4A; --orange:#E8700F; --yellow:#F2C200; --red:#D93636; --red-dim:#FDE8E8;
+    --green:#1E8E4A; --orange:#E8700F; --yellow:#F2C200; --red:#A50F15; --red-dim:#F6E3E4;   /* el mismo rojo que la cabecera */
     --gray:#fff;
   }
   html,body{ background:var(--bg); color:var(--text); }
@@ -455,6 +455,7 @@
   .row.twocols .name{ font-size:27px; padding-left:12px; }
   .colheader.twocols .col{ width:72px; }
   #mapMetric button{ width:44px; }
+  .pk.red{ fill:#A50F15; stroke:#6B0A0E; } .pn.red{ fill:#A50F15; }
   /* ---- Salas, cafeterías y meeting: una tarjeta por edificio, barra de ocupación continua ---- */
   #spRows{ padding:10px 12px 16px; display:flex; flex-direction:column; gap:10px; }
   .bcard{ background:#fff; border:1px solid #DDE2E9; border-radius:16px; overflow:hidden; }
@@ -473,13 +474,13 @@
   .srow .t1, .srow.ingroup .t1{ font-family:'Manrope',sans-serif; font-weight:700; font-size:18px; color:#14202E; }
   .srow .t3{ font-size:13px; color:var(--muted); }
   .srow .st-open{ color:var(--green); font-weight:600; }
-  .srow .st-closed{ color:#C23030; font-weight:600; }
+  .srow .st-closed{ color:#A50F15; font-weight:600; }
   .pctv{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:21px; flex-shrink:0; }
-  .pctv.green{ color:#1E8E4A; } .pctv.yellow{ color:#9A7400; } .pctv.orange{ color:#C85A08; } .pctv.red{ color:#C23030; }
+  .pctv.green{ color:#1E8E4A; } .pctv.yellow{ color:#9A7400; } .pctv.orange{ color:#C85A08; } .pctv.red{ color:#A50F15; }
   .pctx{ flex-shrink:0; height:28px; padding:0 10px; border-radius:14px; display:flex; align-items:center; background:#EEF1F5; color:var(--muted); font-size:13px; font-weight:700; }
   .pbar{ height:6px; border-radius:3px; background:#E3E7ED; margin-top:8px; overflow:hidden; }
   .pbar i{ display:block; height:100%; border-radius:3px; }
-  .pbar i.green{ background:#1E8E4A; } .pbar i.yellow{ background:#E5B800; } .pbar i.orange{ background:#E8700F; } .pbar i.red{ background:#D93636; }
+  .pbar i.green{ background:#1E8E4A; } .pbar i.yellow{ background:#E5B800; } .pbar i.orange{ background:#E8700F; } .pbar i.red{ background:#A50F15; }
   body.stale .pbar i{ background:#C5CCD6 !important; }
 
   /* ---- Misas ---- */
@@ -494,9 +495,9 @@
   .monthpick .mtoday{ border-color:var(--navy); color:var(--navy); }
   .monthpick .mgrid b{ color:var(--muted); }
   .monthpick .mgrid span.off{ color:#B7C0CC; }
-  .monthpick .mgrid span.off.fest{ color:#E3A5A5; }
+  .monthpick .mgrid span.off.fest{ color:#D9A3A6; }
   .monthpick .mgrid button{ background:#fff; border:1px solid #D9DEE6; color:#14202E; }
-  .monthpick .mgrid button.fest{ color:#C23030; }
+  .monthpick .mgrid button.fest{ color:#A50F15; }
   .monthpick .mgrid button.today{ border-color:var(--navy); border-width:2px; }
   .monthpick .mgrid button.on{ background:var(--navy); border-color:var(--navy); color:#fff; }
   .misawarn{ border:1px solid #EBCB5A; border-radius:12px; background:#FFF6D6; color:#4A3B00; padding:11px 14px; }
