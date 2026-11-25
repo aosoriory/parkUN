@@ -1,6 +1,6 @@
 {
-  "name": "ParkUN",
-  "short_name": "ParkUN",
+  "name": "Ubi",
+  "short_name": "Ubi",
   "description": "Plazas libres en los aparcamientos de la Universidad de Navarra",
   "start_url": "./index.html",
   "scope": "./",
@@ -20,6 +20,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png?v=4",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

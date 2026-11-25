@@ -1,6 +1,6 @@
 {
-  "name": "Espacios UN (pruebas)",
-  "short_name": "UN pruebas",
+  "name": "Ubi (pruebas)",
+  "short_name": "Ubi pruebas",
   "description": "Versión de pruebas de Espacios UN (rama mejoras)",
   "start_url": "./index.html",
   "scope": "./",
@@ -20,6 +20,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png?v=4",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "id": "./?app=pruebas"

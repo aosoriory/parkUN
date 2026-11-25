@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ParkUN">
+<meta name="apple-mobile-web-app-title" content="Ubi">
 <meta name="theme-color" content="#A50F15">
-<title>ParkUN</title>
+<title>Ubi</title>
 <!-- use-credentials: la vista previa de Vercel pide sesión, y sin ella el manifest no se descarga y no se puede instalar -->
 <link rel="manifest" id="manifestLink" href="manifest.json" crossorigin="use-credentials">
 <script>
@@ -15,11 +15,11 @@
   // para no confundirla con la app de verdad.
   if (/\.vercel\.app$/.test(location.hostname) && location.hostname !== "parkun.vercel.app"){
     document.getElementById("manifestLink").href = "manifest-pruebas.json";
-    document.querySelector('meta[name="apple-mobile-web-app-title"]').content = "UN pruebas";
+    document.querySelector('meta[name="apple-mobile-web-app-title"]').content = "Ubi pruebas";
   }
 </script>
 <link rel="icon" href="icon-192.png?v=4" type="image/png">
-<link rel="apple-touch-icon" href="icon-192.png?v=4">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -540,7 +540,7 @@
 <!-- ===== Cabecera fija: nombre de la app y botones ===== -->
 <div id="appHead">
   <svg class="applogo" viewBox="0 0 180 180" aria-hidden="true"><ellipse cx="90" cy="90" rx="54" ry="76" fill="none" stroke="#fff" stroke-width="12"/><path d="M90 130s-28-24-28-47a28 28 0 0 1 56 0c0 23-28 47-28 47z" fill="#fff"/><circle cx="90" cy="83" r="11" fill="#A50F15"/></svg>
-  <div class="appname">Espacios UN</div>
+  <div class="appname">Ubi</div>
   <div class="spacer"></div>
   <button class="hbtn" id="btnInfo" aria-label="Info"><svg class="svgi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg></button>
   <button class="hbtn" id="btnSettings" aria-label="Ajustes"><svg class="svgi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
@@ -795,7 +795,7 @@
     </div>
     <div class="sheet-body">
       <div class="info-text" style="overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0;">
-        <b>Espacios UN: dónde hay sitio en la Universidad de Navarra.</b><br>
+        <b>Ubi («dónde», en latín): dónde aparcar, estudiar, tomar algo o ir a misa en la Universidad de Navarra.</b><br>
         Página privada (no oficial) con las plazas libres de los aparcamientos, la ocupación de salas de estudio, cafeterías y meeting points, y el horario de misas.
 
         <h3>Arriba</h3>
