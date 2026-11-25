@@ -314,6 +314,7 @@
   .monthpick .mhead{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
   .monthpick .mhead span{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px; }
   .monthpick .mnav{ width:40px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,.25); background:#2E323A; color:var(--text); font-size:20px; cursor:pointer; }
+  .monthpick .mtoday{ margin-left:8px; height:28px; padding:0 10px; border-radius:8px; border:1px solid #7ec8ff; background:transparent; color:#7ec8ff; font-size:13px; font-weight:700; cursor:pointer; vertical-align:middle; }
   .monthpick .mnav:disabled{ opacity:.25; cursor:default; }
   .monthpick .mgrid{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center; }
   .monthpick .mgrid b{ font-size:12px; color:var(--muted); padding:2px 0; }
@@ -1332,9 +1333,10 @@ function fiestaHoy(d, city){
 const DIAS_LARGOS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
 const toMin = t => { const [h,m] = t.split(":").map(Number); return h*60 + m; };
 
-/* Día elegido en Misas: 0 = hoy … 6 = dentro de 6 días. Se guarda en sessionStorage (sobrevive
+/* Día elegido en Misas: 0 = hoy … MISAS_MAX_DIAS (un año). Se guarda en sessionStorage (sobrevive
    a recargar, no a cerrar la app) junto con la fecha en que se eligió, para no arrastrarlo a otro día. */
 const MISAS_DAY_KEY = "parkun_misas_dia";
+const MISAS_MAX_DIAS = 365;
 let misasDayPicker = false;
 let misasPickMonth = null;   // mes que enseña el calendario (primer día del mes)
 // Verano astronómico (21 jun – 22 sep): la CUN no dice qué fechas son «verano», así que la nota
@@ -1379,7 +1381,7 @@ const MESES_LARGOS = ["enero","febrero","marzo","abril","mayo","junio","julio","
 function misasOffset(){
   try{
     const v = JSON.parse(sessionStorage.getItem(MISAS_DAY_KEY) || "null");
-    if (v && v.on === new Date().toDateString() && v.off >= 0 && v.off <= 6) return v.off;
+    if (v && v.on === new Date().toDateString() && v.off >= 0 && v.off <= MISAS_MAX_DIAS) return v.off;
   }catch(_){}
   return 0;
 }
@@ -1400,12 +1402,14 @@ function renderMisas(){
   const cierre = regla && regla.cierra !== false ? regla : null;        // Universidad cerrada: solo la CUN
   const seg = !usesFavs() ? "" : `<div class="tseg spMode" role="group" aria-label="Favoritas o todas">${
     [["fav","Favoritas"],["all","Todas"]].map(([m,t])=>`<button data-m="${m}" class="${state.spaceMode === m ? "on" : ""}">${t}</button>`).join("")}</div>`;
-  const nombreDia = off === 0 ? "Hoy" : off === 1 ? "Mañana" : DIAS_LARGOS[realDow][0].toUpperCase() + DIAS_LARGOS[realDow].slice(1);
+  const largo = DIAS_LARGOS[realDow][0].toUpperCase() + DIAS_LARGOS[realDow].slice(1);
+  const nombreDia = off === 0 ? "Hoy" : off === 1 ? "Mañana" : off > 6 ? largo.slice(0,3) : largo;   // lejos: «Vie 25 dic»
+  const mesCorto = off > 6 ? " " + MESES_LARGOS[day.getMonth()].slice(0,3) + (day.getFullYear() !== now.getFullYear() ? " " + day.getFullYear() : "") : "";
   // Calendario del mes: se pueden elegir hoy y los 6 días siguientes; si cruzan de mes, ‹ › cambian de mes
   let picker = "";
   if (misasDayPicker){
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const last = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 6);
+    const last = new Date(today.getFullYear(), today.getMonth(), today.getDate() + MISAS_MAX_DIAS);
     if (!misasPickMonth) misasPickMonth = new Date(day.getFullYear(), day.getMonth(), 1);
     const m0 = misasPickMonth, y = m0.getFullYear(), mo = m0.getMonth();
     const canPrev = new Date(y, mo, 1) > new Date(today.getFullYear(), today.getMonth(), 1);
@@ -1417,7 +1421,7 @@ function renderMisas(){
     for (let d = 1; d <= nDays; d++){
       const dt = new Date(y, mo, d);
       const o = Math.round((dt - today) / 86400000);
-      const ok = o >= 0 && o <= 6;
+      const ok = o >= 0 && o <= MISAS_MAX_DIAS;
       const red = dt.getDay() === 0 || (dt.getDay() !== 0 && fiestaHoy(dt, state.city));
       cells += ok
         ? `<button data-off="${o}" class="${o === off ? "on" : ""} ${red ? "fest" : ""} ${o === 0 ? "today" : ""}">${d}</button>`
@@ -1425,12 +1429,12 @@ function renderMisas(){
     }
     picker = `<div class="monthpick">
       <div class="mhead"><button class="mnav" data-mnav="-1" ${canPrev ? "" : "disabled"}>‹</button>
-        <span>${MESES_LARGOS[mo][0].toUpperCase() + MESES_LARGOS[mo].slice(1)} ${y}</span>
+        <span>${MESES_LARGOS[mo][0].toUpperCase() + MESES_LARGOS[mo].slice(1)} ${y}${off ? ` <button class="mtoday" data-off="0">Hoy</button>` : ""}</span>
         <button class="mnav" data-mnav="1" ${canNext ? "" : "disabled"}>›</button></div>
       <div class="mgrid">${["L","M","X","J","V","S","D"].map(x=>`<b>${x}</b>`).join("")}${cells}</div>
     </div>`;
   }
-  const head = `<div class="bhead"><button class="dsel" id="misasDay" aria-label="Elegir día">${nombreDia} ${day.getDate()}${fiesta ? " · fiesta" : ""} <span class="car">${misasDayPicker ? "▴" : "▾"}</span></button>${seg}</div>`
+  const head = `<div class="bhead"><button class="dsel" id="misasDay" aria-label="Elegir día">${nombreDia} ${day.getDate()}${mesCorto}${fiesta ? " · fiesta" : ""} <span class="car">${misasDayPicker ? "▴" : "▾"}</span></button>${seg}</div>`
     + picker
     + (cierre ? `<div class="misawarn">${cierre.oficial ? "" : "<b>Información no actualizada.</b> "}${off === 0 ? "Hoy" : "Ese día"} la Universidad ${cierre.oficial ? "está" : "probablemente está"} cerrada (${esc(cierre.motivo)}): ${
         CUN_URL[state.city] ? "solo se muestran las misas de la Clínica (CUN)." : "no se muestran misas."}${cierre.nota ? " " + esc(cierre.nota) : ""}</div>` : "")
@@ -2136,7 +2140,7 @@ document.getElementById("spRows").addEventListener("click", (e)=>{
   if (e.target.closest("#misasDay")){ misasDayPicker = !misasDayPicker; misasPickMonth = null; renderMisas(); return; }
   const mn = e.target.closest(".mnav");
   if (mn){ if (!mn.disabled){ misasPickMonth = new Date(misasPickMonth.getFullYear(), misasPickMonth.getMonth() + Number(mn.dataset.mnav), 1); renderMisas(); } return; }
-  const d = e.target.closest(".monthpick button[data-off]");
+  const d = e.target.closest(".monthpick button[data-off], .monthpick .mtoday");
   if (d){ setMisasOffset(Number(d.dataset.off)); misasDayPicker = false; document.getElementById("spWrap").scrollTop = 0; renderMisas(); return; }
   const b = e.target.closest(".spMode button"); if (!b) return;
   state.spaceMode = b.dataset.m;
