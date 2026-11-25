@@ -673,7 +673,7 @@ const state = {
   mapMetric: "p",    // en el mapa: "p" plazas de parking · "r" puntos de recarga
   mapFlip: false,     // false: Este arriba (N a la izquierda) · true: Oeste arriba (N a la derecha)
   // --- Pestañas y espacios (salas, cafeterías, meeting points) ---
-  screen: "parking",  // pestaña abierta: "parking" | "salas" | "cafeterias" | "meeting" (al abrir, siempre "parking")
+  screen: "parking",  // pestaña abierta: "parking" | "salas" | "cafeterias" | "meeting" | "misas" (se guarda: al abrir, la última)
   city: "pamplona",   // "pamplona" | "madrid" | "sansebastian"
   favBuildings: [],   // nombres de edificio tal como los da Quodus ("Edificio Amigos")
   buildingOrder: [],  // orden de los edificios de Pamplona elegido en Ajustes (los que no están, después, por orden alfabético)
@@ -731,6 +731,7 @@ async function loadPrefs(){
       if (Array.isArray(p.favBuildings)) state.favBuildings = p.favBuildings.filter(b=>typeof b === "string");
       if (Array.isArray(p.buildingOrder)) state.buildingOrder = p.buildingOrder.filter(b=>typeof b === "string");
       if (p.spaceMode === "fav" || p.spaceMode === "all") state.spaceMode = p.spaceMode;
+      if (["parking","salas","cafeterias","meeting","misas"].includes(p.screen)) state.screen = p.screen;
     }
   }catch(e){
     // Navegación privada u otro bloqueo de localStorage: seguimos sin persistencia.
@@ -754,6 +755,7 @@ async function savePrefs(){
       favBuildings: state.favBuildings,
       buildingOrder: state.buildingOrder,
       spaceMode: state.spaceMode,
+      screen: state.screen,
     }));
     storageAvailable = true;
   }catch(e){
@@ -1300,6 +1302,7 @@ function renderTabs(){
    ========================================================= */
 function showScreen(name){
   state.screen = name;
+  savePrefs();   // al recargar, la app vuelve a esta pestaña
   document.getElementById("scrParking").classList.toggle("on", name === "parking");
   document.getElementById("scrSpaces").classList.toggle("on", isSpaceScreen() || name === "misas");
   document.querySelectorAll("#tabs .tab").forEach(t=>t.classList.toggle("on", t.dataset.go === name));
@@ -1989,7 +1992,8 @@ document.getElementById("btnFlip").addEventListener("click", ()=>{
     if (last && Array.isArray(last.spaces)) state.spaces = last.spaces;   // sin lastSuccess: se piden datos nuevos igualmente
   }catch(_){}
   applyCity(); applyFlip(); applyMetric();
-  showScreen("parking");
+  showScreen(state.screen);   // la última pestaña abierta (si no existe en la ciudad, renderTabs vuelve a Parkings)
+  renderTabs();
   refreshSpaces();   // en segundo plano: para saber qué pestañas hay en cada ciudad
   renderRows();
   timerIntervalId = setInterval(tickTimer, 1000);
