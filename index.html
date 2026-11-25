@@ -8,7 +8,16 @@
 <meta name="apple-mobile-web-app-title" content="ParkUN">
 <meta name="theme-color" content="#000000">
 <title>ParkUN</title>
-<link rel="manifest" href="manifest.json">
+<!-- use-credentials: la vista previa de Vercel pide sesión, y sin ella el manifest no se descarga y no se puede instalar -->
+<link rel="manifest" id="manifestLink" href="manifest.json" crossorigin="use-credentials">
+<script>
+  // Fuera de parkun.vercel.app (vista previa de la rama de pruebas) se instala con otro nombre,
+  // para no confundirla con la app de verdad.
+  if (/\.vercel\.app$/.test(location.hostname) && location.hostname !== "parkun.vercel.app"){
+    document.getElementById("manifestLink").href = "manifest-pruebas.json";
+    document.querySelector('meta[name="apple-mobile-web-app-title"]').content = "UN pruebas";
+  }
+</script>
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
