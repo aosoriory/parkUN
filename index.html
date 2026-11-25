@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ParkUN">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#0E2A47">
 <title>ParkUN</title>
 <!-- use-credentials: la vista previa de Vercel pide sesión, y sin ella el manifest no se descarga y no se puede instalar -->
 <link rel="manifest" id="manifestLink" href="manifest.json" crossorigin="use-credentials">
@@ -22,7 +22,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#000000;
@@ -379,6 +379,152 @@
   .setnote{ display:none; padding:14px; border-radius:12px; background:#fff; border:1px solid #B8BDC7; color:#374151; font-size:14px; line-height:1.45; }
   .settings-group{ font-family:'Space Grotesk'; font-weight:700; font-size:16px; color:#14171C; margin:18px 0 8px; }
   .settings-group:first-child{ margin-top:0; }
+
+  /* =========================================================
+     ESTÉTICA «DÍA CLARO» (26 nov 2026): fondo claro, tarjetas blancas y azul marino.
+     Va al final para mandar sobre lo anterior. Parkings conserva la letra muy grande.
+     ========================================================= */
+  :root{
+    --bg:#EEF1F5; --panel:#EEF1F5; --panel-2:#fff; --line:#DDE2E9;
+    --text:#14202E; --muted:#5A6575; --navy:#0E2A47;
+    --accent:#0E2A47; --accent-dim:rgba(14,42,71,.10);
+    --green:#1E8E4A; --orange:#E8700F; --yellow:#F2C200; --red:#D93636; --red-dim:#FDE8E8;
+    --gray:#fff;
+  }
+  html,body{ background:var(--bg); color:var(--text); }
+  /* La franja de la barra de estado del iPhone (app instalada), del azul de la cabecera */
+  #app{ background:linear-gradient(var(--navy),var(--navy)) top / 100% env(safe-area-inset-top) no-repeat, var(--bg); }
+  .svgi{ display:block; flex-shrink:0; }
+
+  /* Cabecera azul marino */
+  #appHead{ background:var(--navy); border-bottom:none; padding:10px 12px 10px 18px; color:#fff; }
+  #appHead .appname{ font-family:'Manrope',sans-serif; font-weight:800; font-size:23px; letter-spacing:0; }
+  .hbtn{ border-radius:12px; background:rgba(255,255,255,.13); color:#fff; }
+  .hbtn:active{ background:rgba(255,255,255,.25); }
+  #btnCity{ background:#fff; color:var(--navy); font-family:'Manrope',sans-serif; font-weight:800; font-size:15px; padding:0 12px 0 10px; gap:5px; }
+
+  /* Pestañas: la elegida, en azul con raya debajo */
+  #tabs{ background:#fff; border-bottom:1px solid #D9DEE6; }
+  .tab{ color:#6B7686; border-radius:0; padding:8px 2px 6px; border-bottom:3px solid transparent; gap:3px; }
+  .tab .ic{ font-size:0; line-height:0; }
+  .tab .lb{ font-size:12.5px; font-weight:600; }
+  .tab.on{ background:transparent; color:var(--navy); border-bottom-color:var(--navy); }
+  .tab.on .lb{ font-weight:800; }
+  .tab.on .svgi{ stroke-width:2.3; }
+
+  /* Botones de icono y selectores */
+  .icon-btn, .mbtn{ background:#fff; border:1px solid #D9DEE6; color:var(--navy); border-radius:12px; }
+  .icon-btn:active, .mbtn:active{ background:#E3E7ED; }
+  .mseg, .tseg{ background:#fff; border:1px solid #D9DEE6; border-radius:12px; }
+  .mseg button, .tseg button{ color:var(--navy); display:flex; align-items:center; justify-content:center; }
+  .mseg button.on, .tseg button.on{ background:var(--navy); color:#fff; }
+  .tseg button{ font-family:'Inter'; font-weight:700; }
+  .timer{ color:var(--muted); }
+
+  /* ---- Parkings: tarjetas blancas, nombre azul y número en caja de color (letra muy grande) ---- */
+  .colheader{ background:var(--bg); }
+  #colheader{ padding:10px 0 8px; }
+  .colheader .ctrls{ padding:0 8px 0 12px; }
+  .colheader .col{ color:var(--muted); font-family:'Manrope',sans-serif; font-weight:800; font-size:24px; }
+  #rows{ gap:7px; padding:0 10px 14px; }
+  .row, .row.red, .row.orange, .row.yellow, .row.green, .row.twocols{
+    background:#fff; color:var(--navy); border:1px solid #DDE2E9; border-radius:14px; height:64px; gap:6px; padding-right:6px;
+  }
+  .row .name{ font-family:'Manrope',sans-serif; font-weight:800; font-size:32px; padding:0 4px 0 14px; color:var(--navy); }
+  .rowgap{ height:22px; }
+  .cell{ align-self:center; height:52px; width:84px; border-radius:10px; border:none; font-size:46px; }
+  .row.twocols .cell{ width:66px; }
+  .colheader .col{ width:90px; }
+  .colheader.twocols .col{ width:72px; }
+  .cell.chip.green{ background:var(--green); color:#fff; }
+  .cell.chip.orange{ background:var(--orange); color:#fff; }
+  .cell.chip.yellow{ background:var(--yellow); color:#1A1600; }
+  .cell.chip.red{ background:var(--red); color:#fff; }
+  .cell.chip.gray{ background:#E3E7ED; color:var(--muted); }
+  body.stale .row{ background:#E3E7ED !important; color:#7A8494 !important; }
+  body.stale .row .name{ color:#7A8494 !important; }
+  body.stale .cell.chip{ background:#C5CCD6 !important; color:#7A8494 !important; }
+  .pull{ background:var(--navy); }
+  .empty{ color:var(--muted); }
+  #mapFoot{ color:var(--muted); }
+
+  .colheader .cols{ padding-right:14px; }
+  .row.twocols .name{ font-size:27px; padding-left:12px; }
+  .colheader.twocols .col{ width:72px; }
+  #mapMetric button{ width:44px; }
+  /* ---- Salas, cafeterías y meeting: una tarjeta por edificio, barra de ocupación continua ---- */
+  #spRows{ padding:10px 12px 16px; display:flex; flex-direction:column; gap:10px; }
+  .bcard{ background:#fff; border:1px solid #DDE2E9; border-radius:16px; overflow:hidden; }
+  #spRows .bhead{ background:#fff; color:var(--navy); border-top:none; border-bottom:1px solid #EEF1F5;
+    font-family:'Manrope',sans-serif; font-weight:800; font-size:18px; min-height:54px; padding:8px 10px 8px 16px; }
+  #spRows.hasseg .bhead.first{ padding-right:180px; }
+  .segfix{ margin-bottom:-10px; }   /* no suma hueco en la columna */
+  .segfix .tseg{ margin:8px 11px 0 0; }
+  .segfix .tseg button{ height:38px; padding:0 12px; font-size:13.5px; }
+  .segfix .tseg, .bhead .tseg{ box-shadow:0 1px 3px rgba(14,42,71,.12); }
+  .srow, .srow.ingroup{ display:block; background:#fff; color:var(--muted); border:none; border-left:none; border-top:1px solid #EEF1F5; min-height:0; padding:11px 14px 12px 16px; }
+  .bhead + .srow{ border-top:none; }
+  .srow:active{ filter:none; background:#F4F6F9; }
+  .srow .sline{ display:flex; align-items:center; gap:10px; }
+  .srow .info, .srow.ingroup .info{ padding:0; gap:2px; }
+  .srow .t1, .srow.ingroup .t1{ font-family:'Manrope',sans-serif; font-weight:700; font-size:18px; color:#14202E; }
+  .srow .t3{ font-size:13px; color:var(--muted); }
+  .srow .st-open{ color:var(--green); font-weight:600; }
+  .srow .st-closed{ color:#C23030; font-weight:600; }
+  .pctv{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:21px; flex-shrink:0; }
+  .pctv.green{ color:#1E8E4A; } .pctv.yellow{ color:#9A7400; } .pctv.orange{ color:#C85A08; } .pctv.red{ color:#C23030; }
+  .pctx{ flex-shrink:0; height:28px; padding:0 10px; border-radius:14px; display:flex; align-items:center; background:#EEF1F5; color:var(--muted); font-size:13px; font-weight:700; }
+  .pbar{ height:6px; border-radius:3px; background:#E3E7ED; margin-top:8px; overflow:hidden; }
+  .pbar i{ display:block; height:100%; border-radius:3px; }
+  .pbar i.green{ background:#1E8E4A; } .pbar i.yellow{ background:#E5B800; } .pbar i.orange{ background:#E8700F; } .pbar i.red{ background:#D93636; }
+  body.stale .pbar i{ background:#C5CCD6 !important; }
+
+  /* ---- Misas ---- */
+  .misatop{ background:var(--bg); padding-bottom:10px; display:flex; flex-direction:column; gap:10px; margin:-10px -12px 0; padding:10px 12px 10px; }
+  #spRows .misatop .bhead{ background:transparent; border:none; padding:0; min-height:0; gap:8px; }
+  .bhead .dsel{ height:46px; padding:0 14px; border-radius:12px; background:#fff; border:1px solid #D9DEE6; color:var(--navy);
+    font-family:'Manrope',sans-serif; font-weight:800; font-size:17px; display:flex; align-items:center; gap:8px; }
+  .bhead .dsel .car{ color:var(--navy); margin-left:auto; font-size:14px; }
+  .monthpick{ background:#fff; border:1px solid #DDE2E9; border-radius:16px; padding:10px 12px 12px; }
+  .monthpick .mhead span{ color:var(--navy); font-family:'Manrope',sans-serif; font-weight:800; }
+  .monthpick .mnav{ background:#fff; border:1px solid #D9DEE6; color:var(--navy); }
+  .monthpick .mtoday{ border-color:var(--navy); color:var(--navy); }
+  .monthpick .mgrid b{ color:var(--muted); }
+  .monthpick .mgrid span.off{ color:#B7C0CC; }
+  .monthpick .mgrid span.off.fest{ color:#E3A5A5; }
+  .monthpick .mgrid button{ background:#fff; border:1px solid #D9DEE6; color:#14202E; }
+  .monthpick .mgrid button.fest{ color:#C23030; }
+  .monthpick .mgrid button.today{ border-color:var(--navy); border-width:2px; }
+  .monthpick .mgrid button.on{ background:var(--navy); border-color:var(--navy); color:#fff; }
+  .misawarn{ border:1px solid #EBCB5A; border-radius:12px; background:#FFF6D6; color:#4A3B00; padding:11px 14px; }
+  .mcard{ background:#fff; border:1px solid #DDE2E9; border-radius:16px; overflow:hidden; }
+  .mrow{ background:#fff; border-bottom:none; border-top:1px solid #EEF1F5; min-height:56px; }
+  .mrow:first-child{ border-top:none; }
+  .mrow .mt{ color:var(--navy); font-size:24px; width:84px; }
+  .mrow .mp{ font-family:'Manrope',sans-serif; font-weight:700; font-size:19px; color:#14202E; }
+  .mrow .mp small{ color:#0B5FFF; }
+  .mrow.past{ opacity:.4; }
+  .misafoot{ padding:12px 4px 8px; color:var(--muted); }
+  .misafoot a{ color:#0B5FFF; }
+
+  /* ---- Detalle de un espacio y hojas (ajustes, ciudad, información) ---- */
+  #detail{ background:var(--bg); }
+  #detail .topbar{ background:var(--navy); color:#fff; }
+  #detail .icon-btn{ background:rgba(255,255,255,.13); border:none; color:#fff; }
+  #detail .scrtitle{ font-family:'Manrope',sans-serif; font-weight:800; color:#fff; }
+  .sheet{ background:var(--bg); color:#14202E; }
+  .sheet-title{ font-family:'Manrope',sans-serif; font-weight:800; font-size:20px; color:var(--navy); }
+  .stabs{ border:none; background:#DDE2E9; padding:4px; border-radius:12px; gap:4px; }
+  .stabs button{ border-radius:9px; background:transparent; color:var(--navy); font-family:'Manrope',sans-serif; font-weight:700; }
+  .stabs button + button{ border-left:none; }
+  .stabs button.on{ background:#fff; color:var(--navy); font-weight:800; box-shadow:0 1px 2px rgba(0,0,0,.12); }
+  .seg button{ border-color:#D9DEE6; color:var(--navy); }
+  .seg button.on, .toggle-card.on, .prow .pname.on, .prow .arrow.gapbtn.on, .blist .bname.on, .city-opts button.on{
+    background:var(--navy); border-color:var(--navy); color:#fff; }
+  .toggle-card, .prow .pname, .prow .arrow, .blist .bname, .city-opts button{ border-color:#D9DEE6; }
+  .city-opts button{ font-family:'Manrope',sans-serif; font-weight:800; }
+  .sheet .btn-primary{ background:var(--navy); color:#fff; font-family:'Manrope',sans-serif; font-weight:800; }
+  .info-text a{ color:#0B5FFF !important; }
 </style>
 </head>
 <body>
@@ -390,18 +536,18 @@
 <div id="appHead">
   <div class="appname">Espacios UN</div>
   <div class="spacer"></div>
-  <button class="hbtn" id="btnInfo" aria-label="Info">ⓘ</button>
-  <button class="hbtn" id="btnSettings" aria-label="Ajustes">⚙️</button>
-  <button class="hbtn citybtn" id="btnCity" aria-label="Elegir ciudad">📍<span id="cityName">PNA</span></button>
+  <button class="hbtn" id="btnInfo" aria-label="Info"><svg class="svgi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg></button>
+  <button class="hbtn" id="btnSettings" aria-label="Ajustes"><svg class="svgi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
+  <button class="hbtn citybtn" id="btnCity" aria-label="Elegir ciudad"><svg class="svgi" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><span id="cityName">PNA</span></button>
 </div>
 
 <!-- ===== Pestañas: un tipo de espacio cada una ===== -->
 <div id="tabs" role="tablist">
-  <button class="tab" data-go="parking" role="tab"><span class="ic">🅿️</span><span class="lb">Parkings</span></button>
-  <button class="tab" data-go="salas" role="tab"><span class="ic">📚</span><span class="lb">Salas</span></button>
-  <button class="tab" data-go="cafeterias" role="tab"><span class="ic">☕</span><span class="lb">Cafeterías</span></button>
-  <button class="tab" data-go="meeting" role="tab"><span class="ic">🤝</span><span class="lb">Meeting</span></button>
-  <button class="tab" data-go="misas" role="tab"><span class="ic">⛪</span><span class="lb">Misas</span></button>
+  <button class="tab" data-go="parking" role="tab"><span class="ic"><svg class="svgi" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M10 16V8h3a2.5 2.5 0 0 1 0 5h-3"/></svg></span><span class="lb">Parkings</span></button>
+  <button class="tab" data-go="salas" role="tab"><span class="ic"><svg class="svgi" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5a2 2 0 0 1 2-2h14v14H6a2 2 0 0 0-2 2 2 2 0 0 0 2 2h14"/></svg></span><span class="lb">Salas</span></button>
+  <button class="tab" data-go="cafeterias" role="tab"><span class="ic"><svg class="svgi" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h12v4a6 6 0 0 1-12 0z"/><path d="M16 10h1.5a2.5 2.5 0 0 1 0 5H15M8 3v3M12 3v3"/></svg></span><span class="lb">Cafeterías</span></button>
+  <button class="tab" data-go="meeting" role="tab"><span class="ic"><svg class="svgi" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M3 19a5 5 0 0 1 10 0M11 19a5 5 0 0 1 10 0"/></svg></span><span class="lb">Meeting</span></button>
+  <button class="tab" data-go="misas" role="tab"><span class="ic"><svg class="svgi" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M7 8h10"/></svg></span><span class="lb">Misas</span></button>
 </div>
 
 <!-- ===== Salas de estudio / cafeterías / meeting points ===== -->
@@ -420,8 +566,8 @@
   <!-- Una sola franja: voz, lista/mapa y contador; a la derecha, la cabecera de columnas (P / ⚡) en la lista -->
   <div class="colheader" id="colheader">
     <div class="ctrls">
-      <button class="icon-btn" id="btnTalk" aria-label="Voz">🔊</button>
-      <div class="mseg" id="viewSeg" role="group" aria-label="Lista o mapa"><button data-v="list" aria-label="Ver la lista">📋</button><button data-v="map" aria-label="Ver el mapa">🗺️</button></div>
+      <button class="icon-btn" id="btnTalk" aria-label="Voz"></button>
+      <div class="mseg" id="viewSeg" role="group" aria-label="Lista o mapa"><button data-v="list" aria-label="Ver la lista"><svg class="svgi" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h14"/></svg></button><button data-v="map" aria-label="Ver el mapa"><svg class="svgi" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg></button></div>
       <div class="spacer"></div>
       <div class="timer" id="timer">0:00</div>
     </div>
@@ -557,8 +703,8 @@
     <div id="mapFoot">
       <span id="mapCaption">Esquema aproximado · Este arriba</span>
       <button class="mbtn" id="btnZoomReset" aria-label="Quitar el zoom" style="display:none">⤢</button>
-      <div class="mseg" id="mapMetric"><button data-m="p" aria-label="Plazas de parking">🅿️</button><button data-m="r" aria-label="Puntos de recarga">⚡</button></div>
-      <button class="mbtn" id="btnFlip" aria-label="Girar el mapa">🔄</button>
+      <div class="mseg" id="mapMetric"><button data-m="p" aria-label="Plazas de parking"><svg class="svgi" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M10 16V8h3a2.5 2.5 0 0 1 0 5h-3"/></svg></button><button data-m="r" aria-label="Puntos de recarga"><svg class="svgi" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg></button></div>
+      <button class="mbtn" id="btnFlip" aria-label="Girar el mapa"><svg class="svgi" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg></button>
     </div>
   </div>
 </div><!-- /scrParking -->
@@ -567,7 +713,7 @@
 <!-- Detalle de un espacio: la página de Quodus dentro de la app -->
 <div id="detail" aria-hidden="true">
   <div class="topbar">
-    <button class="icon-btn" id="btnDetailBack" aria-label="Volver a la lista">←</button>
+    <button class="icon-btn" id="btnDetailBack" aria-label="Volver a la lista"><svg class="svgi" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
     <div class="scrtitle" id="detailTitle"></div>
   </div>
 </div>
@@ -597,8 +743,8 @@
     <div class="sheet-body">
       <div class="sheet-fixed">
         <div class="stabs" id="setTabs" role="tablist" style="margin-top:0">
-          <button data-t="parkings">🅿️ Parkings</button>
-          <button data-t="edificios">🏛️ Edificios</button>
+          <button data-t="parkings">Parkings</button>
+          <button data-t="edificios">Edificios</button>
         </div>
       </div>
 
@@ -1201,12 +1347,12 @@ function renderSpaces(){
   const fem = kind !== "meeting";   // la sala, la cafetería / el meeting point
   // Siempre agrupado por edificio: el nombre del edificio sale una vez, como cabecera,
   // y cada espacio lleva su propio nombre en grande (también si el edificio tiene uno solo).
+  // Cada edificio es una tarjeta con sus espacios dentro; cada espacio, su nombre, estado y una barra de ocupación.
   let prevB = null;
   el.classList.toggle("hasseg", !!seg);
   el.innerHTML = (seg ? `<div class="segfix">${seg}</div>` : "") + list.map(sp=>{
-    const grouped = true;
-    const head = grouped && sp.building !== prevB
-      ? `<div class="bhead${prevB === null ? " first" : ""}"><span class="bn">${esc(shortBuilding(sp.building))}</span></div>` : "";
+    const head = sp.building !== prevB
+      ? (prevB !== null ? `</section>` : "") + `<section class="bcard"><div class="bhead${prevB === null ? " first" : ""}"><span class="bn">${esc(shortBuilding(sp.building))}</span></div>` : "";
     prevB = sp.building;
     const o = openText(sp, fem);
     const pct = typeof sp.percentage === "number" ? Math.round(sp.percentage) : null;
@@ -1214,18 +1360,20 @@ function renderSpaces(){
     const occ = (typeof sp.occupancy === "number" && typeof sp.capacity === "number")
       ? `${sp.occupancy}/${sp.capacity}` : (typeof sp.capacity === "number" ? `cap. ${sp.capacity}` : "");
     const extra = o.open ? occ : (typeof sp.capacity === "number" ? "cap. " + sp.capacity : "");
-    const lines = grouped
-      ? `<div class="t1">${esc(abbrSpaceName(shortSpaceName(sp.name, sp.building)))}</div>`
-      : `<div class="t1">${esc(shortBuilding(sp.building))}</div>
-        <div class="t2">${esc(shortSpaceName(sp.name, sp.building))}</div>`;
-    return head + `<div class="srow ${grouped ? "ingroup" : ""}" data-id="${sp.id}">
-      <div class="info">
-        ${lines}
-        <div class="t3"><span class="${o.open ? "st-open" : "st-closed"}">${esc(o.txt)}</span>${extra ? " · " + esc(extra) : ""}</div>
+    const right = o.open && pct !== null ? `<span class="pctv ${cls}">${pct}%</span>`
+      : `<span class="pctx">${o.open ? "—" : (fem ? "Cerrada" : "Cerrado")}</span>`;
+    const bar = o.open && pct !== null ? `<div class="pbar"><i class="${cls}" style="width:${Math.max(0, Math.min(100, pct))}%"></i></div>` : "";
+    return head + `<div class="srow ingroup" data-id="${sp.id}">
+      <div class="sline">
+        <div class="info">
+          <div class="t1">${esc(abbrSpaceName(shortSpaceName(sp.name, sp.building)))}</div>
+          <div class="t3"><span class="${o.open ? "st-open" : "st-closed"}">${esc(o.txt)}</span>${extra ? " · " + esc(extra) : ""}</div>
+        </div>
+        ${right}
       </div>
-      <div class="pct ${cls}">${o.open && pct !== null ? pct + "%" : "—"}<small>${o.open ? "OCUPADO" : "CERRADO"}</small></div>
+      ${bar}
     </div>`;
-  }).join("");
+  }).join("") + (list.length ? `</section>` : "");
   fitNames(el);
 }
 // Si un nombre aún no cabe en una línea, se reduce su letra (hasta 15 px); si ni así, puntos suspensivos.
@@ -1485,7 +1633,7 @@ function renderMisas(){
       <div class="mgrid">${["L","M","X","J","V","S","D"].map(x=>`<b>${x}</b>`).join("")}${cells}</div>
     </div>`;
   }
-  const head = `<div class="misatop"><div class="bhead"><button class="dsel" id="misasDay" aria-label="Elegir día">${nombreDia} ${day.getDate()}${mesCorto}${fiesta ? " · fiesta" : ""} <span class="car">${misasDayPicker ? "▴" : "▾"}</span></button>${seg}</div>`
+  const head = `<div class="misatop"><div class="bhead"><button class="dsel" id="misasDay" aria-label="Elegir día"><svg class="svgi" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>${nombreDia} ${day.getDate()}${mesCorto}${fiesta ? " · fiesta" : ""} <span class="car">${misasDayPicker ? "▴" : "▾"}</span></button>${seg}</div>`
     + picker
     + (cierre ? `<div class="misawarn">${cierre.oficial ? "" : "<b>Información no actualizada.</b> "}${off === 0 ? "Hoy" : "Ese día"} la Universidad ${cierre.oficial ? "está" : "probablemente está"} cerrada (${esc(cierre.motivo)}): ${
         CUN_URL[state.city] ? "solo se muestran las misas de la Clínica (CUN)." : "no se muestran misas."}${cierre.nota ? " " + esc(cierre.nota) : ""}</div>` : "")
@@ -1515,7 +1663,7 @@ function renderMisas(){
       : cuandoTxt + " no hay misas en tus edificios favoritos.<br><br>Toca <b>Todas</b> o elige edificios en <b>⚙️ Ajustes → Edificios</b>."}</div>` + foot;
     return;
   }
-  el.innerHTML = head + list.map(m=>{
+  el.innerHTML = head + `<section class="mcard">` + list.map(m=>{
     const past = off === 0 && toMin(m.t) + 30 < nowMin;   // pasada (solo hoy: media hora después de empezar)
     let note = m.note && m.note[dow];
     if (note && /verano/i.test(note) && !esVerano(day)) note = null;   // la nota de verano, solo en verano
@@ -1523,7 +1671,7 @@ function renderMisas(){
       <div class="mt">${m.t}</div>
       <div class="mp">${esc(m.label)}${note ? `<small>${esc(note)}</small>` : ""}</div>
     </div>`;
-  }).join("") + foot;
+  }).join("") + `</section>` + foot;
 }
 
 /* Pestañas: un tipo de espacio que no existe en la ciudad no tiene pestaña
@@ -1638,12 +1786,14 @@ function classify(val){
   return "green";
 }
 
+const ICON_VOZ_ON = '<svg class="svgi" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
+const ICON_VOZ_OFF = '<svg class="svgi" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l4 6M21 9l-4 6"/></svg>';
 function renderColHeader(){
   const el = document.getElementById("colheader");
   el.classList.toggle("twocols", state.verP && state.verR);
   document.getElementById("colsBox").innerHTML =
     (state.verP ? `<div class="col">P</div>` : "") +
-    (state.verR ? `<div class="col">⚡</div>` : "");
+    (state.verR ? `<div class="col"><svg class="svgi" style="margin:0 auto" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg></div>` : "");
 }
 
 function renderRows(){ renderList(); renderMap(); }
@@ -1675,13 +1825,13 @@ function renderList(){
     let cells = "";
     if (state.verP){
       const v = d.p;
-      const cls = twoCols ? `chip ${classify(v) || "gray"}` : "plain";
+      const cls = `chip ${classify(v) || "gray"}`;
       const wide = (typeof v === "number" && v >= 100) ? " wide3" : "";
       cells += `<div class="cell ${cls}${wide}">${v===null?"—":v}</div>`;
     }
     if (state.verR){
       const v = d.r;
-      const cls = state.verP ? `chip ${classify(v) || "gray"}` : "plain";
+      const cls = `chip ${classify(v) || "gray"}`;
       const wide = (typeof v === "number" && v >= 100) ? " wide3" : "";
       cells += `<div class="cell ${cls}${wide}">${v===null?"—":v}</div>`;
     }
@@ -1812,7 +1962,7 @@ function speakNext(gen){
 function toggleTalk(){
   state.talkEnabled = !state.talkEnabled;
   document.getElementById("btnTalk").classList.toggle("active", state.talkEnabled);
-  document.getElementById("btnTalk").textContent = state.talkEnabled ? "🔊" : "🔇";
+  document.getElementById("btnTalk").innerHTML = state.talkEnabled ? ICON_VOZ_ON : ICON_VOZ_OFF;
   savePrefs();
   if (!state.talkEnabled){
     window.speechSynthesis.cancel();
@@ -2238,7 +2388,7 @@ document.getElementById("btnFlip").addEventListener("click", ()=>{
 (async function start(){
   await loadPrefs();
   document.getElementById("btnTalk").classList.toggle("active", state.talkEnabled);
-  document.getElementById("btnTalk").textContent = state.talkEnabled ? "🔊" : "🔇";
+  document.getElementById("btnTalk").innerHTML = state.talkEnabled ? ICON_VOZ_ON : ICON_VOZ_OFF;
   try{
     const last = JSON.parse(localStorage.getItem(SPACES_LAST_KEY) || "null");
     if (last && Array.isArray(last.spaces)) state.spaces = last.spaces;   // sin lastSuccess: se piden datos nuevos igualmente
