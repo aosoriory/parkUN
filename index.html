@@ -534,6 +534,31 @@
   .sheet .btn-primary{ background:var(--navy); color:#fff; font-family:'Manrope',sans-serif; font-weight:800; }
   .info-text a{ color:#0B5FFF !important; }
   .info-text h3{ font-family:'Manrope',sans-serif; font-weight:800; font-size:16px; color:var(--text); margin:16px 0 4px; }
+
+  /* ---- Tutorial de bienvenida (primera visita; se repite desde Información) ---- */
+  #tut{ position:fixed; inset:0; z-index:120; background:rgba(14,18,24,.55); display:none; align-items:center; justify-content:center; padding:16px; }
+  #tut.open{ display:flex; }
+  .tcard{ width:100%; max-width:420px; max-height:calc(100dvh - 32px); background:#fff; color:var(--text); border-radius:22px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,.25); }
+  .tbody{ padding:26px 22px 8px; overflow-y:auto; -webkit-overflow-scrolling:touch; -webkit-user-select:text; user-select:text; }
+  .tart{ width:64px; height:64px; border-radius:18px; background:var(--brand); color:#fff; display:flex; align-items:center; justify-content:center; margin-bottom:14px; }
+  .tbody h2{ margin:0 0 8px; font-family:'Manrope',sans-serif; font-weight:800; font-size:23px; color:var(--text); }
+  .tbody p{ margin:0 0 10px; font-size:15px; line-height:1.5; color:#2A3442; }
+  .tbody ol, .tbody ul{ margin:0 0 10px; padding-left:20px; font-size:15px; line-height:1.5; color:#2A3442; }
+  .tbody li{ margin-bottom:4px; }
+  .tbody .tag{ display:inline-block; padding:1px 7px; border-radius:6px; font-weight:700; font-size:13px; color:#fff; }
+  .tbody details{ margin-top:6px; border-top:1px solid #EEF1F5; padding-top:10px; }
+  .tbody summary{ font-weight:700; color:#0B5FFF; cursor:pointer; font-size:14.5px; }
+  .tbody details p{ font-size:14px; margin:8px 0 0; }
+  .tinstall{ display:none; width:100%; height:48px; margin:6px 0 10px; border:none; border-radius:12px; background:var(--brand); color:#fff; font-family:'Manrope',sans-serif; font-weight:800; font-size:16px; cursor:pointer; }
+  .tfoot{ display:flex; align-items:center; gap:6px; padding:12px 12px 14px; border-top:1px solid #EEF1F5; }
+  .tfoot button{ height:46px; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; }
+  #tutSkip{ border:none; background:none; color:var(--muted); padding:0 6px; }
+  #tutBack{ border:1px solid #D9DEE6; background:#fff; color:var(--text); padding:0 12px; flex-shrink:0; }
+  #tutNext{ border:none; background:var(--navy); color:#fff; padding:0 16px; flex-shrink:0; font-family:'Manrope',sans-serif; font-weight:800; }
+  .tdots{ flex:1; min-width:0; display:flex; justify-content:center; gap:5px; }
+  .tdots i{ width:7px; height:7px; border-radius:4px; background:#D9DEE6; }
+  .tdots i.on{ width:18px; background:var(--navy); }
+  .info-tut{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; height:46px; margin:0 0 14px; border:1px solid #D9DEE6; border-radius:12px; background:#fff; color:var(--text); font-family:'Manrope',sans-serif; font-weight:800; font-size:15px; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -790,6 +815,20 @@
   </div>
 </div>
 
+
+<!-- Tutorial de bienvenida -->
+<div id="tut" role="dialog" aria-modal="true" aria-labelledby="tutTitle">
+  <div class="tcard">
+    <div class="tbody" id="tutBody"></div>
+    <div class="tfoot">
+      <button id="tutSkip">Saltar</button>
+      <div class="tdots" id="tutDots"></div>
+      <button id="tutBack">Atrás</button>
+      <button id="tutNext">Siguiente</button>
+    </div>
+  </div>
+</div>
+
 <!-- Info modal -->
 <div class="overlay" id="ovInfo">
   <div class="sheet">
@@ -799,6 +838,7 @@
     </div>
     <div class="sheet-body">
       <div class="info-text" style="overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0;">
+        <button class="info-tut" id="btnTutorial">Ver el tutorial y cómo instalar la app</button>
         <b>Ubi («dónde», en latín): dónde aparcar, estudiar, tomar algo o ir a misa en la Universidad de Navarra.</b><br>
         Página privada (no oficial) con las plazas libres de los aparcamientos, la ocupación de salas de estudio, cafeterías y meeting points, y el horario de misas.
 
@@ -2420,6 +2460,94 @@ document.getElementById("btnFlip").addEventListener("click", ()=>{
   applyFlip(); savePrefs();
 });
 
+
+/* =========================================================
+   TUTORIAL DE BIENVENIDA
+   Sale solo la primera vez (quien no tiene aún ajustes guardados) y se repite
+   desde Información. El último paso explica cómo instalar la app según el
+   sistema y el navegador; en Chrome/Edge de Android y ordenador hay botón «Instalar».
+   ========================================================= */
+const TUT_KEY = "ubi_tutorial_visto_v1";
+const tutNuevo = !localStorage.getItem(TUT_KEY) && !localStorage.getItem(PREFS_KEY);
+let tutPaso = 0, installPrompt = null;
+window.addEventListener("beforeinstallprompt", (e)=>{ e.preventDefault(); installPrompt = e; tutBotonInstalar(); });
+window.addEventListener("appinstalled", ()=>{ installPrompt = null; tutBotonInstalar(); });
+
+const TI = d => `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const T_ICON = {
+  hola: '<svg width="40" height="40" viewBox="0 0 180 180" aria-hidden="true"><ellipse cx="90" cy="90" rx="54" ry="76" fill="none" stroke="#fff" stroke-width="10"/><path d="M90 130s-28-24-28-47a28 28 0 0 1 56 0c0 23-28 47-28 47z" fill="#fff"/><circle cx="90" cy="83" r="11" fill="#A50F15"/></svg>',
+  P: TI('<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M10 16V8h3a2.5 2.5 0 0 1 0 5h-3"/>'),
+  S: TI('<path d="M4 19V5a2 2 0 0 1 2-2h14v14H6a2 2 0 0 0-2 2 2 2 0 0 0 2 2h14"/>'),
+  M: TI('<path d="M12 3v18M7 8h10"/>'),
+  A: TI('<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>'),
+  I: TI('<rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M12 15V7M9 11l3 4 3-4"/>')
+};
+const tag = (c, t) => `<span class="tag" style="background:${c}${c === "#F2C200" ? ";color:#1A1600" : ""}">${t}</span>`;
+
+function tutInstalar(){
+  const ua = navigator.userAgent;
+  const instalada = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const android = /Android/.test(ua);
+  const samsung = /SamsungBrowser/.test(ua), firefox = /Firefox|FxiOS/.test(ua);
+  const edge = /Edg(A|iOS)?\//.test(ua), chromeIOS = /CriOS/.test(ua);
+  const safariMac = !ios && /Macintosh/.test(ua) && /Safari/.test(ua) && !/Chrome|Chromium|Edg|Firefox/.test(ua);
+  if (instalada) return `<p><b>Ya la estás usando como app instalada.</b> No tienes que hacer nada más.</p>`;
+  let aqui;
+  if (ios && !chromeIOS && !firefox && !edge) aqui = `<ol><li>Toca el botón <b>Compartir</b> de Safari (el cuadrado con una flecha hacia arriba; abajo o en la barra de la dirección).</li><li>Baja y toca <b>«Añadir a pantalla de inicio»</b>.</li><li>Toca <b>«Añadir»</b>.</li></ol>`;
+  else if (ios) aqui = `<ol><li>Toca el botón <b>Compartir</b> (en Chrome, en la barra de la dirección, arriba a la derecha).</li><li>Toca <b>«Añadir a pantalla de inicio»</b> y luego <b>«Añadir»</b>.</li></ol><p>Si no aparece, abre esta página en <b>Safari</b> y hazlo desde allí.</p>`;
+  else if (android && samsung) aqui = `<ol><li>Toca el menú <b>≡</b> (abajo a la derecha).</li><li>Toca <b>«Añadir página a»</b> y elige <b>«Pantalla de inicio»</b>.</li></ol>`;
+  else if (android && firefox) aqui = `<ol><li>Toca el menú <b>⋮</b>.</li><li>Toca <b>«Instalar»</b> o <b>«Añadir a pantalla de inicio»</b>.</li></ol>`;
+  else if (android) aqui = `<p>Toca <b>Instalar</b> aquí abajo. Si no aparece el botón:</p><ol><li>Abre el menú <b>⋮</b> del navegador (arriba a la derecha).</li><li>Toca <b>«Instalar aplicación»</b> o <b>«Añadir a pantalla de inicio»</b>.</li></ol>`;
+  else if (safariMac) aqui = `<p>En el menú <b>Archivo</b> de Safari, elige <b>«Añadir al Dock»</b> (macOS Sonoma o posterior).</p>`;
+  else if (firefox) aqui = `<p>Firefox para ordenador no instala páginas como apps. Ábrela en <b>Chrome</b>, <b>Edge</b> o <b>Safari</b>, o guárdala en marcadores.</p>`;
+  else aqui = `<p>Pulsa <b>Instalar</b> aquí abajo. Si no aparece el botón, usa el icono de instalar de la barra de la dirección (a la derecha) o busca <b>«Instalar»</b> en el menú del navegador (${edge ? "…" : "⋮"}).</p>`;
+  return aqui + `<button class="tinstall" id="tutInstall">Instalar</button>
+    <details><summary>Instrucciones para otros dispositivos</summary>
+      <p><b>iPhone o iPad (Safari):</b> Compartir → «Añadir a pantalla de inicio» → «Añadir».</p>
+      <p><b>iPhone (Chrome):</b> Compartir en la barra de la dirección → «Añadir a pantalla de inicio».</p>
+      <p><b>Android (Chrome):</b> menú ⋮ → «Instalar aplicación» o «Añadir a pantalla de inicio».</p>
+      <p><b>Android (Samsung Internet):</b> menú ≡ → «Añadir página a» → «Pantalla de inicio».</p>
+      <p><b>Ordenador (Chrome o Edge):</b> icono de instalar en la barra de la dirección, o «Instalar» en el menú.</p>
+      <p><b>Mac (Safari):</b> Archivo → «Añadir al Dock».</p>
+    </details>`;
+}
+const TUT = [
+  { art:"hola", t:"Bienvenido a Ubi", h:()=>`<p><b>Ubi</b> es «dónde» en latín: dónde aparcar, estudiar, tomar algo o ir a misa en la Universidad de Navarra.</p><p>Arriba eliges la ciudad (<b>PNA</b>, <b>MAD</b> o <b>SS</b>) y, en las pestañas, qué buscas. La app recuerda tu última pestaña y tus ajustes.</p><p>Página no oficial, con datos públicos de la Universidad.</p>` },
+  { art:"P", t:"Parkings", h:()=>`<p>Cada parking con sus plazas libres, en letra grande para leerlo de un vistazo:</p><p>${tag("#A50F15","0")} lleno · ${tag("#E8700F","1–4")} casi lleno · ${tag("#F2C200","5–9")} pocas · ${tag("#1E8E4A","10+")} hay sitio</p><ul><li>Se actualiza solo; <b>toca la pantalla</b> para actualizar ya.</li><li>Arriba cambias entre <b>lista</b> y <b>mapa</b>, y el <b>altavoz</b> te lee las plazas en voz alta.</li></ul>` },
+  { art:"S", t:"Salas, cafeterías y meeting points", h:()=>`<p>Por edificios, con si está abierto, cuánta gente hay y una barra de ocupación.</p><ul><li><b>Toca un espacio</b> para ver su ficha: plano de puestos, servicios y ocupación de la semana.</li><li>En Pamplona, <b>Favoritas</b> muestra solo tus edificios y <b>Todas</b>, todos.</li></ul>` },
+  { art:"M", t:"Misas", h:()=>`<p>Las misas del día por hora, de la Capellanía y de la Clínica (CUN).</p><ul><li><b>Toca la fecha</b> para ver otro día en el calendario.</li><li>En festivos, Navidad, Semana Santa y verano, un aviso amarillo te dice si el horario puede cambiar.</li></ul>` },
+  { art:"A", t:"Ajustes", h:()=>`<p>Con el botón de las rayas, arriba:</p><ul><li><b>Parkings:</b> cuáles ver, en qué orden y cada cuánto se actualizan.</li><li><b>Edificios:</b> tus favoritos de Pamplona, que deciden qué sale en «Favoritas».</li></ul><p>Este tutorial se puede volver a ver desde el botón de <b>información</b>.</p>` },
+  { art:"I", t:"Instala la app", h:tutInstalar },
+];
+function tutBotonInstalar(){
+  const b = document.getElementById("tutInstall");
+  if (b) b.style.display = installPrompt ? "block" : "none";
+}
+function tutRender(){
+  const st = TUT[tutPaso];
+  document.getElementById("tutBody").innerHTML = `<div class="tart">${T_ICON[st.art]}</div><h2 id="tutTitle">${st.t}</h2>${st.h()}`;
+  document.getElementById("tutBody").scrollTop = 0;
+  document.getElementById("tutDots").innerHTML = TUT.map((_, i)=>`<i class="${i === tutPaso ? "on" : ""}"></i>`).join("");
+  document.getElementById("tutBack").style.display = tutPaso ? "" : "none";
+  document.getElementById("tutSkip").style.visibility = tutPaso === TUT.length - 1 ? "hidden" : "";
+  document.getElementById("tutNext").textContent = tutPaso === TUT.length - 1 ? "Empezar" : "Siguiente";
+  tutBotonInstalar();
+  const b = document.getElementById("tutInstall");
+  if (b) b.onclick = async ()=>{
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    try{ await installPrompt.userChoice; }catch(_){}
+    installPrompt = null; tutBotonInstalar();
+  };
+}
+function tutAbrir(){ tutPaso = 0; tutRender(); document.getElementById("tut").classList.add("open"); }
+function tutCerrar(){ document.getElementById("tut").classList.remove("open"); try{ localStorage.setItem(TUT_KEY, "1"); }catch(_){} }
+document.getElementById("tutNext").addEventListener("click", ()=>{ if (tutPaso < TUT.length - 1){ tutPaso++; tutRender(); } else tutCerrar(); });
+document.getElementById("tutBack").addEventListener("click", ()=>{ if (tutPaso){ tutPaso--; tutRender(); } });
+document.getElementById("tutSkip").addEventListener("click", tutCerrar);
+document.getElementById("btnTutorial").addEventListener("click", ()=>{ document.getElementById("ovInfo").classList.remove("open"); tutAbrir(); });
+
 /* =========================================================
    ARRANQUE
    ========================================================= */
@@ -2439,6 +2567,7 @@ document.getElementById("btnFlip").addEventListener("click", ()=>{
   timerIntervalId = setInterval(tickTimer, 1000);
   scheduleAutoRefresh();
   setTimeout(()=>refresh(), 400);
+  if (tutNuevo) tutAbrir();   // primera visita
 })();
 
 /* Mantiene la pantalla encendida mientras la app está abierta (Screen Wake Lock).
