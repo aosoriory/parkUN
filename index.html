@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ParkUN">
-<meta name="theme-color" content="#0E2A47">
+<meta name="theme-color" content="#A50F15">
 <title>ParkUN</title>
 <!-- use-credentials: la vista previa de Vercel pide sesión, y sin ella el manifest no se descarga y no se puede instalar -->
 <link rel="manifest" id="manifestLink" href="manifest.json" crossorigin="use-credentials">
@@ -18,8 +18,8 @@
     document.querySelector('meta[name="apple-mobile-web-app-title"]').content = "UN pruebas";
   }
 </script>
-<link rel="icon" href="icon-192.png" type="image/png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png?v=4" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png?v=4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -386,22 +386,25 @@
      ========================================================= */
   :root{
     --bg:#EEF1F5; --panel:#EEF1F5; --panel-2:#fff; --line:#DDE2E9;
-    --text:#14202E; --muted:#5A6575; --navy:#0E2A47;
-    --accent:#0E2A47; --accent-dim:rgba(14,42,71,.10);
+    --text:#14202E; --muted:#5A6575;
+    --brand:#A50F15;   /* rojo del escudo: solo la cabecera */
+    --navy:#1F2329;    /* gris casi negro: pestaña elegida, botones activos, nombres (no compite con el rojo de «lleno») */
+    --accent:#1F2329; --accent-dim:rgba(31,35,41,.10);
     --green:#1E8E4A; --orange:#E8700F; --yellow:#F2C200; --red:#D93636; --red-dim:#FDE8E8;
     --gray:#fff;
   }
   html,body{ background:var(--bg); color:var(--text); }
   /* La franja de la barra de estado del iPhone (app instalada), del azul de la cabecera */
-  #app{ background:linear-gradient(var(--navy),var(--navy)) top / 100% env(safe-area-inset-top) no-repeat, var(--bg); }
+  #app{ background:linear-gradient(var(--brand),var(--brand)) top / 100% env(safe-area-inset-top) no-repeat, var(--bg); }
   .svgi{ display:block; flex-shrink:0; }
 
-  /* Cabecera azul marino */
-  #appHead{ background:var(--navy); border-bottom:none; padding:10px 12px 10px 18px; color:#fff; }
+  /* Cabecera roja, con el logo */
+  #appHead{ background:var(--brand); border-bottom:none; padding:10px 12px 10px 18px; color:#fff; }
   #appHead .appname{ font-family:'Manrope',sans-serif; font-weight:800; font-size:23px; letter-spacing:0; }
   .hbtn{ border-radius:12px; background:rgba(255,255,255,.13); color:#fff; }
   .hbtn:active{ background:rgba(255,255,255,.25); }
-  #btnCity{ background:#fff; color:var(--navy); font-family:'Manrope',sans-serif; font-weight:800; font-size:15px; padding:0 12px 0 10px; gap:5px; }
+  #appHead .applogo{ width:34px; height:34px; flex-shrink:0; margin-right:2px; }
+  #btnCity{ background:#fff; color:var(--text); font-family:'Manrope',sans-serif; font-weight:800; font-size:15px; padding:0 12px 0 10px; gap:5px; }
 
   /* Pestañas: la elegida, en azul con raya debajo */
   #tabs{ background:#fff; border-bottom:1px solid #D9DEE6; }
@@ -509,7 +512,7 @@
 
   /* ---- Detalle de un espacio y hojas (ajustes, ciudad, información) ---- */
   #detail{ background:var(--bg); }
-  #detail .topbar{ background:var(--navy); color:#fff; }
+  #detail .topbar{ background:var(--brand); color:#fff; }
   #detail .icon-btn{ background:rgba(255,255,255,.13); border:none; color:#fff; }
   #detail .scrtitle{ font-family:'Manrope',sans-serif; font-weight:800; color:#fff; }
   .sheet{ background:var(--bg); color:#14202E; }
@@ -534,6 +537,7 @@
 
 <!-- ===== Cabecera fija: nombre de la app y botones ===== -->
 <div id="appHead">
+  <svg class="applogo" viewBox="0 0 180 180" aria-hidden="true"><ellipse cx="90" cy="90" rx="54" ry="76" fill="none" stroke="#fff" stroke-width="12"/><path d="M90 130s-28-24-28-47a28 28 0 0 1 56 0c0 23-28 47-28 47z" fill="#fff"/><circle cx="90" cy="83" r="11" fill="#A50F15"/></svg>
   <div class="appname">Espacios UN</div>
   <div class="spacer"></div>
   <button class="hbtn" id="btnInfo" aria-label="Info"><svg class="svgi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg></button>
