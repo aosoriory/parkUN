@@ -1051,6 +1051,8 @@ function shortSpaceName(n, building){
   // "Biblioteca de Ciencias Sala 1" en el edificio Biblioteca de Ciencias -> "Sala 1"
   const sb = building ? shortBuilding(building) : "";
   if (sb && String(n).toLowerCase().startsWith(sb.toLowerCase() + " ")) n = String(n).slice(sb.length + 1);
+  // "Sala Estudio Ismael Sánchez Bella" en el edificio Ismael Sánchez Bella -> "Sala Estudio"
+  if (sb && String(n).toLowerCase().endsWith(" " + sb.toLowerCase())) n = String(n).slice(0, -(sb.length + 1));
   const parts = String(n || "").split("-").map(x=>x.trim()).filter(Boolean);
   if (parts.length >= 2 && /^[A-ZÁÉÍÓÚ]{2,5}$/.test(parts[0])){
     parts.shift();
@@ -1104,13 +1106,11 @@ function renderSpaces(){
     return;
   }
   const fem = kind !== "meeting";   // la sala, la cafetería / el meeting point
-  // Edificios con varios espacios: el nombre del edificio sale una vez, como cabecera,
-  // y cada sala lleva su propio nombre en grande. Con un solo espacio, la fila de siempre.
-  const count = {};
-  list.forEach(sp => { count[sp.building] = (count[sp.building] || 0) + 1; });
+  // Siempre agrupado por edificio: el nombre del edificio sale una vez, como cabecera,
+  // y cada espacio lleva su propio nombre en grande (también si el edificio tiene uno solo).
   let prevB = null;
   el.innerHTML = list.map(sp=>{
-    const grouped = count[sp.building] > 1;
+    const grouped = true;
     const head = grouped && sp.building !== prevB
       ? `<div class="bhead">${esc(shortBuilding(sp.building))}</div>` : "";
     prevB = sp.building;
