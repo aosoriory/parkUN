@@ -1349,7 +1349,13 @@ let misasPickMonth = null;   // mes que enseña el calendario (primer día del m
    Lo revisa la tarea programada «Revisión de misas y cierres ParkUN» con los PDF de
    Gestión de Espacios. Regla de Al (25 nov 2026), mientras no haya PDF: 23 dic – 6 ene. */
 const CIERRES_UN = [
-  { desde:"12-23", hasta:"01-06", motivo:"Navidad" },
+  // Navidad (Al, 25 nov 2026): del 24 dic al 1 ene y el 6 ene, seguramente cerrada (solo la CUN);
+  // 22-23 dic, 2-5 ene y 7-8 ene, todas las misas con aviso de que quizá esté cerrada o cambie el horario.
+  { desde:"12-24", hasta:"01-01", motivo:"Navidad" },
+  { desde:"01-06", hasta:"01-06", motivo:"Navidad" },
+  { desde:"12-22", hasta:"12-23", motivo:"Navidad", cierra:false },
+  { desde:"01-02", hasta:"01-05", motivo:"Navidad", cierra:false },
+  { desde:"01-07", hasta:"01-08", motivo:"Navidad", cierra:false },
   // Verano: no cierra (cierra:false), pero sin información oficial se avisa de que puede no estar al día.
   // Cuando haya datos oficiales de ese verano, se añade una entrada con fechas completas y motivo "Verano"
   // (con cierra:false si los edificios no cierran, y nota:"…" si hay algo que contar).
@@ -1368,7 +1374,8 @@ function cierreUN(d, city = state.city){
   for (const c of CIERRES_UN.filter(c => c.desde.length === 5 && aplica(c))){
     const cruza = c.desde > c.hasta;
     if (!(cruza ? (md >= c.desde || md <= c.hasta) : (md >= c.desde && md <= c.hasta))) continue;
-    const temporada = cruza && md <= c.hasta ? y - 1 : y;   // año en que empieza esta temporada
+    // año en que empieza esta temporada (la de Navidad empieza en diciembre)
+    const temporada = c.motivo === "Navidad" ? (d.getMonth() === 11 ? y : y - 1) : (cruza && md <= c.hasta ? y - 1 : y);
     // Si para esa temporada hay fechas oficiales con el mismo motivo, mandan ellas (y este día no está)
     if (concretas.some(k => k.motivo === c.motivo && Number(k.desde.slice(0,4)) === temporada)) continue;
     return { ...c, oficial: false };
@@ -1439,7 +1446,9 @@ function renderMisas(){
     + (cierre ? `<div class="misawarn">${cierre.oficial ? "" : "<b>Información no actualizada.</b> "}${off === 0 ? "Hoy" : "Ese día"} la Universidad ${cierre.oficial ? "está" : "probablemente está"} cerrada (${esc(cierre.motivo)}): ${
         CUN_URL[state.city] ? "solo se muestran las misas de la Clínica (CUN)." : "no se muestran misas."}${cierre.nota ? " " + esc(cierre.nota) : ""}</div>` : "")
     + (regla && regla.cierra === false && regla.oficial && regla.nota ? `<div class="misawarn">${esc(regla.nota)}</div>` : "")
-    + (regla && regla.cierra === false && !regla.oficial ? `<div class="misawarn"><b>Información no actualizada</b> para ${esc(regla.motivo === "Verano" ? "el verano" : regla.motivo)}: aún no se ha publicado el horario de estas fechas y puede cambiar.</div>` : "")
+    + (regla && regla.cierra === false && !regla.oficial ? `<div class="misawarn"><b>Información no actualizada.</b> ${regla.motivo === "Verano"
+        ? "Aún no se ha publicado el horario del verano y puede cambiar."
+        : `Puede que la Universidad esté cerrada (${esc(regla.motivo)}) o que el horario de misas sea diferente.`}</div>` : "")
     + (fiesta && (!cierre || CUN_URL[state.city]) ? `<div class="misawarn">${off === 0 ? "Hoy es" : "Ese día es"} fiesta (${esc(fiesta)}): ${cierre
         ? "en la CUN, su horario de domingos y festivos."
         : "se muestra el horario de los domingos. En la CUN es su horario de festivos; en los demás <b>no es seguro</b>, porque la Capellanía no publica horario para festivos."}</div>` : "");
