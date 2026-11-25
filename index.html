@@ -307,6 +307,7 @@
   .mrow .mp{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:22px; color:var(--text); min-width:0; }
   .mrow .mp small{ display:block; font-family:'Inter'; font-size:13px; font-weight:600; color:#7ec8ff; margin-top:2px; }
   .mrow.past{ opacity:.38; }
+  .misawarn{ padding:10px 16px; font-size:13.5px; line-height:1.4; color:#1a1600; background:var(--yellow); border-bottom:2px solid #000; }
   .misafoot{ padding:14px 16px 24px; font-size:12.5px; color:var(--muted); line-height:1.45; }
   .misafoot a{ color:#7ec8ff; }
   .bhead .bn{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -1247,16 +1248,49 @@ async function refreshMisas(force){
   }catch(_){ /* se queda con lo guardado o con la copia a mano */ }
   finally{ misasLoading = false; renderMisas(); renderTabs(); }
 }
+/* Días de fiesta: se muestra el horario de los domingos, con aviso de que no es seguro.
+   Festivos oficiales de cada ciudad (resto de 2026 y 2027; faltan los locales de 2027 de
+   Pamplona y Madrid, aún sin publicar) y días de precepto de la página de la Capellanía. */
+const FESTIVOS_MISAS = {
+  pamplona: {
+    "2026-11-30":"Fiesta local", "2026-12-03":"San Francisco Javier", "2026-12-08":"Inmaculada Concepción", "2026-12-25":"Navidad",
+    "2027-01-01":"Año Nuevo", "2027-01-06":"Epifanía", "2027-03-19":"San José", "2027-03-25":"Jueves Santo", "2027-03-26":"Viernes Santo",
+    "2027-03-29":"Lunes de Pascua", "2027-05-01":"Fiesta del Trabajo", "2027-10-12":"Fiesta Nacional", "2027-11-01":"Todos los Santos",
+    "2027-12-03":"San Francisco Javier", "2027-12-06":"Día de la Constitución", "2027-12-08":"Inmaculada Concepción", "2027-12-25":"Navidad",
+  },
+  madrid: {
+    "2026-12-07":"Día de la Constitución (trasladado)", "2026-12-08":"Inmaculada Concepción", "2026-12-25":"Navidad",
+    "2027-01-01":"Año Nuevo", "2027-01-06":"Epifanía", "2027-03-19":"San José", "2027-03-25":"Jueves Santo", "2027-03-26":"Viernes Santo",
+    "2027-05-01":"Fiesta del Trabajo", "2027-08-16":"Asunción (trasladada)", "2027-10-12":"Fiesta Nacional", "2027-11-01":"Todos los Santos",
+    "2027-12-06":"Día de la Constitución", "2027-12-08":"Inmaculada Concepción", "2027-12-25":"Navidad",
+  },
+  sansebastian: {
+    "2026-12-08":"Inmaculada Concepción", "2026-12-25":"Navidad",
+    "2027-01-01":"Año Nuevo", "2027-01-06":"Epifanía", "2027-01-20":"San Sebastián", "2027-03-25":"Jueves Santo", "2027-03-26":"Viernes Santo",
+    "2027-03-29":"Lunes de Pascua", "2027-05-01":"Fiesta del Trabajo", "2027-07-31":"San Ignacio de Loyola", "2027-10-07":"Aniversario del Gobierno Vasco",
+    "2027-10-12":"Fiesta Nacional", "2027-11-01":"Todos los Santos", "2027-12-06":"Día de la Constitución", "2027-12-08":"Inmaculada Concepción", "2027-12-25":"Navidad",
+  },
+};
+const PRECEPTO = { "01-01":"Santa María, Madre de Dios", "01-06":"Epifanía", "03-19":"San José", "07-25":"Santiago Apóstol",
+  "08-15":"Asunción de la Virgen", "11-01":"Todos los Santos", "12-08":"Inmaculada Concepción", "12-25":"Navidad" };
+function fiestaHoy(d, city){
+  const ymd = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  return (FESTIVOS_MISAS[city] || {})[ymd] || PRECEPTO[ymd.slice(5)] || null;
+}
 const DIAS_LARGOS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
 const toMin = t => { const [h,m] = t.split(":").map(Number); return h*60 + m; };
 
 function renderMisas(){
   if (state.screen !== "misas") return;
   const el = document.getElementById("spRows");
-  const now = new Date(), dow = now.getDay(), nowMin = now.getHours()*60 + now.getMinutes();
+  const now = new Date(), nowMin = now.getHours()*60 + now.getMinutes();
+  const realDow = now.getDay();
+  const fiesta = realDow !== 0 ? fiestaHoy(now, state.city) : null;   // en domingo ya va el horario de domingo
+  const dow = fiesta ? 0 : realDow;                                     // fiesta: horario de los domingos
   const seg = !usesFavs() ? "" : `<div class="tseg spMode" role="group" aria-label="Favoritas o todas">${
     [["fav","Favoritas"],["all","Todas"]].map(([m,t])=>`<button data-m="${m}" class="${state.spaceMode === m ? "on" : ""}">${t}</button>`).join("")}</div>`;
-  const head = `<div class="bhead"><span class="bn">${DIAS_LARGOS[dow][0].toUpperCase() + DIAS_LARGOS[dow].slice(1)} ${now.getDate()}</span>${seg}</div>`;
+  const head = `<div class="bhead"><span class="bn">${DIAS_LARGOS[realDow][0].toUpperCase() + DIAS_LARGOS[realDow].slice(1)} ${now.getDate()}${fiesta ? " · fiesta" : ""}</span>${seg}</div>`
+    + (fiesta ? `<div class="misawarn">Hoy es fiesta (${esc(fiesta)}): se muestra el horario de los domingos. <b>No es seguro</b>; la Capellanía no publica horario para festivos.</div>` : "");
   const ALL = misasSrc.list;
   let list = ALL.filter(m => m.city === state.city && m.days.includes(dow));
   if (usesFavs() && state.spaceMode === "fav") list = list.filter(m => state.favBuildings.includes(m.building));
@@ -1265,7 +1299,7 @@ function renderMisas(){
   const cuando = hh ? `el ${hh.getDate()}/${hh.getMonth()+1} a las ${hhmm(misasSrc.t)}` : "";
   const origen = misasSrc.from === "copia" ? "copiado a mano el 25/11/2026 (no se ha podido leer la web)"
     : `leído de la web ${cuando}`;
-  const foot = `<div class="misafoot">Horario general de la <a href="${MISAS_URL}" target="_blank" rel="noopener">Capellanía</a>, ${origen}. No tiene en cuenta festivos ni vacaciones.</div>`;
+  const foot = `<div class="misafoot">Horario general de la <a href="${MISAS_URL}" target="_blank" rel="noopener">Capellanía</a>, ${origen}. En festivos se usa el horario de los domingos; las vacaciones no se tienen en cuenta.</div>`;
   if (!list.length){
     const anyToday = ALL.some(m => m.city === state.city && m.days.includes(dow));
     el.innerHTML = head + `<div class="empty">${!anyToday ? "Hoy no hay misas en " + CITIES[state.city] + "."
