@@ -310,14 +310,21 @@
   .bhead .dsel{ flex:1; min-width:0; text-align:left; background:none; border:none; color:var(--text); padding:6px 0;
     font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:22px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .bhead .dsel .car{ font-size:16px; color:#7ec8ff; }
-  .daypick{ display:flex; gap:6px; padding:8px 10px 10px; background:#111316; border-bottom:2px solid #000; overflow-x:auto; }
-  .daypick button{ flex:1; min-width:44px; padding:6px 2px; border-radius:10px; border:1px solid rgba(255,255,255,.25); background:#2E323A; color:var(--text);
-    display:flex; flex-direction:column; align-items:center; gap:1px; cursor:pointer; }
-  .daypick button b{ font-size:12px; font-weight:700; }
-  .daypick button span{ font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:700; }
-  .daypick button.fest span{ color:#ff8a87; }
-  .daypick button.on{ background:var(--accent); border-color:var(--accent); }
-  .daypick button.on span{ color:#fff; }
+  .monthpick{ padding:6px 12px 12px; background:#111316; border-bottom:2px solid #000; }
+  .monthpick .mhead{ display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .monthpick .mhead span{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px; }
+  .monthpick .mnav{ width:40px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,.25); background:#2E323A; color:var(--text); font-size:20px; cursor:pointer; }
+  .monthpick .mnav:disabled{ opacity:.25; cursor:default; }
+  .monthpick .mgrid{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center; }
+  .monthpick .mgrid b{ font-size:12px; color:var(--muted); padding:2px 0; }
+  .monthpick .mgrid > span, .monthpick .mgrid button{ height:38px; display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:16px; border-radius:10px; }
+  .monthpick .mgrid span.off{ color:#4b5058; }
+  .monthpick .mgrid span.off.fest{ color:#6b3c3b; }
+  .monthpick .mgrid button{ border:1px solid rgba(255,255,255,.28); background:#2E323A; color:var(--text); cursor:pointer; }
+  .monthpick .mgrid button.fest{ color:#ff8a87; }
+  .monthpick .mgrid button.today{ border-color:#7ec8ff; }
+  .monthpick .mgrid button.on{ background:var(--accent); border-color:var(--accent); color:#fff; }
   .misawarn{ padding:10px 16px; font-size:13.5px; line-height:1.4; color:#1a1600; background:var(--yellow); border-bottom:2px solid #000; }
   .misafoot{ padding:14px 16px 24px; font-size:12.5px; color:var(--muted); line-height:1.45; }
   .misafoot a{ color:#7ec8ff; }
@@ -1329,6 +1336,8 @@ const toMin = t => { const [h,m] = t.split(":").map(Number); return h*60 + m; };
    a recargar, no a cerrar la app) junto con la fecha en que se eligió, para no arrastrarlo a otro día. */
 const MISAS_DAY_KEY = "parkun_misas_dia";
 let misasDayPicker = false;
+let misasPickMonth = null;   // mes que enseña el calendario (primer día del mes)
+const MESES_LARGOS = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 function misasOffset(){
   try{
     const v = JSON.parse(sessionStorage.getItem(MISAS_DAY_KEY) || "null");
@@ -1339,7 +1348,6 @@ function misasOffset(){
 function setMisasOffset(off){
   try{ sessionStorage.setItem(MISAS_DAY_KEY, JSON.stringify({ on: new Date().toDateString(), off })); }catch(_){}
 }
-const DIAS_CORTOS = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 
 function renderMisas(){
   if (state.screen !== "misas") return;
@@ -1353,12 +1361,35 @@ function renderMisas(){
   const seg = !usesFavs() ? "" : `<div class="tseg spMode" role="group" aria-label="Favoritas o todas">${
     [["fav","Favoritas"],["all","Todas"]].map(([m,t])=>`<button data-m="${m}" class="${state.spaceMode === m ? "on" : ""}">${t}</button>`).join("")}</div>`;
   const nombreDia = off === 0 ? "Hoy" : off === 1 ? "Mañana" : DIAS_LARGOS[realDow][0].toUpperCase() + DIAS_LARGOS[realDow].slice(1);
-  const picker = !misasDayPicker ? "" : `<div class="daypick">${[0,1,2,3,4,5,6].map(o=>{
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + o);
-    const lab = o === 0 ? "Hoy" : o === 1 ? "Mañana" : DIAS_CORTOS[d.getDay()];
-    const f = d.getDay() !== 0 && fiestaHoy(d, state.city);
-    return `<button data-off="${o}" class="${o === off ? "on" : ""} ${f || d.getDay() === 0 ? "fest" : ""}"><b>${lab}</b><span>${d.getDate()}</span></button>`;
-  }).join("")}</div>`;
+  // Calendario del mes: se pueden elegir hoy y los 6 días siguientes; si cruzan de mes, ‹ › cambian de mes
+  let picker = "";
+  if (misasDayPicker){
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const last = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 6);
+    if (!misasPickMonth) misasPickMonth = new Date(day.getFullYear(), day.getMonth(), 1);
+    const m0 = misasPickMonth, y = m0.getFullYear(), mo = m0.getMonth();
+    const canPrev = new Date(y, mo, 1) > new Date(today.getFullYear(), today.getMonth(), 1);
+    const canNext = new Date(y, mo + 1, 1) <= last;
+    const lead = (new Date(y, mo, 1).getDay() + 6) % 7;   // lunes = 0
+    const nDays = new Date(y, mo + 1, 0).getDate();
+    let cells = "";
+    for (let i = 0; i < lead; i++) cells += `<span></span>`;
+    for (let d = 1; d <= nDays; d++){
+      const dt = new Date(y, mo, d);
+      const o = Math.round((dt - today) / 86400000);
+      const ok = o >= 0 && o <= 6;
+      const red = dt.getDay() === 0 || (dt.getDay() !== 0 && fiestaHoy(dt, state.city));
+      cells += ok
+        ? `<button data-off="${o}" class="${o === off ? "on" : ""} ${red ? "fest" : ""} ${o === 0 ? "today" : ""}">${d}</button>`
+        : `<span class="off ${red ? "fest" : ""}">${d}</span>`;
+    }
+    picker = `<div class="monthpick">
+      <div class="mhead"><button class="mnav" data-mnav="-1" ${canPrev ? "" : "disabled"}>‹</button>
+        <span>${MESES_LARGOS[mo][0].toUpperCase() + MESES_LARGOS[mo].slice(1)} ${y}</span>
+        <button class="mnav" data-mnav="1" ${canNext ? "" : "disabled"}>›</button></div>
+      <div class="mgrid">${["L","M","X","J","V","S","D"].map(x=>`<b>${x}</b>`).join("")}${cells}</div>
+    </div>`;
+  }
   const head = `<div class="bhead"><button class="dsel" id="misasDay" aria-label="Elegir día">${nombreDia} ${day.getDate()}${fiesta ? " · fiesta" : ""} <span class="car">${misasDayPicker ? "▴" : "▾"}</span></button>${seg}</div>`
     + picker
     + (fiesta ? `<div class="misawarn">${off === 0 ? "Hoy es" : "Ese día es"} fiesta (${esc(fiesta)}): se muestra el horario de los domingos. En la CUN es su horario de festivos; en los demás <b>no es seguro</b>, porque la Capellanía no publica horario para festivos.</div>` : "");
@@ -1730,7 +1761,7 @@ function initGestures(wrap, indicator){
     indicator.textContent = "↓ Sigue tirando para recargar";
     active = false; dragAmt = 0;
     if (reload){ location.reload(); }
-    else if (tap && !(e.target.closest && e.target.closest(".srow, .tseg, .dsel, .daypick"))){ manualRefresh(); }   // un toque: actualiza solo los datos (en una fila de espacio, abre su detalle)
+    else if (tap && !(e.target.closest && e.target.closest(".srow, .tseg, .dsel, .monthpick"))){ manualRefresh(); }   // un toque: actualiza solo los datos (en una fila de espacio, abre su detalle)
   }, {passive:true});
 
   wrap.addEventListener("touchcancel", ()=>{
@@ -2055,8 +2086,10 @@ document.getElementById("tabs").addEventListener("click", (e)=>{
   showScreen(b.dataset.go);
 });
 document.getElementById("spRows").addEventListener("click", (e)=>{
-  if (e.target.closest("#misasDay")){ misasDayPicker = !misasDayPicker; renderMisas(); return; }
-  const d = e.target.closest(".daypick button");
+  if (e.target.closest("#misasDay")){ misasDayPicker = !misasDayPicker; misasPickMonth = null; renderMisas(); return; }
+  const mn = e.target.closest(".mnav");
+  if (mn){ if (!mn.disabled){ misasPickMonth = new Date(misasPickMonth.getFullYear(), misasPickMonth.getMonth() + Number(mn.dataset.mnav), 1); renderMisas(); } return; }
+  const d = e.target.closest(".monthpick button[data-off]");
   if (d){ setMisasOffset(Number(d.dataset.off)); misasDayPicker = false; document.getElementById("spWrap").scrollTop = 0; renderMisas(); return; }
   const b = e.target.closest(".spMode button"); if (!b) return;
   state.spaceMode = b.dataset.m;
