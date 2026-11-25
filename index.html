@@ -1075,7 +1075,7 @@ const VERCEL_PROXY_URL = "https://parkun.vercel.app/api/park";
 const BACKUP_URL = "https://raw.githubusercontent.com/aosoriory/parkUN/data/data.json";
 const BACKUP_MAX_AGE_S = 30*60;   // una copia de más de 30 min ya no se muestra
 // Modo autónomo: si la app se sirve desde Vercel, pide los datos solo a su propia función
-// (/api/park, misma dirección). La función ya prueba la UNAV, proxies públicos y su copia en memoria.
+// (/api/park, misma dirección; también en ubi-un.vercel.app). La función ya prueba la UNAV, proxies públicos y su copia en memoria.
 // Si falla, se muestra la última lectura buena guardada en este móvil (máx. 30 min).
 document.addEventListener("selectstart", e=>{ if (!(e.target && e.target.closest && e.target.closest("input,textarea,select"))) e.preventDefault(); });
 document.addEventListener("contextmenu", e=>{ if (!(e.target && e.target.closest && e.target.closest("input,textarea,select"))) e.preventDefault(); });
@@ -2470,7 +2470,7 @@ document.getElementById("btnFlip").addEventListener("click", ()=>{
    (parkun.vercel.app) sale entonces un aviso con un enlace que lleva los ajustes
    (favoritos, orden, ciudad…) a la nueva, porque cada dirección guarda los suyos aparte.
    ========================================================= */
-const NEW_HOST = "";
+const NEW_HOST = "ubi-un.vercel.app";
 const OLD_HOST = "parkun.vercel.app";
 const MUDANZA_KEYS = ["aparcamientos_unav_prefs_v1", "ubi_tutorial_visto_v1"];
 (function importarAjustes(){
