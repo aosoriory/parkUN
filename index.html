@@ -330,15 +330,15 @@
   .misafoot{ padding:14px 16px 24px; font-size:12.5px; color:var(--muted); line-height:1.45; }
   .misafoot a{ color:#7ec8ff; }
   .bhead .bn{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  /* Al desplazar la lista: la cabecera del edificio en curso queda arriba, y el selector Favoritas/Todas
-     queda siempre fijo a su derecha (va en una capa aparte, de alto 0, encima de las cabeceras). */
-  #spRows .bhead{ position:sticky; top:0; z-index:2; }
-  #spRows.hasseg .bhead.under{ padding-right:176px; }   /* solo la cabecera que está arriba, bajo el selector */
+  /* Al desplazar la lista, el selector Favoritas/Todas queda fijo arriba a la derecha (capa de alto 0);
+     en cuanto la lista se mueve, detrás de él aparece una franja oscura para que no tape los datos. */
+  #spRows.hasseg .bhead.first{ padding-right:176px; }
   .segfix{ position:sticky; top:0; z-index:4; height:0; display:flex; justify-content:flex-end; align-items:flex-start; pointer-events:none; }
-  .segfix .tseg{ pointer-events:auto; margin:10px 10px 0 0; }
+  .segfix::before{ content:""; position:absolute; left:0; right:0; top:0; height:58px; background:#111316; border-bottom:2px solid #000; display:none; }
+  .segfix.band::before{ display:block; }
+  .segfix .tseg{ pointer-events:auto; margin:10px 10px 0 0; position:relative; }
   /* Misas: la fecha, el calendario y los avisos quedan fijos arriba */
   .misatop{ position:sticky; top:0; z-index:3; }
-  #spRows .misatop .bhead{ position:static; padding-right:10px; }
   .bhead .tseg button{ height:38px; padding:0 11px; font-size:13.5px; }
   .srow.ingroup{ border-left:6px solid #5A6070; min-height:64px; }
   .srow.ingroup .info{ padding-left:12px; }
@@ -949,7 +949,7 @@ async function fetchParkingHTML(){
 let retryTimeoutId = null;
 
 // Parpadeo del refresco automático: gris durante un instante, lo justo para notar que hubo refresco.
-const BLINK_MS = 140;
+const BLINK_MS = 260;
 let blinkTimer = null, manualInFlight = false;
 function blinkParking(){
   document.body.classList.add("stale");
@@ -1207,9 +1207,8 @@ function renderSpaces(){
   el.classList.toggle("hasseg", !!seg);
   el.innerHTML = (seg ? `<div class="segfix">${seg}</div>` : "") + list.map(sp=>{
     const grouped = true;
-    // cada edificio va en su propio bloque: su cabecera queda arriba mientras se ven sus espacios y la siguiente la empuja
     const head = grouped && sp.building !== prevB
-      ? (prevB !== null ? `</div>` : "") + `<div class="bgroup"><div class="bhead"><span class="bn">${esc(shortBuilding(sp.building))}</span></div>` : "";
+      ? `<div class="bhead${prevB === null ? " first" : ""}"><span class="bn">${esc(shortBuilding(sp.building))}</span></div>` : "";
     prevB = sp.building;
     const o = openText(sp, fem);
     const pct = typeof sp.percentage === "number" ? Math.round(sp.percentage) : null;
@@ -1228,16 +1227,14 @@ function renderSpaces(){
       </div>
       <div class="pct ${cls}">${o.open && pct !== null ? pct + "%" : "—"}<small>${o.open ? "OCUPADO" : "CERRADO"}</small></div>
     </div>`;
-  }).join("") + `</div>`;
+  }).join("");
   fitNames(el);
   markUnderSeg();
 }
-// La cabecera de edificio que queda arriba (bajo Favoritas/Todas) deja sitio al selector; las demás usan todo el ancho.
+// En cuanto la lista se desplaza, el selector fijo lleva detrás una franja oscura.
 function markUnderSeg(){
-  const el = document.getElementById("spRows");
-  if (!el.classList.contains("hasseg")) return;
-  const top = document.getElementById("spWrap").getBoundingClientRect().top;
-  el.querySelectorAll(".bhead").forEach(h=>h.classList.toggle("under", h.getBoundingClientRect().top < top + 58));
+  const f = document.querySelector("#spRows .segfix");
+  if (f) f.classList.toggle("band", document.getElementById("spWrap").scrollTop > 0);
 }
 document.getElementById("spWrap").addEventListener("scroll", markUnderSeg, { passive:true });
 // Si un nombre aún no cabe en una línea, se reduce su letra (hasta 15 px); si ni así, puntos suspensivos.
