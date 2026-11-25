@@ -1337,6 +1337,9 @@ const toMin = t => { const [h,m] = t.split(":").map(Number); return h*60 + m; };
 const MISAS_DAY_KEY = "parkun_misas_dia";
 let misasDayPicker = false;
 let misasPickMonth = null;   // mes que enseña el calendario (primer día del mes)
+// Verano astronómico (21 jun – 22 sep): la CUN no dice qué fechas son «verano», así que la nota
+// «en verano, a las 20:00» sale todos esos días, sin mover la misa.
+const esVerano = d => { const md = (d.getMonth()+1)*100 + d.getDate(); return md >= 621 && md <= 922; };
 const MESES_LARGOS = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 function misasOffset(){
   try{
@@ -1414,7 +1417,8 @@ function renderMisas(){
   }
   el.innerHTML = head + list.map(m=>{
     const past = off === 0 && toMin(m.t) + 30 < nowMin;   // pasada (solo hoy: media hora después de empezar)
-    const note = m.note && m.note[dow];
+    let note = m.note && m.note[dow];
+    if (note && /verano/i.test(note) && !esVerano(day)) note = null;   // la nota de verano, solo en verano
     return `<div class="mrow ${past ? "past" : ""}">
       <div class="mt">${m.t}</div>
       <div class="mp">${esc(m.label)}${note ? `<small>${esc(note)}</small>` : ""}</div>
