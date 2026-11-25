@@ -11,9 +11,9 @@
 <!-- use-credentials: la vista previa de Vercel pide sesión, y sin ella el manifest no se descarga y no se puede instalar -->
 <link rel="manifest" id="manifestLink" href="manifest.json" crossorigin="use-credentials">
 <script>
-  // Fuera de parkun.vercel.app (vista previa de la rama de pruebas) se instala con otro nombre,
-  // para no confundirla con la app de verdad.
-  if (/\.vercel\.app$/.test(location.hostname) && location.hostname !== "parkun.vercel.app"){
+  // En la vista previa de una rama (…-git-<rama>-….vercel.app) se instala con otro nombre,
+  // para no confundirla con la app de verdad (parkun.vercel.app o su dirección nueva).
+  if (/\.vercel\.app$/.test(location.hostname) && /-git-/.test(location.hostname)){
     document.getElementById("manifestLink").href = "manifest-pruebas.json";
     document.querySelector('meta[name="apple-mobile-web-app-title"]').content = "Ubi pruebas";
   }
@@ -559,6 +559,8 @@
   .tdots i{ width:7px; height:7px; border-radius:4px; background:#D9DEE6; }
   .tdots i.on{ width:18px; background:var(--navy); }
   .info-tut{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; height:46px; margin:0 0 14px; border:1px solid #D9DEE6; border-radius:12px; background:#fff; color:var(--text); font-family:'Manrope',sans-serif; font-weight:800; font-size:15px; cursor:pointer; }
+  #mudanza{ padding:12px 16px 14px; background:#FFF6D6; border-bottom:1px solid #EBCB5A; color:#4A3B00; font-size:14px; line-height:1.4; flex-shrink:0; }
+  #mudanza a{ display:block; margin-top:10px; height:44px; line-height:44px; text-align:center; border-radius:12px; background:var(--brand); color:#fff; font-weight:800; text-decoration:none; font-family:'Manrope',sans-serif; }
 </style>
 </head>
 <body>
@@ -1077,7 +1079,7 @@ const BACKUP_MAX_AGE_S = 30*60;   // una copia de más de 30 min ya no se muestr
 // Si falla, se muestra la última lectura buena guardada en este móvil (máx. 30 min).
 document.addEventListener("selectstart", e=>{ if (!(e.target && e.target.closest && e.target.closest("input,textarea,select"))) e.preventDefault(); });
 document.addEventListener("contextmenu", e=>{ if (!(e.target && e.target.closest && e.target.closest("input,textarea,select"))) e.preventDefault(); });
-const AUTONOMOUS = /(^|\.)vercel\.app$/.test(location.hostname);
+const AUTONOMOUS = /(^|\.)vercel\.app$/.test(location.hostname);   // también la dirección nueva (*.vercel.app)
 const LAST_KEY = "aparcamientos_unav_last_v1";
 function saveLast(parsed){
   try{ localStorage.setItem(LAST_KEY, JSON.stringify({ t: Date.now(), data: parsed })); }catch(_){}
@@ -2461,6 +2463,39 @@ document.getElementById("btnFlip").addEventListener("click", ()=>{
 });
 
 
+
+/* =========================================================
+   MUDANZA A LA DIRECCIÓN NUEVA
+   NEW_HOST: la dirección nueva de Ubi (vacío = aún no hay). En la dirección antigua
+   (parkun.vercel.app) sale entonces un aviso con un enlace que lleva los ajustes
+   (favoritos, orden, ciudad…) a la nueva, porque cada dirección guarda los suyos aparte.
+   ========================================================= */
+const NEW_HOST = "";
+const OLD_HOST = "parkun.vercel.app";
+const MUDANZA_KEYS = ["aparcamientos_unav_prefs_v1", "ubi_tutorial_visto_v1"];
+(function importarAjustes(){
+  const m = location.hash.match(/^#importar=([A-Za-z0-9_-]+)$/);
+  if (!m) return;
+  try{
+    const data = JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g, "+").replace(/_/g, "/")))));
+    MUDANZA_KEYS.forEach(k=>{ if (typeof data[k] === "string") localStorage.setItem(k, data[k]); });
+  }catch(_){}
+  history.replaceState(null, "", location.pathname + location.search);
+})();
+function enlaceMudanza(){
+  const data = {};
+  MUDANZA_KEYS.forEach(k=>{ const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
+  const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(data)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return "https://" + NEW_HOST + "/#importar=" + b64;
+}
+function avisoMudanza(){
+  if (!NEW_HOST || location.hostname !== OLD_HOST) return;
+  const d = document.createElement("div");
+  d.id = "mudanza";
+  d.innerHTML = `<b>Ubi tiene dirección nueva: ${NEW_HOST}</b><br>Ábrela con este botón (se llevan tus ajustes) e instálala desde allí; luego puedes borrar esta.<a href="${enlaceMudanza()}">Abrir ${NEW_HOST}</a>`;
+  document.getElementById("app").insertBefore(d, document.getElementById("tabs").nextSibling);
+}
+
 /* =========================================================
    TUTORIAL DE BIENVENIDA
    Sale solo la primera vez (quien no tiene aún ajustes guardados) y se repite
@@ -2568,6 +2603,7 @@ document.getElementById("btnTutorial").addEventListener("click", ()=>{ document.
   scheduleAutoRefresh();
   setTimeout(()=>refresh(), 400);
   if (tutNuevo) tutAbrir();   // primera visita
+  avisoMudanza();
 })();
 
 /* Mantiene la pantalla encendida mientras la app está abierta (Screen Wake Lock).
