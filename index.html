@@ -1339,6 +1339,17 @@ let misasDayPicker = false;
 let misasPickMonth = null;   // mes que enseña el calendario (primer día del mes)
 // Verano astronómico (21 jun – 22 sep): la CUN no dice qué fechas son «verano», así que la nota
 // «en verano, a las 20:00» sale todos esos días, sin mover la misa.
+/* Cierres de la Universidad: esos días solo hay misas en la CUN. Fechas mes-día, valen
+   para cualquier año (el intervalo puede cruzar de año). Lo revisa la tarea programada
+   «Revisión de misas y cierres ParkUN» con los PDF de Gestión de Espacios. */
+const CIERRES_UN = [
+  { desde:"12-23", hasta:"01-06", motivo:"Navidad" },
+];
+function cierreUN(d){
+  const md = String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  return CIERRES_UN.find(c => c.desde <= c.hasta ? (md >= c.desde && md <= c.hasta) : (md >= c.desde || md <= c.hasta)) || null;
+}
+const esCUN = m => /^CUN/.test(m.building || "");
 const esVerano = d => { const md = (d.getMonth()+1)*100 + d.getDate(); return md >= 621 && md <= 922; };
 const MESES_LARGOS = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 function misasOffset(){
@@ -1361,6 +1372,7 @@ function renderMisas(){
   const realDow = day.getDay();
   const fiesta = realDow !== 0 ? fiestaHoy(day, state.city) : null;   // en domingo ya va el horario de domingo
   const dow = fiesta ? 0 : realDow;                                     // fiesta: horario de los domingos
+  const cierre = cierreUN(day);                                         // Universidad cerrada: solo la CUN
   const seg = !usesFavs() ? "" : `<div class="tseg spMode" role="group" aria-label="Favoritas o todas">${
     [["fav","Favoritas"],["all","Todas"]].map(([m,t])=>`<button data-m="${m}" class="${state.spaceMode === m ? "on" : ""}">${t}</button>`).join("")}</div>`;
   const nombreDia = off === 0 ? "Hoy" : off === 1 ? "Mañana" : DIAS_LARGOS[realDow][0].toUpperCase() + DIAS_LARGOS[realDow].slice(1);
@@ -1395,9 +1407,13 @@ function renderMisas(){
   }
   const head = `<div class="bhead"><button class="dsel" id="misasDay" aria-label="Elegir día">${nombreDia} ${day.getDate()}${fiesta ? " · fiesta" : ""} <span class="car">${misasDayPicker ? "▴" : "▾"}</span></button>${seg}</div>`
     + picker
-    + (fiesta ? `<div class="misawarn">${off === 0 ? "Hoy es" : "Ese día es"} fiesta (${esc(fiesta)}): se muestra el horario de los domingos. En la CUN es su horario de festivos; en los demás <b>no es seguro</b>, porque la Capellanía no publica horario para festivos.</div>` : "");
+    + (cierre ? `<div class="misawarn">${off === 0 ? "Hoy" : "Ese día"} la Universidad está cerrada (${esc(cierre.motivo)}): ${
+        CUN_URL[state.city] ? "no hay más misas que las de la Clínica (CUN)." : "no hay misas."}</div>` : "")
+    + (fiesta && (!cierre || CUN_URL[state.city]) ? `<div class="misawarn">${off === 0 ? "Hoy es" : "Ese día es"} fiesta (${esc(fiesta)}): ${cierre
+        ? "en la CUN, su horario de domingos y festivos."
+        : "se muestra el horario de los domingos. En la CUN es su horario de festivos; en los demás <b>no es seguro</b>, porque la Capellanía no publica horario para festivos."}</div>` : "");
   const ALL = misasAll();
-  let list = ALL.filter(m => m.city === state.city && m.days.includes(dow));
+  let list = ALL.filter(m => m.city === state.city && m.days.includes(dow) && (!cierre || esCUN(m)));
   if (usesFavs() && state.spaceMode === "fav") list = list.filter(m => state.favBuildings.includes(m.building));
   list.sort((a,b)=> toMin(a.t) - toMin(b.t) || a.label.localeCompare(b.label, "es"));
   const hh = misasSrc.t ? new Date(misasSrc.t) : null;
@@ -1409,7 +1425,7 @@ function renderMisas(){
     cs.from === "copia" ? "copiado a mano el 25/11/2026 (no se ha podido leer su web)" : "leído de su web" + (cs.t ? ` el ${new Date(cs.t).getDate()}/${new Date(cs.t).getMonth()+1} a las ${hhmm(cs.t)}` : "")}.` : "";
   const foot = `<div class="misafoot">Horario general de la <a href="${MISAS_URL}" target="_blank" rel="noopener">Capellanía</a>, ${origen}.${cun} En festivos se usa el horario de los domingos; las vacaciones no se tienen en cuenta.</div>`;
   if (!list.length){
-    const anyToday = ALL.some(m => m.city === state.city && m.days.includes(dow));
+    const anyToday = ALL.some(m => m.city === state.city && m.days.includes(dow) && (!cierre || esCUN(m)));
     const cuandoTxt = off === 0 ? "Hoy" : "Ese día";
     el.innerHTML = head + `<div class="empty">${!anyToday ? cuandoTxt + " no hay misas en " + CITIES[state.city] + "."
       : cuandoTxt + " no hay misas en tus edificios favoritos.<br><br>Toca <b>Todas</b> o elige edificios en <b>⚙️ Ajustes → Edificios</b>."}</div>` + foot;
