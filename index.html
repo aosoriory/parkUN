@@ -334,8 +334,9 @@
   .sheet.small{ height:auto; max-height:80dvh; }
   .blist{ display:flex; flex-direction:column; gap:6px; }
   .blist .bcity{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#4B5563; font-weight:700; margin:10px 0 2px; }
-  .blist .bname{ padding:12px; border-radius:10px; border:1px solid #B8BDC7; background:#fff; color:#6B7280; font-weight:600; font-size:14px; }
+  .blist .bname{ flex:1; min-width:0; padding:12px; border-radius:10px; border:1px solid #B8BDC7; background:#fff; color:#6B7280; font-weight:600; font-size:14px; }
   .blist .bname.on{ color:#fff; border-color:#1F5FB8; background:#2F7CE0; }
+  .blist .bname.ro{ color:#14171C; cursor:default; }
   .blist .bname small{ display:block; font-weight:500; font-size:11.5px; opacity:.85; margin-top:2px; }
   .stabs{ display:flex; border-radius:12px; overflow:hidden; border:1px solid #B8BDC7; margin-top:6px; }
   .stabs button{ flex:1; padding:12px 6px; border:none; background:#fff; color:#14171C; font-family:'Space Grotesk'; font-weight:700; font-size:16px; cursor:pointer; }
@@ -586,11 +587,11 @@
       </div>
 
       <div class="plist-scroll" id="tabEdificios" style="display:none">
+        <div class="setnote" id="blistNote" style="margin-bottom:14px"></div>
         <div id="blistBox">
           <div class="section-label" id="blistLabel">Edificios favoritos</div>
           <div class="blist" id="blist"></div>
         </div>
-        <div class="setnote" id="blistNote"></div>
       </div>
 
       <button class="btn-primary" id="btnSaveSettings">Guardar</button>
@@ -667,6 +668,7 @@ const state = {
   screen: "parking",  // pestaña abierta: "parking" | "salas" | "cafeterias" | "meeting" (al abrir, siempre "parking")
   city: "pamplona",   // "pamplona" | "madrid" | "sansebastian"
   favBuildings: [],   // nombres de edificio tal como los da Quodus ("Edificio Amigos")
+  buildingOrder: [],  // orden de los edificios de Pamplona elegido en Ajustes (los que no están, después, por orden alfabético)
   spaceMode: "fav",   // "fav" | "all"
   spaces: [],         // lista de /api/espacios
   spacesLastSuccess: null,
@@ -719,6 +721,7 @@ async function loadPrefs(){
       if (p.mapMetric === "p" || p.mapMetric === "r") state.mapMetric = p.mapMetric;
       if (CITIES[p.city]) state.city = p.city;
       if (Array.isArray(p.favBuildings)) state.favBuildings = p.favBuildings.filter(b=>typeof b === "string");
+      if (Array.isArray(p.buildingOrder)) state.buildingOrder = p.buildingOrder.filter(b=>typeof b === "string");
       if (p.spaceMode === "fav" || p.spaceMode === "all") state.spaceMode = p.spaceMode;
     }
   }catch(e){
@@ -741,6 +744,7 @@ async function savePrefs(){
       mapMetric: state.mapMetric,
       city: state.city,
       favBuildings: state.favBuildings,
+      buildingOrder: state.buildingOrder,
       spaceMode: state.spaceMode,
     }));
     storageAvailable = true;
@@ -1110,7 +1114,16 @@ function openText(sp, fem){
 function visibleSpaces(kind){
   let list = state.spaces.filter(s => s.kind === kind && s.city === state.city);
   if (usesFavs() && state.spaceMode === "fav") list = list.filter(s => state.favBuildings.includes(s.building));
-  return list.sort((a,b)=> shortBuilding(a.building).localeCompare(shortBuilding(b.building), "es") || a.name.localeCompare(b.name, "es"));
+  return list.sort((a,b)=> buildingCmp(a.building, b.building) || a.name.localeCompare(b.name, "es"));
+}
+// Orden de edificios: en Pamplona, el elegido en Ajustes; los demás (y en Madrid y San Sebastián), alfabético.
+function buildingCmp(a, b){
+  if (a === b) return 0;
+  if (usesFavs()){
+    const ia = state.buildingOrder.indexOf(a), ib = state.buildingOrder.indexOf(b);
+    if (ia >= 0 || ib >= 0) return (ia < 0 ? 1e9 : ia) - (ib < 0 ? 1e9 : ib);
+  }
+  return shortBuilding(a).localeCompare(shortBuilding(b), "es");
 }
 
 function renderSpaces(){
@@ -1616,7 +1629,7 @@ function setMapZoom(k, x, y){
 /* =========================================================
    MODALES / AJUSTES
    ========================================================= */
-let draftOrder = [], draftActive = [], draftP = true, draftR = false, draftFreq = 60, draftFav = [];
+let draftOrder = [], draftActive = [], draftP = true, draftR = false, draftFreq = 60, draftFav = [], draftBOrder = [];
 
 function openSettings(){
   // Solo se ordenan y eligen los parkings de Pamplona (y sus huecos); los demás se conservan al guardar.
@@ -1624,16 +1637,17 @@ function openSettings(){
   draftActive = [...state.active];
   draftP = state.verP; draftR = state.verR; draftFreq = state.refreshSeconds;
   draftFav = [...state.favBuildings];
+  draftBOrder = null;   // se calcula en renderBlist con los edificios que haya
   renderFreqSeg(); renderToggles(); renderPlist(); renderBlist();
   const fav = usesFavs(), city = CITIES[state.city];
   document.getElementById("plistBox").style.display = fav ? "" : "none";
-  document.getElementById("blistBox").style.display = fav ? "" : "none";
+  // En Madrid y San Sebastián los edificios se ven, pero no se eligen ni se ordenan.
   const pn = document.getElementById("plistNote"), bn = document.getElementById("blistNote");
   pn.style.display = bn.style.display = fav ? "none" : "block";
   pn.innerHTML = `En ${city} se muestran siempre todos los parkings; no hace falta elegirlos.`;
-  bn.innerHTML = `En ${city} se muestran siempre todos los espacios; no hace falta elegir edificios.`;
+  bn.innerHTML = `En ${city} se muestran siempre todos los espacios; no hace falta elegir ni ordenar edificios.`;
   document.getElementById("plistLabel").textContent = `Parkings favoritos de ${city}: ordenar y seleccionar`;
-  document.getElementById("blistLabel").textContent = `Edificios favoritos de ${city}`;
+  document.getElementById("blistLabel").textContent = fav ? `Edificios favoritos de ${city}: ordenar y seleccionar` : `Edificios de ${city}`;
   setSettingsTab("parkings");
   document.getElementById("ovSettings").classList.add("open");
   // Sin la lista de espacios no se conocen los edificios: se pide y se repinta al llegar.
@@ -1656,28 +1670,62 @@ document.getElementById("setTabs").addEventListener("click", (e)=>{
 function renderBlist(){
   const el = document.getElementById("blist");
   const byB = {};
-  state.spaces.forEach(sp=>{
-    const b = byB[sp.building] || (byB[sp.building] = { city: sp.city, kinds: new Set() });
-    b.kinds.add(sp.kind);
+  state.spaces.filter(sp => sp.city === state.city).forEach(sp=>{
+    (byB[sp.building] || (byB[sp.building] = new Set())).add(sp.kind);
   });
   const names = Object.keys(byB);
-  if (!names.length){ el.innerHTML = `<div class="empty" style="padding:16px">Cargando edificios…</div>`; return; }
-  const cityOrder = [state.city];
+  if (!names.length){ el.innerHTML = `<div class="empty" style="padding:16px">${state.spaces.length ? "No hay edificios con espacios aquí." : "Cargando edificios…"}</div>`; return; }
   const KS = { salas:"Salas de estudio", cafeterias:"Cafetería", meeting:"Meeting point" };
-  el.innerHTML = cityOrder.map(c=>{
-    const bs = names.filter(n => byB[n].city === c).sort((a,b)=>shortBuilding(a).localeCompare(shortBuilding(b), "es"));
-    if (!bs.length) return "";
-    return bs.map(n=>{
-      const kinds = SPACE_KINDS.filter(k=>byB[n].kinds.has(k)).map(k=>KS[k]).join(" · ");
-      return `<div class="bname ${draftFav.includes(n) ? "on" : ""}" data-b="${esc(n)}">${esc(shortBuilding(n))}${kinds ? `<small>${kinds}</small>` : ""}</div>`;
-    }).join("");
+  const kindsOf = n => SPACE_KINDS.filter(k=>byB[n].has(k)).map(k=>KS[k]).join(" · ");
+  if (!usesFavs()){   // solo para ver: sin elegir ni ordenar
+    el.innerHTML = names.sort((a,b)=>shortBuilding(a).localeCompare(shortBuilding(b), "es"))
+      .map(n=>`<div class="prow"><div class="bname ro">${esc(shortBuilding(n))}<small>${kindsOf(n)}</small></div></div>`).join("");
+    return;
+  }
+  if (!draftBOrder){
+    draftBOrder = state.buildingOrder.filter(n => byB[n]);
+    names.filter(n => !draftBOrder.includes(n))
+      .sort((a,b)=>shortBuilding(a).localeCompare(shortBuilding(b), "es"))
+      .forEach(n => draftBOrder.push(n));
+  }
+  el.innerHTML = draftBOrder.map((n,i)=>{
+    const first = i === 0, last = i === draftBOrder.length-1;
+    return `<div class="prow" data-b="${esc(n)}" data-idx="${i}">
+      <div class="bname ${draftFav.includes(n) ? "on" : ""}" data-act="toggle">${esc(shortBuilding(n))}<small>${kindsOf(n)}</small></div>
+      <div class="arrow" data-act="up" ${first?'style="visibility:hidden"':''}>↑</div>
+      <div class="arrow" data-act="down" ${last?'style="visibility:hidden"':''}>↓</div>
+    </div>`;
   }).join("");
 }
+// Igual que los parkings: ↑ ↓ con la misma animación lenta para ver el intercambio.
+function renderBlistAnimated(mutate, clicked){
+  const before = {};
+  document.querySelectorAll("#blist .prow").forEach(r=>{ before[r.dataset.b] = r.getBoundingClientRect().top; });
+  mutate();
+  renderBlist();
+  document.querySelectorAll("#blist .prow").forEach(r=>{
+    const prev = before[r.dataset.b];
+    if (prev === undefined) return;
+    const dy = prev - r.getBoundingClientRect().top;
+    if (Math.abs(dy) < 1 || !r.animate) return;
+    r.style.position = "relative";
+    r.style.zIndex = (r.dataset.b === clicked) ? "3" : "2";
+    const anim = r.animate([{ transform:`translateY(${dy}px)` }, { transform:"translateY(0)" }], { duration: REORDER_MS, easing: "ease-in-out" });
+    anim.onfinish = anim.oncancel = ()=>{ r.style.zIndex = ""; };
+  });
+}
 document.getElementById("blist").addEventListener("click", (e)=>{
-  const b = e.target.closest(".bname"); if (!b) return;
-  const n = b.dataset.b;
-  draftFav = draftFav.includes(n) ? draftFav.filter(x=>x !== n) : [...draftFav, n];
-  b.classList.toggle("on", draftFav.includes(n));
+  const row = e.target.closest(".prow[data-b]"); if (!row) return;
+  const n = row.dataset.b, idx = parseInt(row.dataset.idx, 10);
+  const t = e.target.closest("[data-act]"); const act = t ? t.dataset.act : null;
+  if (act === "toggle"){
+    draftFav = draftFav.includes(n) ? draftFav.filter(x=>x !== n) : [...draftFav, n];
+    row.querySelector(".bname").classList.toggle("on", draftFav.includes(n));
+  } else if (act === "up" && idx > 0){
+    renderBlistAnimated(()=>{ [draftBOrder[idx-1], draftBOrder[idx]] = [draftBOrder[idx], draftBOrder[idx-1]]; }, n);
+  } else if (act === "down" && idx < draftBOrder.length-1){
+    renderBlistAnimated(()=>{ [draftBOrder[idx+1], draftBOrder[idx]] = [draftBOrder[idx], draftBOrder[idx+1]]; }, n);
+  }
 });
 function closeSettings(){ document.getElementById("ovSettings").classList.remove("open"); }
 
@@ -1775,6 +1823,7 @@ document.getElementById("btnSaveSettings").addEventListener("click", ()=>{
   state.verP = draftP; state.verR = draftR;
   state.refreshSeconds = draftFreq;
   state.favBuildings = [...draftFav];
+  if (draftBOrder) state.buildingOrder = [...draftBOrder];
   if (freqChanged) scheduleAutoRefresh();
   closeSettings();
   renderSpaces(); renderTabs();
