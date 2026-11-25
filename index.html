@@ -307,6 +307,17 @@
   .mrow .mp{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:22px; color:var(--text); min-width:0; }
   .mrow .mp small{ display:block; font-family:'Inter'; font-size:13px; font-weight:600; color:#7ec8ff; margin-top:2px; }
   .mrow.past{ opacity:.38; }
+  .bhead .dsel{ flex:1; min-width:0; text-align:left; background:none; border:none; color:var(--text); padding:6px 0;
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:22px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bhead .dsel .car{ font-size:16px; color:#7ec8ff; }
+  .daypick{ display:flex; gap:6px; padding:8px 10px 10px; background:#111316; border-bottom:2px solid #000; overflow-x:auto; }
+  .daypick button{ flex:1; min-width:44px; padding:6px 2px; border-radius:10px; border:1px solid rgba(255,255,255,.25); background:#2E323A; color:var(--text);
+    display:flex; flex-direction:column; align-items:center; gap:1px; cursor:pointer; }
+  .daypick button b{ font-size:12px; font-weight:700; }
+  .daypick button span{ font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:700; }
+  .daypick button.fest span{ color:#ff8a87; }
+  .daypick button.on{ background:var(--accent); border-color:var(--accent); }
+  .daypick button.on span{ color:#fff; }
   .misawarn{ padding:10px 16px; font-size:13.5px; line-height:1.4; color:#1a1600; background:var(--yellow); border-bottom:2px solid #000; }
   .misafoot{ padding:14px 16px 24px; font-size:12.5px; color:var(--muted); line-height:1.45; }
   .misafoot a{ color:#7ec8ff; }
@@ -1314,17 +1325,43 @@ function fiestaHoy(d, city){
 const DIAS_LARGOS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
 const toMin = t => { const [h,m] = t.split(":").map(Number); return h*60 + m; };
 
+/* Día elegido en Misas: 0 = hoy … 6 = dentro de 6 días. Se guarda en sessionStorage (sobrevive
+   a recargar, no a cerrar la app) junto con la fecha en que se eligió, para no arrastrarlo a otro día. */
+const MISAS_DAY_KEY = "parkun_misas_dia";
+let misasDayPicker = false;
+function misasOffset(){
+  try{
+    const v = JSON.parse(sessionStorage.getItem(MISAS_DAY_KEY) || "null");
+    if (v && v.on === new Date().toDateString() && v.off >= 0 && v.off <= 6) return v.off;
+  }catch(_){}
+  return 0;
+}
+function setMisasOffset(off){
+  try{ sessionStorage.setItem(MISAS_DAY_KEY, JSON.stringify({ on: new Date().toDateString(), off })); }catch(_){}
+}
+const DIAS_CORTOS = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+
 function renderMisas(){
   if (state.screen !== "misas") return;
   const el = document.getElementById("spRows");
   const now = new Date(), nowMin = now.getHours()*60 + now.getMinutes();
-  const realDow = now.getDay();
-  const fiesta = realDow !== 0 ? fiestaHoy(now, state.city) : null;   // en domingo ya va el horario de domingo
+  const off = misasOffset();
+  const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + off);
+  const realDow = day.getDay();
+  const fiesta = realDow !== 0 ? fiestaHoy(day, state.city) : null;   // en domingo ya va el horario de domingo
   const dow = fiesta ? 0 : realDow;                                     // fiesta: horario de los domingos
   const seg = !usesFavs() ? "" : `<div class="tseg spMode" role="group" aria-label="Favoritas o todas">${
     [["fav","Favoritas"],["all","Todas"]].map(([m,t])=>`<button data-m="${m}" class="${state.spaceMode === m ? "on" : ""}">${t}</button>`).join("")}</div>`;
-  const head = `<div class="bhead"><span class="bn">${DIAS_LARGOS[realDow][0].toUpperCase() + DIAS_LARGOS[realDow].slice(1)} ${now.getDate()}${fiesta ? " · fiesta" : ""}</span>${seg}</div>`
-    + (fiesta ? `<div class="misawarn">Hoy es fiesta (${esc(fiesta)}): se muestra el horario de los domingos. En la CUN es su horario de festivos; en los demás <b>no es seguro</b>, porque la Capellanía no publica horario para festivos.</div>` : "");
+  const nombreDia = off === 0 ? "Hoy" : off === 1 ? "Mañana" : DIAS_LARGOS[realDow][0].toUpperCase() + DIAS_LARGOS[realDow].slice(1);
+  const picker = !misasDayPicker ? "" : `<div class="daypick">${[0,1,2,3,4,5,6].map(o=>{
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + o);
+    const lab = o === 0 ? "Hoy" : o === 1 ? "Mañana" : DIAS_CORTOS[d.getDay()];
+    const f = d.getDay() !== 0 && fiestaHoy(d, state.city);
+    return `<button data-off="${o}" class="${o === off ? "on" : ""} ${f || d.getDay() === 0 ? "fest" : ""}"><b>${lab}</b><span>${d.getDate()}</span></button>`;
+  }).join("")}</div>`;
+  const head = `<div class="bhead"><button class="dsel" id="misasDay" aria-label="Elegir día">${nombreDia} ${day.getDate()}${fiesta ? " · fiesta" : ""} <span class="car">${misasDayPicker ? "▴" : "▾"}</span></button>${seg}</div>`
+    + picker
+    + (fiesta ? `<div class="misawarn">${off === 0 ? "Hoy es" : "Ese día es"} fiesta (${esc(fiesta)}): se muestra el horario de los domingos. En la CUN es su horario de festivos; en los demás <b>no es seguro</b>, porque la Capellanía no publica horario para festivos.</div>` : "");
   const ALL = misasAll();
   let list = ALL.filter(m => m.city === state.city && m.days.includes(dow));
   if (usesFavs() && state.spaceMode === "fav") list = list.filter(m => state.favBuildings.includes(m.building));
@@ -1339,12 +1376,13 @@ function renderMisas(){
   const foot = `<div class="misafoot">Horario general de la <a href="${MISAS_URL}" target="_blank" rel="noopener">Capellanía</a>, ${origen}.${cun} En festivos se usa el horario de los domingos; las vacaciones no se tienen en cuenta.</div>`;
   if (!list.length){
     const anyToday = ALL.some(m => m.city === state.city && m.days.includes(dow));
-    el.innerHTML = head + `<div class="empty">${!anyToday ? "Hoy no hay misas en " + CITIES[state.city] + "."
-      : "Hoy no hay misas en tus edificios favoritos.<br><br>Toca <b>Todas</b> o elige edificios en <b>⚙️ Ajustes → Edificios</b>."}</div>` + foot;
+    const cuandoTxt = off === 0 ? "Hoy" : "Ese día";
+    el.innerHTML = head + `<div class="empty">${!anyToday ? cuandoTxt + " no hay misas en " + CITIES[state.city] + "."
+      : cuandoTxt + " no hay misas en tus edificios favoritos.<br><br>Toca <b>Todas</b> o elige edificios en <b>⚙️ Ajustes → Edificios</b>."}</div>` + foot;
     return;
   }
   el.innerHTML = head + list.map(m=>{
-    const past = toMin(m.t) + 30 < nowMin;   // pasada (media hora después de empezar)
+    const past = off === 0 && toMin(m.t) + 30 < nowMin;   // pasada (solo hoy: media hora después de empezar)
     const note = m.note && m.note[dow];
     return `<div class="mrow ${past ? "past" : ""}">
       <div class="mt">${m.t}</div>
@@ -1692,7 +1730,7 @@ function initGestures(wrap, indicator){
     indicator.textContent = "↓ Sigue tirando para recargar";
     active = false; dragAmt = 0;
     if (reload){ location.reload(); }
-    else if (tap && !(e.target.closest && e.target.closest(".srow, .tseg"))){ manualRefresh(); }   // un toque: actualiza solo los datos (en una fila de espacio, abre su detalle)
+    else if (tap && !(e.target.closest && e.target.closest(".srow, .tseg, .dsel, .daypick"))){ manualRefresh(); }   // un toque: actualiza solo los datos (en una fila de espacio, abre su detalle)
   }, {passive:true});
 
   wrap.addEventListener("touchcancel", ()=>{
@@ -2017,6 +2055,9 @@ document.getElementById("tabs").addEventListener("click", (e)=>{
   showScreen(b.dataset.go);
 });
 document.getElementById("spRows").addEventListener("click", (e)=>{
+  if (e.target.closest("#misasDay")){ misasDayPicker = !misasDayPicker; renderMisas(); return; }
+  const d = e.target.closest(".daypick button");
+  if (d){ setMisasOffset(Number(d.dataset.off)); misasDayPicker = false; document.getElementById("spWrap").scrollTop = 0; renderMisas(); return; }
   const b = e.target.closest(".spMode button"); if (!b) return;
   state.spaceMode = b.dataset.m;
   renderSpaces(); renderMisas(); savePrefs();
