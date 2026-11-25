@@ -529,6 +529,7 @@
   .city-opts button{ font-family:'Manrope',sans-serif; font-weight:800; }
   .sheet .btn-primary{ background:var(--navy); color:#fff; font-family:'Manrope',sans-serif; font-weight:800; }
   .info-text a{ color:#0B5FFF !important; }
+  .info-text h3{ font-family:'Manrope',sans-serif; font-weight:800; font-size:16px; color:var(--text); margin:16px 0 4px; }
 </style>
 </head>
 <body>
@@ -793,15 +794,39 @@
       <button class="icon-btn" id="closeInfo">✕</button>
     </div>
     <div class="sheet-body">
-      <div class="info-text">
-        <b>Parkings y espacios libres de la UNAV.</b><br>
-        Esta es una página privada que muestra las plazas libres en los aparcamientos de la UNAV y la ocupación de las salas de estudio, cafeterías y meeting points. Los parkings salen de la página de Gestión de Espacios (<a href="https://www.unav.edu/web/gestion-de-espacios/aparcamientos" target="_blank" rel="noopener" style="color:#1F5FB8; word-break:break-all;">https://www.unav.edu/web/gestion-de-espacios/aparcamientos</a>); los demás espacios, de <a href="https://unav.quodus.ai/" target="_blank" rel="noopener" style="color:#1F5FB8;">unav.quodus.ai</a>.
-        <br><br>
-        • El botón 📍 elige la ciudad: solo se ven los parkings y espacios de esa ciudad.<br>
-        • Toca la pantalla para actualizar los datos. Desliza hacia abajo (desde arriba del todo) para recargar la app.<br>
-        • Los parkings se actualizan solos; salas, cafeterías y meeting points, al entrar o al tocar la pantalla. En Ajustes eliges la frecuencia de actualización de los parkings, qué tipo de plazas ver (parking y/o recarga eléctrica), qué aparcamientos mostrar, en qué orden, y si quieres un espacio de separación (botón ⇕) debajo de alguno; y tus edificios favoritos, que deciden qué salas, cafeterías y meeting points salen en «Favoritas».<br>
-        • El icono del altavoz activa la lectura en voz alta de las plazas libres tras cada actualización.
-        <span class="note">Tus ajustes se guardan en este dispositivo y navegador, y se mantienen la próxima vez que abras la app. Añade esta página a la pantalla de inicio para usarla como una app.</span>
+      <div class="info-text" style="overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0;">
+        <b>Espacios UN: dónde hay sitio en la Universidad de Navarra.</b><br>
+        Página privada (no oficial) con las plazas libres de los aparcamientos, la ocupación de salas de estudio, cafeterías y meeting points, y el horario de misas.
+
+        <h3>Arriba</h3>
+        • El botón de la ciudad (<b>PNA</b>, <b>MAD</b> o <b>SS</b>) elige Pamplona, Madrid o San Sebastián: solo se ve lo de esa ciudad, y solo salen las pestañas que existen allí.<br>
+        • Las pestañas son <b>Parkings</b>, <b>Salas</b>, <b>Cafeterías</b>, <b>Meeting</b> y <b>Misas</b>. La app vuelve a abrir en la última que usaste.<br>
+        • El botón de las rayas abre los <b>Ajustes</b>.
+
+        <h3>Parkings</h3>
+        • El número es el de plazas libres: <b style="color:#A50F15">rojo</b> 0 · <b style="color:#C85A08">naranja</b> 1 a 4 · <b style="color:#9A7400">amarillo</b> 5 a 9 · <b style="color:#1E8E4A">verde</b> 10 o más.<br>
+        • Se actualizan solos (un parpadeo breve avisa de que han llegado datos nuevos). Toca la pantalla para actualizar en ese momento; el reloj de arriba cuenta el tiempo desde la última actualización.<br>
+        • Con los botones de arriba cambias entre lista y mapa, y el altavoz lee en voz alta las plazas libres tras cada actualización.<br>
+        • En el mapa puedes ver plazas de parking o puntos de recarga, girarlo y hacer zoom.
+
+        <h3>Salas, cafeterías y meeting points</h3>
+        • Agrupados por edificio, con si está abierto, hasta cuándo, cuántas personas hay y la barra de ocupación: <b style="color:#1E8E4A">verde</b> menos del 50 % · <b style="color:#9A7400">amarillo</b> hasta el 79 % · <b style="color:#C85A08">naranja</b> hasta el 94 % · <b style="color:#A50F15">rojo</b> 95 % o más.<br>
+        • Se actualizan al entrar en la pestaña o al tocar la pantalla.<br>
+        • Toca un espacio para ver su ficha completa (plano de puestos, servicios y ocupación de la semana); la flecha o el «atrás» del móvil vuelven a la lista.<br>
+        • En Pamplona, <b>Favoritas</b> muestra solo tus edificios favoritos y <b>Todas</b>, todos. En Madrid y San Sebastián se ven siempre todos.
+
+        <h3>Misas</h3>
+        • Las misas del día, por hora. Toca la fecha para elegir otro día en el calendario (hasta un año adelante); las de hoy que ya han pasado salen atenuadas.<br>
+        • Los horarios se leen de las webs de la Capellanía y de la Clínica (CUN); si no se pueden leer, se usa una copia guardada.<br>
+        • En festivos se muestra el horario de los domingos, con aviso de que no es seguro. En Navidad, Semana Santa y verano un aviso amarillo indica si la Universidad puede estar cerrada (entonces solo salen las misas de la CUN) o si el horario puede cambiar.
+
+        <h3>Ajustes</h3>
+        • <b>Parkings:</b> cada cuánto se actualizan, qué plazas ver (parking y/o recarga eléctrica), qué aparcamientos mostrar, en qué orden, y un espacio de separación (botón ⇕) debajo de alguno.<br>
+        • <b>Edificios:</b> tus edificios favoritos de Pamplona y su orden; deciden qué sale en «Favoritas» en Salas, Cafeterías, Meeting y Misas.
+
+        <h3>Fuentes</h3>
+        Parkings: <a href="https://www.unav.edu/web/gestion-de-espacios/aparcamientos" target="_blank" rel="noopener">Gestión de Espacios</a> · Salas, cafeterías y meeting points: <a href="https://unav.quodus.ai/" target="_blank" rel="noopener">unav.quodus.ai</a> · Misas: <a href="https://www.unav.edu/web/capellania/oratorios-y-misas" target="_blank" rel="noopener">Capellanía</a> y <a href="https://www.cun.es/servicios-pacientes-familiares" target="_blank" rel="noopener">Clínica Universidad de Navarra</a>.
+        <span class="note">Desliza hacia abajo desde arriba del todo para recargar la app. Tus ajustes se guardan en este móvil y navegador. Añade esta página a la pantalla de inicio para usarla como una app.</span>
       </div>
     </div>
   </div>
