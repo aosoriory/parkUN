@@ -1225,6 +1225,27 @@ const MISAS = [
   { city:"madrid", t:"8:10",  days:[1,2,3,4,5,6], building:"Edificio Alumni",                   label:"Alumni" },
   { city:"madrid", t:"13:15", days:[1,5],         building:"Edificio Alumni",                   label:"Alumni" },
 ];
+/* Clínica Universidad de Navarra: horarios copiados a mano el 25 nov 2026 de
+   https://www.cun.es/servicios-pacientes-familiares (Pamplona) y
+   https://www.cun.es/servicios-pacientes-familiares-madrid (Madrid). No están en Quodus:
+   "CUN" y "CUN Madrid" son edificios propios para los favoritos. En la CUN el horario de
+   domingos y festivos es oficial (lo dice su web). */
+const VERANO = { 1:"en verano, a las 20:00", 2:"en verano, a las 20:00", 3:"en verano, a las 20:00", 4:"en verano, a las 20:00", 5:"en verano, a las 20:00" };
+const MISAS_CUN = [
+  { city:"pamplona", t:"7:25",  days:LV,      building:"CUN", label:"CUN" },
+  { city:"pamplona", t:"8:00",  days:[0,1,2,3,4,5,6], building:"CUN", label:"CUN" },
+  { city:"pamplona", t:"12:00", days:[0,6],   building:"CUN", label:"CUN" },
+  { city:"pamplona", t:"13:30", days:LV,      building:"CUN", label:"CUN" },
+  { city:"pamplona", t:"19:00", days:LV,      building:"CUN", label:"CUN", note:VERANO },
+  { city:"pamplona", t:"20:00", days:[0,6],   building:"CUN", label:"CUN" },
+  { city:"madrid",   t:"7:20",  days:LV,      building:"CUN Madrid", label:"CUN Madrid" },
+  { city:"madrid",   t:"14:10", days:LV,      building:"CUN Madrid", label:"CUN Madrid" },
+  { city:"madrid",   t:"19:45", days:[6],     building:"CUN Madrid", label:"CUN Madrid" },
+  { city:"madrid",   t:"11:00", days:[0],     building:"CUN Madrid", label:"CUN Madrid" },
+];
+const CUN_URL = { pamplona:"https://www.cun.es/servicios-pacientes-familiares", madrid:"https://www.cun.es/servicios-pacientes-familiares-madrid" };
+// Todas las misas: las de la Capellanía (de la web o de la copia) y las de la CUN
+const misasAll = () => [...misasSrc.list, ...MISAS_CUN];
 const MISAS_API = AUTONOMOUS ? "/api/misas" : "https://parkun.vercel.app/api/misas";
 const MISAS_KEY = "parkun_misas_v1";
 const MISAS_MAX_AGE = 6 * 3600 * 1000;
@@ -1290,8 +1311,8 @@ function renderMisas(){
   const seg = !usesFavs() ? "" : `<div class="tseg spMode" role="group" aria-label="Favoritas o todas">${
     [["fav","Favoritas"],["all","Todas"]].map(([m,t])=>`<button data-m="${m}" class="${state.spaceMode === m ? "on" : ""}">${t}</button>`).join("")}</div>`;
   const head = `<div class="bhead"><span class="bn">${DIAS_LARGOS[realDow][0].toUpperCase() + DIAS_LARGOS[realDow].slice(1)} ${now.getDate()}${fiesta ? " · fiesta" : ""}</span>${seg}</div>`
-    + (fiesta ? `<div class="misawarn">Hoy es fiesta (${esc(fiesta)}): se muestra el horario de los domingos. <b>No es seguro</b>; la Capellanía no publica horario para festivos.</div>` : "");
-  const ALL = misasSrc.list;
+    + (fiesta ? `<div class="misawarn">Hoy es fiesta (${esc(fiesta)}): se muestra el horario de los domingos. En la CUN es su horario de festivos; en los demás <b>no es seguro</b>, porque la Capellanía no publica horario para festivos.</div>` : "");
+  const ALL = misasAll();
   let list = ALL.filter(m => m.city === state.city && m.days.includes(dow));
   if (usesFavs() && state.spaceMode === "fav") list = list.filter(m => state.favBuildings.includes(m.building));
   list.sort((a,b)=> toMin(a.t) - toMin(b.t) || a.label.localeCompare(b.label, "es"));
@@ -1299,7 +1320,8 @@ function renderMisas(){
   const cuando = hh ? `el ${hh.getDate()}/${hh.getMonth()+1} a las ${hhmm(misasSrc.t)}` : "";
   const origen = misasSrc.from === "copia" ? "copiado a mano el 25/11/2026 (no se ha podido leer la web)"
     : `leído de la web ${cuando}`;
-  const foot = `<div class="misafoot">Horario general de la <a href="${MISAS_URL}" target="_blank" rel="noopener">Capellanía</a>, ${origen}. En festivos se usa el horario de los domingos; las vacaciones no se tienen en cuenta.</div>`;
+  const cun = CUN_URL[state.city] ? ` Clínica (<a href="${CUN_URL[state.city]}" target="_blank" rel="noopener">CUN</a>): copiado a mano el 25/11/2026.` : "";
+  const foot = `<div class="misafoot">Horario general de la <a href="${MISAS_URL}" target="_blank" rel="noopener">Capellanía</a>, ${origen}.${cun} En festivos se usa el horario de los domingos; las vacaciones no se tienen en cuenta.</div>`;
   if (!list.length){
     const anyToday = ALL.some(m => m.city === state.city && m.days.includes(dow));
     el.innerHTML = head + `<div class="empty">${!anyToday ? "Hoy no hay misas en " + CITIES[state.city] + "."
@@ -1325,7 +1347,7 @@ function renderTabs(){
     if (!has && state.screen === k) showScreen("parking");
   });
   // Misas: en las tres ciudades hay
-  const hasMisas = misasSrc.list.some(m => m.city === state.city);
+  const hasMisas = misasAll().some(m => m.city === state.city);
   document.querySelector('#tabs [data-go="misas"]').style.display = hasMisas ? "" : "none";
   if (!hasMisas && state.screen === "misas") showScreen("parking");
   document.querySelectorAll("#tabs .tab").forEach(t=>t.classList.toggle("on", t.dataset.go === state.screen));
@@ -1810,10 +1832,13 @@ function renderBlist(){
   state.spaces.filter(sp => sp.city === state.city).forEach(sp=>{
     (byB[sp.building] || (byB[sp.building] = new Set())).add(sp.kind);
   });
+  if (state.spaces.length) misasAll().filter(m => m.city === state.city && m.building).forEach(m=>{
+    (byB[m.building] || (byB[m.building] = new Set())).add("misas");
+  });
   const names = Object.keys(byB);
   if (!names.length){ el.innerHTML = `<div class="empty" style="padding:16px">${state.spaces.length ? "No hay edificios con espacios aquí." : "Cargando edificios…"}</div>`; return; }
-  const KS = { salas:"Salas de estudio", cafeterias:"Cafetería", meeting:"Meeting point" };
-  const kindsOf = n => SPACE_KINDS.filter(k=>byB[n].has(k)).map(k=>KS[k]).join(" · ");
+  const KS = { salas:"Salas de estudio", cafeterias:"Cafetería", meeting:"Meeting point", misas:"Misas" };
+  const kindsOf = n => [...SPACE_KINDS, "misas"].filter(k=>byB[n].has(k)).map(k=>KS[k]).join(" · ");
   if (!usesFavs()){   // solo para ver: sin elegir ni ordenar
     el.innerHTML = names.sort((a,b)=>shortBuilding(a).localeCompare(shortBuilding(b), "es"))
       .map(n=>`<div class="prow"><div class="bname ro">${esc(shortBuilding(n))}<small>${kindsOf(n)}</small></div></div>`).join("");
