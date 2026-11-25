@@ -302,6 +302,13 @@
     font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:22px; line-height:1.1;
     border-top:2px solid #000;
   }
+  .mrow{ display:flex; align-items:center; gap:16px; min-height:60px; padding:8px 16px; background:var(--gray); border-bottom:2px solid #000; }
+  .mrow .mt{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:26px; width:88px; flex-shrink:0; color:var(--text); }
+  .mrow .mp{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:22px; color:var(--text); min-width:0; }
+  .mrow .mp small{ display:block; font-family:'Inter'; font-size:13px; font-weight:600; color:#7ec8ff; margin-top:2px; }
+  .mrow.past{ opacity:.38; }
+  .misafoot{ padding:14px 16px 24px; font-size:12.5px; color:var(--muted); line-height:1.45; }
+  .misafoot a{ color:#7ec8ff; }
   .bhead .bn{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .bhead .tseg button{ height:38px; padding:0 11px; font-size:13.5px; }
   .srow.ingroup{ border-left:6px solid #5A6070; min-height:64px; }
@@ -367,6 +374,7 @@
   <button class="tab" data-go="salas" role="tab"><span class="ic">📚</span><span class="lb">Salas</span></button>
   <button class="tab" data-go="cafeterias" role="tab"><span class="ic">☕</span><span class="lb">Cafeterías</span></button>
   <button class="tab" data-go="meeting" role="tab"><span class="ic">🤝</span><span class="lb">Meeting</span></button>
+  <button class="tab" data-go="misas" role="tab"><span class="ic">⛪</span><span class="lb">Misas</span></button>
 </div>
 
 <!-- ===== Salas de estudio / cafeterías / meeting points ===== -->
@@ -984,7 +992,7 @@ function flash(){
 
 function manualRefresh(){
   // El contador de la pantalla actual se apaga al instante...
-  if (!isSpaceScreen()) state.timerOff = true;
+  if (state.screen === "parking") state.timerOff = true;
   tickTimer();
   refresh({flash:true});
 }
@@ -993,6 +1001,7 @@ function manualRefresh(){
    en parkings, solo parkings; en salas, cafeterías o meeting points, solo los espacios. */
 function isSpaceScreen(){ return SPACE_KINDS.includes(state.screen); }
 function refresh(opts={}){
+  if (state.screen === "misas"){ renderMisas(); return Promise.resolve(); }   // horarios fijos: no se piden
   const ps = [];
   if (state.screen !== "parking") ps.push(refreshSpaces());
   if (!isSpaceScreen()) ps.push(refreshParking(opts));
@@ -1064,7 +1073,7 @@ function classifyPct(p){
 }
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
 // "Edificio de Arquitectura" -> "Arquitectura"; "Edificio ICS - Instituto Cultura y Sociedad" -> "ICS"
-const BUILDING_NAMES = { "ISB":"Ismael Sánchez Bella" };
+const BUILDING_NAMES = { "ISB":"Ismael Sánchez Bella", "Facultades Eclesiásticas":"Teología" };
 function shortBuilding(b){
   const s = String(b || "").replace(/^Edificio\s+(de\s+)?/i, "").replace(/\s+-\s+.*$/, "").trim() || String(b || "");
   return BUILDING_NAMES[s] || s;
@@ -1185,6 +1194,62 @@ function fitNames(root){
 }
 window.addEventListener("resize", ()=>{ if (isSpaceScreen()) fitNames(document.getElementById("spRows")); });
 
+/* =========================================================
+   MISAS: horarios de https://www.unav.edu/web/capellania/oratorios-y-misas
+   copiados a mano el 25 nov 2026 (si cambian, hay que actualizarlos aquí).
+   days: 0 = domingo … 6 = sábado. building: nombre del edificio en Quodus,
+   para los favoritos. label: cómo se llama en la lista.
+   ========================================================= */
+const MISAS_URL = "https://www.unav.edu/web/capellania/oratorios-y-misas";
+const LV = [1,2,3,4,5];
+const MISAS = [
+  { city:"pamplona", t:"7:25",  days:LV,          building:"Edificio Biblioteca Central",       label:"Biblioteca" },
+  { city:"pamplona", t:"8:00",  days:LV,          building:"Edificio Central",                  label:"Central" },
+  { city:"pamplona", t:"8:15",  days:LV,          building:"Edificio Facultades Eclesiásticas", label:"Teología" },
+  { city:"pamplona", t:"8:15",  days:LV,          building:"Edificio de Ciencias",              label:"Ciencias" },
+  { city:"pamplona", t:"11:00", days:LV,          building:"Edificio Amigos",                   label:"Amigos" },
+  { city:"pamplona", t:"13:00", days:[1,2,3,4,5,6], building:"Edificio Amigos",                 label:"Amigos" },
+  { city:"pamplona", t:"13:30", days:LV,          building:"Edificio de Ciencias",              label:"Ciencias", note:{3:"en inglés"} },
+  { city:"pamplona", t:"13:30", days:LV,          building:"Edificio de Arquitectura",          label:"Arquitectura", note:{3:"en inglés"} },
+  { city:"pamplona", t:"13:50", days:LV,          building:"Edificio FCOM",                     label:"FCOM" },
+  { city:"pamplona", t:"17:00", days:[0],         building:"Edificio de Ciencias",              label:"Ciencias", note:{0:"en inglés"} },
+  { city:"pamplona", t:"19:00", days:LV,          building:"Edificio de Ciencias",              label:"Ciencias" },
+  { city:"pamplona", t:"20:00", days:[1,2,3,4,5,0], building:"Edificio Amigos",                 label:"Amigos" },
+  { city:"pamplona", t:"20:15", days:[1,2,3,4,5,0], building:"Edificio de Ciencias",            label:"Ciencias" },
+  { city:"sansebastian", t:"13:30", days:LV,      building:"Edificio Ibaeta",                   label:"Ibaeta" },
+  { city:"madrid", t:"8:10",  days:[1,2,3,4,5,6], building:"Edificio Alumni",                   label:"Alumni" },
+  { city:"madrid", t:"13:15", days:[1,5],         building:"Edificio Alumni",                   label:"Alumni" },
+];
+const DIAS_LARGOS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+const toMin = t => { const [h,m] = t.split(":").map(Number); return h*60 + m; };
+
+function renderMisas(){
+  if (state.screen !== "misas") return;
+  const el = document.getElementById("spRows");
+  const now = new Date(), dow = now.getDay(), nowMin = now.getHours()*60 + now.getMinutes();
+  const seg = !usesFavs() ? "" : `<div class="tseg spMode" role="group" aria-label="Favoritas o todas">${
+    [["fav","Favoritas"],["all","Todas"]].map(([m,t])=>`<button data-m="${m}" class="${state.spaceMode === m ? "on" : ""}">${t}</button>`).join("")}</div>`;
+  const head = `<div class="bhead"><span class="bn">${DIAS_LARGOS[dow][0].toUpperCase() + DIAS_LARGOS[dow].slice(1)} ${now.getDate()}</span>${seg}</div>`;
+  let list = MISAS.filter(m => m.city === state.city && m.days.includes(dow));
+  if (usesFavs() && state.spaceMode === "fav") list = list.filter(m => state.favBuildings.includes(m.building));
+  list.sort((a,b)=> toMin(a.t) - toMin(b.t) || a.label.localeCompare(b.label, "es"));
+  const foot = `<div class="misafoot">Horario general de la <a href="${MISAS_URL}" target="_blank" rel="noopener">Capellanía</a>; no tiene en cuenta festivos ni vacaciones.</div>`;
+  if (!list.length){
+    const anyToday = MISAS.some(m => m.city === state.city && m.days.includes(dow));
+    el.innerHTML = head + `<div class="empty">${!anyToday ? "Hoy no hay misas en " + CITIES[state.city] + "."
+      : "Hoy no hay misas en tus edificios favoritos.<br><br>Toca <b>Todas</b> o elige edificios en <b>⚙️ Ajustes → Edificios</b>."}</div>` + foot;
+    return;
+  }
+  el.innerHTML = head + list.map(m=>{
+    const past = toMin(m.t) + 30 < nowMin;   // pasada (media hora después de empezar)
+    const note = m.note && m.note[dow];
+    return `<div class="mrow ${past ? "past" : ""}">
+      <div class="mt">${m.t}</div>
+      <div class="mp">${esc(m.label)}${note ? `<small>${esc(note)}</small>` : ""}</div>
+    </div>`;
+  }).join("") + foot;
+}
+
 /* Pestañas: un tipo de espacio que no existe en la ciudad no tiene pestaña
    (si aún no hay datos, se ven todas). Si la pestaña abierta desaparece, se vuelve a Parkings. */
 function renderTabs(){
@@ -1193,6 +1258,10 @@ function renderTabs(){
     document.querySelector(`#tabs [data-go="${k}"]`).style.display = has ? "" : "none";
     if (!has && state.screen === k) showScreen("parking");
   });
+  // Misas: en las tres ciudades hay
+  const hasMisas = MISAS.some(m => m.city === state.city);
+  document.querySelector('#tabs [data-go="misas"]').style.display = hasMisas ? "" : "none";
+  if (!hasMisas && state.screen === "misas") showScreen("parking");
   document.querySelectorAll("#tabs .tab").forEach(t=>t.classList.toggle("on", t.dataset.go === state.screen));
 }
 
@@ -1202,12 +1271,13 @@ function renderTabs(){
 function showScreen(name){
   state.screen = name;
   document.getElementById("scrParking").classList.toggle("on", name === "parking");
-  document.getElementById("scrSpaces").classList.toggle("on", isSpaceScreen());
+  document.getElementById("scrSpaces").classList.toggle("on", isSpaceScreen() || name === "misas");
   document.querySelectorAll("#tabs .tab").forEach(t=>t.classList.toggle("on", t.dataset.go === name));
   document.body.classList.remove("stale");
   if (name !== "parking" && state.talkEnabled && "speechSynthesis" in window) window.speechSynthesis.cancel();
   if (name === "parking"){ applyCity(); renderRows(); }
   if (isSpaceScreen()){ document.getElementById("spWrap").scrollTop = 0; renderSpaces(); }
+  if (name === "misas"){ document.getElementById("spWrap").scrollTop = 0; renderMisas(); setStatusSp(null); tickTimer(); return; }
   tickTimer();
   // Datos de más de 1 min (o ninguno): se piden ya al entrar
   const last = isSpaceScreen() ? state.spacesLastSuccess : state.lastSuccess;
@@ -1265,7 +1335,7 @@ function scheduleAutoRefresh(){
   if (refreshIntervalId) clearInterval(refreshIntervalId);
   // Solo los parkings se refrescan solos (en su pestaña). Salas, cafeterías y
   // meeting points se piden al entrar (si los datos tienen más de 1 min) o al tocar la pantalla.
-  refreshIntervalId = setInterval(()=>{ if (!isSpaceScreen()) refreshParking(); }, state.refreshSeconds*1000);
+  refreshIntervalId = setInterval(()=>{ if (state.screen === "parking") refreshParking(); }, state.refreshSeconds*1000);
 }
 
 function tickTimer(){
@@ -1826,7 +1896,7 @@ document.getElementById("btnSaveSettings").addEventListener("click", ()=>{
   if (draftBOrder) state.buildingOrder = [...draftBOrder];
   if (freqChanged) scheduleAutoRefresh();
   closeSettings();
-  renderSpaces(); renderTabs();
+  renderSpaces(); renderMisas(); renderTabs();
   manualRefresh();
   savePrefs();
 });
@@ -1842,7 +1912,7 @@ document.getElementById("tabs").addEventListener("click", (e)=>{
 document.getElementById("spRows").addEventListener("click", (e)=>{
   const b = e.target.closest(".spMode button"); if (!b) return;
   state.spaceMode = b.dataset.m;
-  renderSpaces(); savePrefs();
+  renderSpaces(); renderMisas(); savePrefs();
 });
 document.getElementById("btnCity").addEventListener("click", openCity);
 document.getElementById("closeCity").addEventListener("click", closeCity);
@@ -1850,7 +1920,7 @@ document.getElementById("ovCity").addEventListener("click", (e)=>{ if (e.target.
 document.getElementById("cityOpts").addEventListener("click", (e)=>{
   const b = e.target.closest("button"); if (!b) return;
   state.city = b.dataset.c;
-  closeCity(); applyCity(); renderRows(); renderSpaces(); renderTabs(); savePrefs();
+  closeCity(); applyCity(); renderRows(); renderSpaces(); renderMisas(); renderTabs(); savePrefs();
 });
 initGestures(document.getElementById("spWrap"), document.getElementById("pullIndicatorSp"));
 document.getElementById("closeSettings").addEventListener("click", closeSettings);
@@ -1915,7 +1985,8 @@ document.addEventListener("visibilitychange", requestWakeLock);
 // (tras estar en segundo plano la conexión suele tardar en despertar).
 function refreshIfStale(){
   if (document.visibilityState === "hidden") return;
-  if (isSpaceScreen()) return;   // los espacios no se refrescan solos
+  if (state.screen === "misas"){ renderMisas(); return; }   // por si ha cambiado el día
+  if (state.screen !== "parking") return;   // los espacios no se refrescan solos
   if (!state.lastSuccess || Date.now() - state.lastSuccess > 60000) refreshParking();
 }
 document.addEventListener("visibilitychange", refreshIfStale);
