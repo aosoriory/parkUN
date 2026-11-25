@@ -330,6 +330,15 @@
   .misafoot{ padding:14px 16px 24px; font-size:12.5px; color:var(--muted); line-height:1.45; }
   .misafoot a{ color:#7ec8ff; }
   .bhead .bn{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  /* Al desplazar la lista: la cabecera del edificio en curso queda arriba, y el selector Favoritas/Todas
+     queda siempre fijo a su derecha (va en una capa aparte, de alto 0, encima de las cabeceras). */
+  #spRows .bhead{ position:sticky; top:0; z-index:2; }
+  #spRows.hasseg .bhead.under{ padding-right:176px; }   /* solo la cabecera que está arriba, bajo el selector */
+  .segfix{ position:sticky; top:0; z-index:4; height:0; display:flex; justify-content:flex-end; align-items:flex-start; pointer-events:none; }
+  .segfix .tseg{ pointer-events:auto; margin:10px 10px 0 0; }
+  /* Misas: la fecha, el calendario y los avisos quedan fijos arriba */
+  .misatop{ position:sticky; top:0; z-index:3; }
+  #spRows .misatop .bhead{ position:static; padding-right:10px; }
   .bhead .tseg button{ height:38px; padding:0 11px; font-size:13.5px; }
   .srow.ingroup{ border-left:6px solid #5A6070; min-height:64px; }
   .srow.ingroup .info{ padding-left:12px; }
@@ -1185,6 +1194,7 @@ function renderSpaces(){
   const list = visibleSpaces(kind);
   if (!list.length){
     const anyInCity = state.spaces.some(s => s.kind === kind && s.city === state.city);
+    el.classList.remove("hasseg");
     el.innerHTML = (seg ? `<div class="bhead"><span class="bn"></span>${seg}</div>` : "") + (!anyInCity
       ? `<div class="empty">No hay ${KIND_TITLES[kind].toLowerCase()} en ${CITIES[state.city]}.</div>`
       : `<div class="empty">Ninguno de tus edificios favoritos tiene ${KIND_TITLES[kind].toLowerCase()} en ${CITIES[state.city]}.<br><br>Toca <b>Todas</b> o elige edificios en <b>⚙️ Ajustes → Edificios</b>.</div>`);
@@ -1193,12 +1203,13 @@ function renderSpaces(){
   const fem = kind !== "meeting";   // la sala, la cafetería / el meeting point
   // Siempre agrupado por edificio: el nombre del edificio sale una vez, como cabecera,
   // y cada espacio lleva su propio nombre en grande (también si el edificio tiene uno solo).
-  let prevB = null, first = true;
-  el.innerHTML = list.map(sp=>{
+  let prevB = null;
+  el.classList.toggle("hasseg", !!seg);
+  el.innerHTML = (seg ? `<div class="segfix">${seg}</div>` : "") + list.map(sp=>{
     const grouped = true;
+    // cada edificio va en su propio bloque: su cabecera queda arriba mientras se ven sus espacios y la siguiente la empuja
     const head = grouped && sp.building !== prevB
-      ? `<div class="bhead"><span class="bn">${esc(shortBuilding(sp.building))}</span>${first ? seg : ""}</div>` : "";
-    first = false;
+      ? (prevB !== null ? `</div>` : "") + `<div class="bgroup"><div class="bhead"><span class="bn">${esc(shortBuilding(sp.building))}</span></div>` : "";
     prevB = sp.building;
     const o = openText(sp, fem);
     const pct = typeof sp.percentage === "number" ? Math.round(sp.percentage) : null;
@@ -1217,9 +1228,18 @@ function renderSpaces(){
       </div>
       <div class="pct ${cls}">${o.open && pct !== null ? pct + "%" : "—"}<small>${o.open ? "OCUPADO" : "CERRADO"}</small></div>
     </div>`;
-  }).join("");
+  }).join("") + `</div>`;
   fitNames(el);
+  markUnderSeg();
 }
+// La cabecera de edificio que queda arriba (bajo Favoritas/Todas) deja sitio al selector; las demás usan todo el ancho.
+function markUnderSeg(){
+  const el = document.getElementById("spRows");
+  if (!el.classList.contains("hasseg")) return;
+  const top = document.getElementById("spWrap").getBoundingClientRect().top;
+  el.querySelectorAll(".bhead").forEach(h=>h.classList.toggle("under", h.getBoundingClientRect().top < top + 58));
+}
+document.getElementById("spWrap").addEventListener("scroll", markUnderSeg, { passive:true });
 // Si un nombre aún no cabe en una línea, se reduce su letra (hasta 15 px); si ni así, puntos suspensivos.
 function fitNames(root){
   root.querySelectorAll(".t1").forEach(t=>{
@@ -1434,6 +1454,7 @@ function setMisasOffset(off){
 function renderMisas(){
   if (state.screen !== "misas") return;
   const el = document.getElementById("spRows");
+  el.classList.remove("hasseg");
   const now = new Date(), nowMin = now.getHours()*60 + now.getMinutes();
   const off = misasOffset();
   const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + off);
@@ -1476,7 +1497,7 @@ function renderMisas(){
       <div class="mgrid">${["L","M","X","J","V","S","D"].map(x=>`<b>${x}</b>`).join("")}${cells}</div>
     </div>`;
   }
-  const head = `<div class="bhead"><button class="dsel" id="misasDay" aria-label="Elegir día">${nombreDia} ${day.getDate()}${mesCorto}${fiesta ? " · fiesta" : ""} <span class="car">${misasDayPicker ? "▴" : "▾"}</span></button>${seg}</div>`
+  const head = `<div class="misatop"><div class="bhead"><button class="dsel" id="misasDay" aria-label="Elegir día">${nombreDia} ${day.getDate()}${mesCorto}${fiesta ? " · fiesta" : ""} <span class="car">${misasDayPicker ? "▴" : "▾"}</span></button>${seg}</div>`
     + picker
     + (cierre ? `<div class="misawarn">${cierre.oficial ? "" : "<b>Información no actualizada.</b> "}${off === 0 ? "Hoy" : "Ese día"} la Universidad ${cierre.oficial ? "está" : "probablemente está"} cerrada (${esc(cierre.motivo)}): ${
         CUN_URL[state.city] ? "solo se muestran las misas de la Clínica (CUN)." : "no se muestran misas."}${cierre.nota ? " " + esc(cierre.nota) : ""}</div>` : "")
@@ -1486,7 +1507,7 @@ function renderMisas(){
         : `Puede que la Universidad esté cerrada (${esc(regla.motivo)}) o que el horario de misas sea diferente.`}</div>` : "")
     + (fiesta && (!cierre || CUN_URL[state.city]) ? `<div class="misawarn">${off === 0 ? "Hoy es" : "Ese día es"} fiesta (${esc(fiesta)}): ${cierre
         ? "en la CUN, su horario de domingos y festivos."
-        : "se muestra el horario de los domingos. En la CUN es su horario de festivos; en los demás <b>no es seguro</b>, porque la Capellanía no publica horario para festivos."}</div>` : "");
+        : "se muestra el horario de los domingos. En la CUN es su horario de festivos; en los demás <b>no es seguro</b>, porque la Capellanía no publica horario para festivos."}</div>` : "") + `</div>`;
   const ALL = misasAll();
   let list = ALL.filter(m => m.city === state.city && m.days.includes(dow) && (!cierre || esCUN(m)));
   if (usesFavs() && state.spaceMode === "fav") list = list.filter(m => state.favBuildings.includes(m.building));
