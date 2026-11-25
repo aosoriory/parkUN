@@ -347,10 +347,9 @@
 <!-- ===== Salas de estudio / cafeterías / meeting points ===== -->
 <div class="screen" id="scrSpaces">
   <div class="topbar">
-    <button class="icon-btn" id="btnBackSp" aria-label="Volver al inicio">←</button>
+    <button class="icon-btn" id="btnBackSp" aria-label="Volver al inicio">🏠</button>
     <div class="tseg" id="spMode" role="group" aria-label="Favoritas o todas"><button data-m="fav">Favoritas</button><button data-m="all">Todas</button></div>
     <div class="spacer"></div>
-    <div class="timer" id="timerSp">0:00</div>
   </div>
   <div class="colheader"><div class="name" id="spTitle">Salas de estudio</div></div>
   <div id="statusBannerSp" style="display:none; padding:10px 18px; font-size:12.5px; color:var(--red); background:var(--red-dim); border-bottom:1px solid var(--line);"></div>
@@ -363,7 +362,7 @@
 <!-- ===== Parkings (la app de siempre) ===== -->
 <div class="screen" id="scrParking">
   <div class="topbar">
-    <button class="icon-btn" id="btnBack" aria-label="Volver al inicio">←</button>
+    <button class="icon-btn" id="btnBack" aria-label="Volver al inicio">🏠</button>
     <button class="icon-btn" id="btnSettings" aria-label="Ajustes">⚙️</button>
     <button class="icon-btn" id="btnInfo" aria-label="Info">ⓘ</button>
     <button class="icon-btn" id="btnTalk" aria-label="Voz">🔊</button>
@@ -540,7 +539,7 @@
     <div class="sheet-body">
       <div class="sheet-fixed">
         <div>
-          <div class="section-label">Frecuencia de actualización</div>
+          <div class="section-label">Actualización automática de parkings</div>
           <div class="seg" id="freqSeg">
             <button data-v="30">30s</button>
             <button data-v="60">60s</button>
@@ -593,7 +592,7 @@
         <br><br>
         • El botón 📍 elige la ciudad: solo se ven los parkings y espacios de esa ciudad.<br>
         • Toca la pantalla para actualizar los datos. Desliza hacia abajo (desde arriba del todo) para recargar la app.<br>
-        • En Ajustes eliges la frecuencia de actualización, qué tipo de plazas ver (parking y/o recarga eléctrica), qué aparcamientos mostrar, en qué orden, y si quieres un espacio de separación (botón ⇕) debajo de alguno; y tus edificios favoritos, que deciden qué salas, cafeterías y meeting points salen en «Favoritas».<br>
+        • Los parkings se actualizan solos; salas, cafeterías y meeting points, al entrar o al tocar la pantalla. En Ajustes eliges la frecuencia de actualización de los parkings, qué tipo de plazas ver (parking y/o recarga eléctrica), qué aparcamientos mostrar, en qué orden, y si quieres un espacio de separación (botón ⇕) debajo de alguno; y tus edificios favoritos, que deciden qué salas, cafeterías y meeting points salen en «Favoritas».<br>
         • El icono del altavoz activa la lectura en voz alta de las plazas libres tras cada actualización.
         <span class="note">Tus ajustes se guardan en este dispositivo y navegador, y se mantienen la próxima vez que abras la app. Añade esta página a la pantalla de inicio para usarla como una app.</span>
       </div>
@@ -960,7 +959,7 @@ function flash(){
 
 function manualRefresh(){
   // El contador de la pantalla actual se apaga al instante...
-  if (isSpaceScreen()) state.spTimerOff = true; else state.timerOff = true;
+  if (!isSpaceScreen()) state.timerOff = true;
   tickTimer();
   refresh({flash:true});
 }
@@ -1000,7 +999,6 @@ async function refreshSpaces(){
     state.spacesLastSuccess = Date.now() - stale*1000;
     if (!stale){ try{ localStorage.setItem(SPACES_LAST_KEY, JSON.stringify({ t: Date.now(), spaces: j.spaces })); }catch(_){} }
     if (isSpaceScreen()) document.body.classList.remove("stale");
-    state.spTimerOff = false;
     setStatusSp(stale ? `Sin conexión en directo: se muestran datos de hace ${Math.max(1,Math.round(stale/60))} min.` : null);
     if (spRetryId){ clearTimeout(spRetryId); spRetryId = null; }
   }catch(e){
@@ -1202,7 +1200,9 @@ function closeCity(){ document.getElementById("ovCity").classList.remove("open")
 
 function scheduleAutoRefresh(){
   if (refreshIntervalId) clearInterval(refreshIntervalId);
-  refreshIntervalId = setInterval(()=>refresh(), state.refreshSeconds*1000);
+  // Solo los parkings se refrescan solos (en el inicio y en su pantalla). Salas, cafeterías y
+  // meeting points se piden al entrar (si los datos tienen más de 1 min) o al tocar la pantalla.
+  refreshIntervalId = setInterval(()=>{ if (!isSpaceScreen()) refreshParking(); }, state.refreshSeconds*1000);
 }
 
 function tickTimer(){
@@ -1215,7 +1215,6 @@ function tickTimer(){
     el.textContent = Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
   };
   put("timer", state.timerOff, state.lastSuccess);
-  put("timerSp", state.spTimerOff, state.spacesLastSuccess);
 }
 
 /* =========================================================
@@ -1820,8 +1819,8 @@ document.addEventListener("visibilitychange", requestWakeLock);
 // (tras estar en segundo plano la conexión suele tardar en despertar).
 function refreshIfStale(){
   if (document.visibilityState === "hidden") return;
-  const last = isSpaceScreen() ? state.spacesLastSuccess : state.lastSuccess;
-  if (!last || Date.now() - last > 60000) refresh();
+  if (isSpaceScreen()) return;   // los espacios no se refrescan solos
+  if (!state.lastSuccess || Date.now() - state.lastSuccess > 60000) refreshParking();
 }
 document.addEventListener("visibilitychange", refreshIfStale);
 window.addEventListener("online", ()=>refresh());
