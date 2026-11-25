@@ -538,21 +538,19 @@
     </div>
     <div class="sheet-body">
       <div class="sheet-fixed">
-        <div>
-          <div class="section-label">Actualización automática de parkings</div>
-          <div class="seg" id="freqSeg">
-            <button data-v="30">30s</button>
-            <button data-v="60">60s</button>
-            <button data-v="120">120s</button>
-          </div>
-        </div>
-        <div class="stabs" id="setTabs" role="tablist">
+        <div class="stabs" id="setTabs" role="tablist" style="margin-top:0">
           <button data-t="parkings">🅿️ Parkings</button>
           <button data-t="edificios">🏛️ Edificios</button>
         </div>
       </div>
 
       <div class="plist-scroll" id="tabParkings">
+        <div class="section-label">Actualización automática</div>
+        <div class="seg" id="freqSeg" style="margin-bottom:14px">
+          <button data-v="30">30s</button>
+          <button data-v="60">60s</button>
+          <button data-v="120">120s</button>
+        </div>
         <div class="section-label">Tipo de plazas</div>
         <div class="toggles" style="margin-bottom:14px">
           <div class="toggle-card" id="toggleP"><div class="ic">🅿️</div><div class="lb">PARKING</div></div>
