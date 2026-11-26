@@ -588,6 +588,9 @@
   #toast.on{ opacity:1; transform:translateX(-50%) translateY(0); }
   /* Avisos de sin conexión o datos viejos: amarillos */
   #statusBanner, #statusBannerSp{ background:#FFF6D6 !important; color:#4A3B00 !important; border-bottom:1px solid #EBCB5A !important; font-size:13.5px !important; }
+  /* Franja fija de Favoritas/Todas */
+  #spBand{ display:flex; justify-content:flex-end; align-items:center; padding:10px 12px 8px; background:var(--bg); border-bottom:1px solid #DDE2E9; flex-shrink:0; }
+  #spBand .tseg button{ height:38px; padding:0 14px; font-size:14px; }
 </style>
 </head>
 <body>
@@ -618,6 +621,8 @@
 <!-- ===== Salas de estudio / cafeterías / meeting points ===== -->
 <div class="screen" id="scrSpaces">
   <div id="statusBannerSp" style="display:none; padding:10px 18px; font-size:12.5px; color:var(--red); background:var(--red-dim); border-bottom:1px solid var(--line);"></div>
+  <!-- Franja fija con Favoritas/Todas (Salas, Cafeterías y Meeting en Pamplona); las fichas empiezan debajo -->
+  <div id="spBand" style="display:none"></div>
   <div id="spWrap">
     <div class="pull" id="pullIndicatorSp">↓ Sigue tirando para recargar</div>
     <div id="spRows"></div>
@@ -1470,6 +1475,9 @@ function renderSpaces(){
   const seg = !usesFavs() ? "" : `<div class="tseg spMode" role="group" aria-label="Favoritas o todas">${
     [["fav","Favoritas"],["all","Todas"]].map(([m,t])=>`<button data-m="${m}" class="${state.spaceMode === m ? "on" : ""}">${t}</button>`).join("")}</div>`;
   const el = document.getElementById("spRows");
+  // Favoritas/Todas va en una franja fija encima de la lista (no se desplaza)
+  const band = document.getElementById("spBand");
+  band.innerHTML = seg; band.style.display = seg ? "" : "none";
   if (!state.spaces.length || !state.spacesLastSuccess){   // la lista guardada al arrancar no se enseña como si fuera actual
     el.innerHTML = `<div class="empty">${state.spacesRefreshing ? "Cargando…" : "Sin datos todavía."}</div>`;
     return;
@@ -1478,7 +1486,7 @@ function renderSpaces(){
   if (!list.length){
     const anyInCity = state.spaces.some(s => s.kind === kind && s.city === state.city);
     el.classList.remove("hasseg");
-    el.innerHTML = (seg ? `<div class="bhead"><span class="bn"></span>${seg}</div>` : "") + (!anyInCity
+    el.innerHTML = (!anyInCity
       ? `<div class="empty">No hay ${KIND_TITLES[kind].toLowerCase()} en ${CITIES[state.city]}.</div>`
       : `<div class="empty">Ninguno de tus edificios favoritos tiene ${KIND_TITLES[kind].toLowerCase()} en ${CITIES[state.city]}.<br><br>Toca <b>Todas</b> o elige edificios en <b>⚙️ Ajustes → Edificios</b>.</div>`);
     return;
@@ -1488,8 +1496,8 @@ function renderSpaces(){
   // y cada espacio lleva su propio nombre en grande (también si el edificio tiene uno solo).
   // Cada edificio es una tarjeta con sus espacios dentro; cada espacio, su nombre, estado y una barra de ocupación.
   let prevB = null;
-  el.classList.toggle("hasseg", !!seg);
-  el.innerHTML = (seg ? `<div class="segfix">${seg}</div>` : "") + list.map(sp=>{
+  el.classList.remove("hasseg");
+  el.innerHTML = list.map(sp=>{
     const head = sp.building !== prevB
       ? (prevB !== null ? `</section>` : "") + `<section class="bcard"><div class="bhead${prevB === null ? " first" : ""}"><span class="bn">${esc(shortBuilding(sp.building))}</span></div>` : "";
     prevB = sp.building;
@@ -1841,7 +1849,7 @@ function showScreen(name){
   if (name !== "parking" && state.talkEnabled && "speechSynthesis" in window) window.speechSynthesis.cancel();
   if (name === "parking"){ applyCity(); renderRows(); }
   if (isSpaceScreen()){ document.getElementById("spWrap").scrollTop = 0; renderSpaces(); }
-  if (name === "misas"){ document.getElementById("spWrap").scrollTop = 0; renderMisas(); setStatusSp(null); tickTimer(); refreshMisas(false); return; }
+  if (name === "misas"){ document.getElementById("spBand").style.display = "none"; document.getElementById("spWrap").scrollTop = 0; renderMisas(); setStatusSp(null); tickTimer(); refreshMisas(false); return; }
   tickTimer();
   // Datos de más de 1 min (o ninguno): se piden ya al entrar
   const last = isSpaceScreen() ? state.spacesLastSuccess : state.lastSuccess;
@@ -2499,6 +2507,13 @@ document.getElementById("spRows").addEventListener("click", (e)=>{
   if (d){ setMisasOffset(Number(d.dataset.off)); misasDayPicker = false; document.getElementById("spWrap").scrollTop = 0; renderMisas(); return; }
   const b = e.target.closest(".spMode button"); if (!b) return;
   state.spaceMode = b.dataset.m;
+  renderSpaces(); renderMisas(); savePrefs();
+});
+// Favoritas/Todas de la franja fija (Salas, Cafeterías, Meeting)
+document.getElementById("spBand").addEventListener("click", (e)=>{
+  const b = e.target.closest(".spMode button"); if (!b) return;
+  state.spaceMode = b.dataset.m;
+  document.getElementById("spWrap").scrollTop = 0;
   renderSpaces(); renderMisas(); savePrefs();
 });
 document.getElementById("btnCity").addEventListener("click", openCity);
