@@ -562,11 +562,30 @@
   .info-tut:active{ filter:brightness(.92); }
   #mudanza{ padding:12px 16px 14px; background:#FFF6D6; border-bottom:1px solid #EBCB5A; color:#4A3B00; font-size:14px; line-height:1.4; flex-shrink:0; }
   #mudanza a{ display:block; margin-top:10px; height:44px; line-height:44px; text-align:center; border-radius:12px; background:var(--brand); color:#fff; font-weight:800; text-decoration:none; font-family:'Manrope',sans-serif; }
+
+  /* ---- Cuándo se llena ---- */
+  .lleno-list{ overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0; display:flex; flex-direction:column; gap:10px; padding-bottom:6px; }
+  .lcard{ background:#fff; border:1px solid #DDE2E9; border-radius:16px; padding:12px 14px 10px; }
+  .lcard h3{ margin:0; font-family:'Manrope',sans-serif; font-weight:800; font-size:19px; color:var(--text); }
+  .lcard .lt{ font-size:14px; color:#2A3442; margin:3px 0 6px; line-height:1.4; }
+  .lcard .lt b{ color:var(--text); }
+  .lcard svg{ display:block; width:100%; height:64px; }
+  .lcard .lx{ display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:2px; }
+  .lleno-foot{ font-size:12.5px; color:var(--muted); line-height:1.45; padding:2px 4px; }
+  /* ---- Ciudad automática ---- */
+  .city-opts button[data-c="auto"]{ display:flex; align-items:center; gap:10px; }
+  .city-opts button[data-c="auto"] small{ display:block; font-family:'Inter'; font-weight:500; font-size:12.5px; opacity:.8; margin-top:2px; }
+  #toast{ position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); opacity:0; transition:all .25s ease; z-index:130;
+    background:#1F2329; color:#fff; padding:12px 18px; border-radius:14px; font-size:14.5px; font-weight:600; max-width:90vw; text-align:center; pointer-events:none; }
+  #toast.on{ opacity:1; transform:translateX(-50%) translateY(0); }
+  /* Avisos de sin conexión o datos viejos: amarillos */
+  #statusBanner, #statusBannerSp{ background:#FFF6D6 !important; color:#4A3B00 !important; border-bottom:1px solid #EBCB5A !important; font-size:13.5px !important; }
 </style>
 </head>
 <body>
 
 <div id="flash"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 <div id="app">
 
 <!-- ===== Cabecera fija: nombre de la app y botones ===== -->
@@ -606,6 +625,7 @@
     <div class="ctrls">
       <button class="icon-btn" id="btnTalk" aria-label="Voz"></button>
       <div class="mseg" id="viewSeg" role="group" aria-label="Lista o mapa"><button data-v="list" aria-label="Ver la lista"><svg class="svgi" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h14"/></svg></button><button data-v="map" aria-label="Ver el mapa"><svg class="svgi" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg></button></div>
+      <button class="icon-btn" id="btnLleno" aria-label="Cuándo se llena cada parking"><svg class="svgi" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h16"/><path d="M7 15l4-5 3 3 5-7"/></svg></button>
       <div class="spacer"></div>
       <div class="timer" id="timer">0:00</div>
     </div>
@@ -764,10 +784,22 @@
       <button class="icon-btn" id="closeCity">✕</button>
     </div>
     <div class="city-opts" id="cityOpts">
+      <button data-c="auto"><svg class="svgi" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/></svg><span>Automática, por ubicación<small id="cityAutoNote"></small></span></button>
       <button data-c="pamplona">Pamplona</button>
       <button data-c="madrid">Madrid</button>
       <button data-c="sansebastian">San Sebastián</button>
     </div>
+  </div>
+</div>
+
+<!-- Cuándo se llena cada parking (estadística de días laborables) -->
+<div class="overlay" id="ovLleno">
+  <div class="sheet">
+    <div class="sheet-head">
+      <div class="sheet-title">¿Cuándo se llena?</div>
+      <button class="icon-btn" id="closeLleno">✕</button>
+    </div>
+    <div class="sheet-body"><div class="lleno-list" id="llenoList"></div></div>
   </div>
 </div>
 
@@ -846,7 +878,7 @@
         Página privada (no oficial) con las plazas libres de los aparcamientos, la ocupación de salas de estudio, cafeterías y meeting points, y el horario de misas.
 
         <h3>Arriba</h3>
-        • El botón de la ciudad (<b>PNA</b>, <b>MAD</b> o <b>SS</b>) elige Pamplona, Madrid o San Sebastián: solo se ve lo de esa ciudad, y solo salen las pestañas que existen allí.<br>
+        • El botón de la ciudad (<b>PNA</b>, <b>MAD</b> o <b>SS</b>) elige Pamplona, Madrid o San Sebastián: solo se ve lo de esa ciudad, y solo salen las pestañas que existen allí. Con <b>Automática</b> (y permiso de ubicación), al abrir la app se elige sola la del campus más cercano; si eliges una a mano, deja de cambiar sola.<br>
         • Las pestañas son <b>Parkings</b>, <b>Salas</b>, <b>Cafeterías</b>, <b>Meeting</b> y <b>Misas</b>. La app vuelve a abrir en la última que usaste.<br>
         • El botón de las rayas abre los <b>Ajustes</b>.
 
@@ -855,7 +887,8 @@
         • El número es el de plazas libres: <b style="color:#A50F15">rojo</b> 0 · <b style="color:#C85A08">naranja</b> 1 a 4 · <b style="color:#9A7400">amarillo</b> 5 a 9 · <b style="color:#1E8E4A">verde</b> 10 o más.<br>
         • Se actualizan solos (un parpadeo breve avisa de que han llegado datos nuevos). Toca la pantalla para actualizar en ese momento; el reloj de arriba cuenta el tiempo desde la última actualización.<br>
         • Con los botones de arriba cambias entre lista y mapa, y el altavoz lee en voz alta las plazas libres tras cada actualización.<br>
-        • En el mapa puedes ver plazas de parking o puntos de recarga, girarlo y hacer zoom.
+        • En el mapa puedes ver plazas de parking o puntos de recarga, girarlo y hacer zoom.<br>
+        • El botón de la gráfica muestra <b>cuándo se llena</b> cada parking un día laborable normal: a qué hora suele llenarse, cuándo vuelve a haber sitio y cuántas plazas suele haber a esta hora. Sale de la estadística de plazas de las últimas semanas.
 
         <h3>Salas, cafeterías y meeting points</h3>
         • Los datos salen de <a href="https://unav.quodus.ai/" target="_blank" rel="noopener">unav.quodus.ai</a>.<br>
@@ -877,6 +910,9 @@
         Parkings: <a href="https://www.unav.edu/web/gestion-de-espacios/aparcamientos" target="_blank" rel="noopener">Gestión de Espacios</a><br>
         Salas, cafeterías y meeting points: <a href="https://unav.quodus.ai/" target="_blank" rel="noopener">unav.quodus.ai</a><br>
         Misas: <a href="https://www.unav.edu/web/capellania/oratorios-y-misas" target="_blank" rel="noopener">Capellanía</a>, <a href="https://www.cun.es/servicios-pacientes-familiares" target="_blank" rel="noopener">CUN Pamplona</a> y <a href="https://www.cun.es/servicios-pacientes-familiares-madrid" target="_blank" rel="noopener">CUN Madrid</a>
+        <h3>Sin conexión y atajos</h3>
+        • Sin conexión la app abre igualmente y muestra los últimos datos guardados en el móvil, con un aviso amarillo de la hora a la que son.<br>
+        • Con la app instalada en Android, mantén pulsado su icono para ir directo a Parkings, Salas, Cafeterías o Misas.
         <span class="note">Desliza hacia abajo desde arriba del todo para recargar la app. Tus ajustes se guardan en este móvil y navegador. Añade esta página a la pantalla de inicio para usarla como una app.</span>
       </div>
     </div>
@@ -914,6 +950,7 @@ const NO_EV_CODES = ["P06","P07","P13"]; // sin datos de recarga eléctrica
    ESTADO (en memoria — se reinicia al recargar la página)
    ========================================================= */
 const state = {
+  cityAuto: true,   // la ciudad se elige sola por la ubicación (si el móvil da permiso)
   fullOrder: PARKING_DATA.map(p=>p.code),
   active:    PARKING_DATA.map(p=>p.code),
   verP: true,
@@ -982,6 +1019,7 @@ async function loadPrefs(){
       if (typeof p.mapFlip === "boolean") state.mapFlip = p.mapFlip;
       if (p.mapMetric === "p" || p.mapMetric === "r") state.mapMetric = p.mapMetric;
       if (CITIES[p.city]) state.city = p.city;
+      if (typeof p.cityAuto === "boolean") state.cityAuto = p.cityAuto;
       if (Array.isArray(p.favBuildings)) state.favBuildings = p.favBuildings.filter(b=>typeof b === "string");
       if (Array.isArray(p.buildingOrder)) state.buildingOrder = p.buildingOrder.filter(b=>typeof b === "string");
       if (p.spaceMode === "fav" || p.spaceMode === "all") state.spaceMode = p.spaceMode;
@@ -1006,6 +1044,7 @@ async function savePrefs(){
       mapFlip: state.mapFlip,
       mapMetric: state.mapMetric,
       city: state.city,
+      cityAuto: state.cityAuto,
       favBuildings: state.favBuildings,
       buildingOrder: state.buildingOrder,
       spaceMode: state.spaceMode,
@@ -1085,12 +1124,21 @@ const LAST_KEY = "aparcamientos_unav_last_v1";
 function saveLast(parsed){
   try{ localStorage.setItem(LAST_KEY, JSON.stringify({ t: Date.now(), data: parsed })); }catch(_){}
 }
+// Sin conexión (el móvil no tiene red) se aceptan datos guardados de hasta 7 días, con aviso;
+// con red pero sin respuesta, solo de 30 min, como siempre.
+const OFFLINE_MAX_AGE_S = 7*24*3600;
+const sinRed = () => typeof navigator !== "undefined" && navigator.onLine === false;
+function edadTexto(t){
+  const d = new Date(t), hoy = new Date();
+  const hm = String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
+  return d.toDateString() === hoy.toDateString() ? "de hoy a las " + hm : `del ${d.getDate()}/${d.getMonth()+1} a las ${hm}`;
+}
 function loadLast(){
   try{
     const j = JSON.parse(localStorage.getItem(LAST_KEY) || "null");
     if (!j || !j.data || !j.t) return null;
     const age = Math.max(0, Math.round((Date.now() - j.t)/1000));
-    return age <= BACKUP_MAX_AGE_S ? { data: j.data, t: j.t, age } : null;
+    return age <= (sinRed() ? OFFLINE_MAX_AGE_S : BACKUP_MAX_AGE_S) ? { data: j.data, t: j.t, age } : null;
   }catch(_){ return null; }
 }
 
@@ -1222,9 +1270,10 @@ async function refreshParking(opts={}){
       state.data = last.data;
       state.lastSuccess = last.t;
       tickTimer();
-      setStatus(`Sin conexión en directo: se muestran datos de hace ${Math.max(1,Math.round(last.age/60))} min. (${e.message})`);
+      setStatus(sinRed() ? `Sin conexión. Se muestran las últimas plazas guardadas, ${edadTexto(last.t)}: pueden no estar al día.`
+        : `Sin conexión en directo: se muestran datos de hace ${Math.max(1,Math.round(last.age/60))} min. (${e.message})`);
     } else {
-      setStatus("No se pudieron cargar los datos: " + e.message);
+      setStatus(sinRed() ? "Sin conexión: no hay plazas guardadas en este móvil." : "No se pudieron cargar los datos: " + e.message);
     }
     // Fallo transitorio probable (red, proxy caído un instante): reintenta
     // pronto en vez de esperar al próximo refresco programado.
@@ -1310,12 +1359,13 @@ async function refreshSpaces(){
     let last = null;
     try{ last = JSON.parse(localStorage.getItem(SPACES_LAST_KEY) || "null"); }catch(_){}
     const age = last && last.t ? Math.round((Date.now() - last.t)/1000) : null;
-    if (last && Array.isArray(last.spaces) && age <= BACKUP_MAX_AGE_S){
+    if (last && Array.isArray(last.spaces) && age <= (sinRed() ? OFFLINE_MAX_AGE_S : BACKUP_MAX_AGE_S)){
       state.spaces = last.spaces;
       state.spacesLastSuccess = last.t;
-      setStatusSp(`Sin conexión en directo: se muestran datos de hace ${Math.max(1,Math.round(age/60))} min. (${msg})`);
+      setStatusSp(sinRed() ? `Sin conexión. Se muestra la última ocupación guardada, ${edadTexto(last.t)}: puede no estar al día.`
+        : `Sin conexión en directo: se muestran datos de hace ${Math.max(1,Math.round(age/60))} min. (${msg})`);
     } else {
-      setStatusSp("No se pudieron cargar los espacios: " + msg);
+      setStatusSp(sinRed() ? "Sin conexión: no hay datos de salas guardados en este móvil." : "No se pudieron cargar los espacios: " + msg);
     }
     if (!spRetryId) spRetryId = setTimeout(()=>{ spRetryId = null; if (state.screen !== "parking") refreshSpaces(); }, 8000);
   }finally{
@@ -1832,7 +1882,8 @@ function applyCity(){
   applyView();
 }
 function openCity(){
-  document.querySelectorAll("#cityOpts button").forEach(b=>b.classList.toggle("on", b.dataset.c === state.city));
+  document.querySelectorAll("#cityOpts button").forEach(b=>b.classList.toggle("on", b.dataset.c === "auto" ? state.cityAuto : (!state.cityAuto && b.dataset.c === state.city)));
+  document.getElementById("cityAutoNote").textContent = state.cityAuto ? "Ahora: " + CITIES[state.city] : "La ciudad más cercana al abrir la app";
   document.getElementById("ovCity").classList.add("open");
 }
 function closeCity(){ document.getElementById("ovCity").classList.remove("open"); }
@@ -2435,7 +2486,9 @@ document.getElementById("closeCity").addEventListener("click", closeCity);
 document.getElementById("ovCity").addEventListener("click", (e)=>{ if (e.target.id === "ovCity") closeCity(); });
 document.getElementById("cityOpts").addEventListener("click", (e)=>{
   const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.c === "auto"){ state.cityAuto = true; savePrefs(); closeCity(); ciudadAutomatica(true); return; }
   state.city = b.dataset.c;
+  state.cityAuto = false;   // elegida a mano: deja de cambiar sola
   closeCity(); applyCity(); renderRows(); renderSpaces(); renderMisas(); renderTabs(); savePrefs();
 });
 initGestures(document.getElementById("spWrap"), document.getElementById("pullIndicatorSp"));
@@ -2464,6 +2517,103 @@ document.getElementById("btnFlip").addEventListener("click", ()=>{
 });
 
 
+
+
+/* =========================================================
+   CIUDAD AUTOMÁTICA
+   Con permiso de ubicación, al abrir la app se elige la ciudad del campus más cercano
+   (si está a menos de 150 km). Elegir una ciudad a mano lo desactiva; «Automática» lo vuelve a activar.
+   ========================================================= */
+const CAMPUS = { pamplona:[42.8015,-1.6625], madrid:[40.4520,-3.6380], sansebastian:[43.3060,-2.0110] };
+function toast(msg){
+  const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("on");
+  clearTimeout(toast._id); toast._id = setTimeout(()=>t.classList.remove("on"), 3200);
+}
+function kmEntre(a, b){
+  const R = 6371, r = x => x*Math.PI/180;
+  const dLa = r(b[0]-a[0]), dLo = r(b[1]-a[1]);
+  const h = Math.sin(dLa/2)**2 + Math.cos(r(a[0]))*Math.cos(r(b[0]))*Math.sin(dLo/2)**2;
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+async function ciudadAutomatica(pedido){
+  if (!state.cityAuto || !("geolocation" in navigator)) return;
+  try{
+    if (!pedido && navigator.permissions){
+      const st = await navigator.permissions.query({ name:"geolocation" });
+      if (st.state === "denied") return;   // ya dijo que no: no se vuelve a preguntar
+    }
+  }catch(_){}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const yo = [pos.coords.latitude, pos.coords.longitude];
+    let mejor = null, d = Infinity;
+    Object.entries(CAMPUS).forEach(([c, xy])=>{ const k = kmEntre(yo, xy); if (k < d){ d = k; mejor = c; } });
+    if (!mejor || d > 150){ if (pedido) toast("Estás lejos de los tres campus: se queda " + CITIES[state.city] + "."); return; }
+    if (mejor !== state.city){
+      state.city = mejor;
+      applyCity(); renderRows(); renderSpaces(); renderMisas(); renderTabs(); savePrefs();
+      toast("Ciudad: " + CITIES[mejor] + " (por tu ubicación)");
+    } else if (pedido) toast("Ciudad: " + CITIES[mejor] + " (por tu ubicación)");
+  }, err=>{
+    if (pedido) toast(err.code === 1 ? "Sin permiso de ubicación: elige la ciudad a mano." : "No se pudo saber tu ubicación.");
+  }, { enableHighAccuracy:false, timeout:10000, maximumAge:10*60*1000 });
+}
+
+/* =========================================================
+   CUÁNDO SE LLENA CADA PARKING
+   perfil.json: plazas libres medias cada 15 min (7:00–21:00) en días laborables y, por día,
+   la primera hora en que se llenó. Lo saca la tarea programada de la base de la estadística.
+   ========================================================= */
+let perfil = null;
+async function cargarPerfil(){
+  if (perfil) return perfil;
+  const r = await fetch("perfil.json", { cache:"no-cache" });   // sin conexión, la copia del service worker
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return perfil = await r.json();
+}
+const hm2min = h => { const [a,b] = h.split(":").map(Number); return a*60 + b; };
+const min2hm = m => Math.floor(m/60) + ":" + String(Math.round(m%60)).padStart(2,"0");
+function grafica(v, ahoraMin){
+  const W = 280, H = 60, n = v.length, max = Math.max(5, ...v);
+  const x = i => i*(W/(n-1)), y = val => H - 4 - (val/max)*(H-8);
+  const pts = v.map((val,i)=>`${x(i).toFixed(1)},${y(val).toFixed(1)}`).join(" ");
+  // tramos «lleno» (media por debajo de 1 plaza) en rojo
+  let rojos = "";
+  v.forEach((val,i)=>{ if (val < 1) rojos += `<rect x="${(x(i)-W/(n-1)/2).toFixed(1)}" y="${H-4}" width="${(W/(n-1)).toFixed(1)}" height="4" fill="#A50F15"/>`; });
+  const ahora = ahoraMin >= 420 && ahoraMin <= 1260 ? `<line x1="${((ahoraMin-420)/15*(W/(n-1))).toFixed(1)}" y1="0" x2="${((ahoraMin-420)/15*(W/(n-1))).toFixed(1)}" y2="${H}" stroke="#0B5FFF" stroke-width="1.5" stroke-dasharray="3 3"/>` : "";
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+    <polygon points="0,${H-4} ${pts} ${W},${H-4}" fill="#E3E7ED"/><polyline points="${pts}" fill="none" stroke="#1F2329" stroke-width="2" vector-effect="non-scaling-stroke"/>${rojos}${ahora}</svg>`;
+}
+async function abrirLleno(){
+  const box = document.getElementById("llenoList");
+  document.getElementById("ovLleno").classList.add("open");
+  box.innerHTML = `<div class="empty">Cargando…</div>`;
+  let pf;
+  try{ pf = await cargarPerfil(); }
+  catch(e){ box.innerHTML = `<div class="empty">No se pudo cargar la estadística${sinRed() ? " (sin conexión)" : ""}.</div>`; return; }
+  const now = new Date(), ahoraMin = now.getHours()*60 + now.getMinutes();
+  const codes = state.fullOrder.filter(c => !isGap(c) && showParking(c) && pf.parkings[c]);
+  if (!codes.length){ box.innerHTML = `<div class="empty">No hay estadística de los parkings de ${CITIES[state.city]}.</div>`; return; }
+  const fmt = f => { const d = new Date(f + "T12:00"); return d.getDate() + " " + MESES_LARGOS[d.getMonth()].slice(0,3); };
+  box.innerHTML = codes.map(c=>{
+    const q = pf.parkings[c], v = q.perfil, ll = q.lleno.map(hm2min).sort((a,b)=>a-b);
+    let txt;
+    if (ll.length >= Math.ceil(q.dias/2)){
+      const med = ll[Math.floor(ll.length/2)];
+      // desde cuándo vuelve a haber sitio holgado: primer tramo tras el lleno con 10 plazas o más de media (y el siguiente también)
+      const k0 = Math.max(0, Math.floor((med-420)/15));
+      const k = v.findIndex((x,i)=> i > k0 && x >= 10 && (v[i+1] === undefined || v[i+1] >= 10));
+      txt = `Suele llenarse hacia las <b>${min2hm(med)}</b> (${ll.length} de ${q.dias} días)` + (k > 0 ? `; vuelve a haber 10 plazas o más hacia las <b>${min2hm(420 + k*15)}</b>.` : ".");
+    } else if (ll.length) txt = `Se llenó ${ll.length} de ${q.dias} días (la primera vez, hacia las ${min2hm(ll[0])}); casi siempre hay sitio.`;
+    else txt = `No se ha llenado ningún día. Lo más justo, hacia las <b>${min2hm(420 + v.indexOf(Math.min(...v))*15)}</b> (unas ${Math.min(...v)} plazas libres).`;
+    const ki = Math.round((ahoraMin-420)/15);
+    const ahora = ki >= 0 && ki < v.length ? " Un día normal, a esta hora " + (v[ki] < 1 ? "<b>suele estar lleno</b>." : v[ki] === 1 ? "queda <b>1</b> plaza." : `quedan unas <b>${v[ki]}</b>.`) : "";
+    return `<div class="lcard"><h3>${NAME_BY_CODE[c].name}</h3><div class="lt">${txt}${ahora}</div>${grafica(v, ahoraMin)}
+      <div class="lx"><span>7:00</span><span>9</span><span>11</span><span>13</span><span>15</span><span>17</span><span>19</span><span>21:00</span></div></div>`;
+  }).join("") + `<div class="lleno-foot">Plazas libres medias en días laborables, del ${fmt(pf.desde)} al ${fmt(pf.hasta)} (${pf.dias} días). Rojo abajo: lleno de media; raya azul: ahora. Se actualiza cada pocos días.</div>`;
+}
+document.getElementById("btnLleno").addEventListener("click", abrirLleno);
+document.getElementById("closeLleno").addEventListener("click", ()=>document.getElementById("ovLleno").classList.remove("open"));
+document.getElementById("ovLleno").addEventListener("click", (e)=>{ if (e.target.id === "ovLleno") e.target.classList.remove("open"); });
 
 /* =========================================================
    MUDANZA A LA DIRECCIÓN NUEVA
@@ -2549,8 +2699,8 @@ function tutInstalar(){
     </details>`;
 }
 const TUT = [
-  { art:"hola", t:"Bienvenido a Ubi", h:()=>`<p><b>Ubi</b> es «dónde» en latín: dónde aparcar, estudiar, tomar algo o ir a misa en la Universidad de Navarra.</p><p>Arriba eliges la ciudad (<b>PNA</b>, <b>MAD</b> o <b>SS</b>) y, en las pestañas, qué buscas. La app recuerda tu última pestaña y tus ajustes.</p><p>Página no oficial, con datos públicos de la Universidad.</p>` },
-  { art:"P", t:"Parkings", h:()=>`<p>Cada parking con sus plazas libres, en letra grande para leerlo de un vistazo:</p><p>${tag("#A50F15","0")} lleno · ${tag("#E8700F","1–4")} casi lleno · ${tag("#F2C200","5–9")} pocas · ${tag("#1E8E4A","10+")} hay sitio</p><ul><li>Se actualiza solo; <b>toca la pantalla</b> para actualizar ya.</li><li>Arriba cambias entre <b>lista</b> y <b>mapa</b>, y el <b>altavoz</b> te lee las plazas en voz alta.</li></ul>` },
+  { art:"hola", t:"Bienvenido a Ubi", h:()=>`<p><b>Ubi</b> es «dónde» en latín: dónde aparcar, estudiar, tomar algo o ir a misa en la Universidad de Navarra.</p><p>Arriba eliges la ciudad (<b>PNA</b>, <b>MAD</b> o <b>SS</b>), o deja que se elija sola por tu ubicación, y en las pestañas, qué buscas. La app recuerda tu última pestaña y tus ajustes.</p><p>Página no oficial, con datos públicos de la Universidad.</p>` },
+  { art:"P", t:"Parkings", h:()=>`<p>Cada parking con sus plazas libres, en letra grande para leerlo de un vistazo:</p><p>${tag("#A50F15","0")} lleno · ${tag("#E8700F","1–4")} casi lleno · ${tag("#F2C200","5–9")} pocas · ${tag("#1E8E4A","10+")} hay sitio</p><ul><li>Se actualiza solo; <b>toca la pantalla</b> para actualizar ya.</li><li>Arriba cambias entre <b>lista</b> y <b>mapa</b>, y el <b>altavoz</b> te lee las plazas en voz alta.</li><li>El botón de la <b>gráfica</b> te dice a qué hora suele llenarse cada parking.</li></ul>` },
   { art:"S", t:"Salas, cafeterías y meeting points", h:()=>`<p>Por edificios, con si está abierto, cuánta gente hay y una barra de ocupación.</p><ul><li><b>Toca un espacio</b> para ver su ficha: plano de puestos, servicios y ocupación de la semana.</li><li>En Pamplona, <b>Favoritas</b> muestra solo tus edificios y <b>Todas</b>, todos.</li></ul>` },
   { art:"M", t:"Misas", h:()=>`<p>Las misas del día por hora, de la Capellanía y de la Clínica (CUN).</p><ul><li><b>Toca la fecha</b> para ver otro día en el calendario.</li><li>En festivos, Navidad, Semana Santa y verano, un aviso amarillo te dice si el horario puede cambiar.</li></ul>` },
   { art:"A", t:"Ajustes", h:()=>`<p>Con el botón de las rayas, arriba:</p><ul><li><b>Parkings:</b> cuáles ver, en qué orden y cada cuánto se actualizan.</li><li><b>Edificios:</b> tus favoritos de Pamplona, que deciden qué sale en «Favoritas».</li></ul><p>Este tutorial se puede volver a ver desde el botón de <b>información</b>.</p>` },
@@ -2578,7 +2728,11 @@ function tutRender(){
   };
 }
 function tutAbrir(){ tutPaso = 0; tutRender(); document.getElementById("tut").classList.add("open"); }
-function tutCerrar(){ document.getElementById("tut").classList.remove("open"); try{ localStorage.setItem(TUT_KEY, "1"); }catch(_){} }
+function tutCerrar(){
+  const primera = !localStorage.getItem(TUT_KEY);
+  document.getElementById("tut").classList.remove("open"); try{ localStorage.setItem(TUT_KEY, "1"); }catch(_){}
+  if (primera) ciudadAutomatica(false);
+}
 document.getElementById("tutNext").addEventListener("click", ()=>{ if (tutPaso < TUT.length - 1){ tutPaso++; tutRender(); } else tutCerrar(); });
 document.getElementById("tutBack").addEventListener("click", ()=>{ if (tutPaso){ tutPaso--; tutRender(); } });
 document.getElementById("tutSkip").addEventListener("click", tutCerrar);
@@ -2589,6 +2743,12 @@ document.getElementById("btnTutorial").addEventListener("click", ()=>{ document.
    ========================================================= */
 (async function start(){
   await loadPrefs();
+  // Atajos del icono (mantener pulsado): ?tab=parking|salas|cafeterias|meeting|misas
+  const tabAtajo = new URLSearchParams(location.search).get("tab");
+  if (["parking","salas","cafeterias","meeting","misas"].includes(tabAtajo)){
+    state.screen = tabAtajo;
+    history.replaceState(null, "", location.pathname + location.hash);
+  }
   document.getElementById("btnTalk").classList.toggle("active", state.talkEnabled);
   document.getElementById("btnTalk").innerHTML = state.talkEnabled ? ICON_VOZ_ON : ICON_VOZ_OFF;
   try{
@@ -2603,7 +2763,8 @@ document.getElementById("btnTutorial").addEventListener("click", ()=>{ document.
   timerIntervalId = setInterval(tickTimer, 1000);
   scheduleAutoRefresh();
   setTimeout(()=>refresh(), 400);
-  if (tutNuevo) tutAbrir();   // primera visita
+  if (tutNuevo) tutAbrir();   // primera visita (la ubicación se pide al cerrar el tutorial)
+  else ciudadAutomatica(false);
   avisoMudanza();
 })();
 

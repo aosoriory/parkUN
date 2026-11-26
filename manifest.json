@@ -1,7 +1,7 @@
 {
   "name": "Ubi",
   "short_name": "Ubi",
-  "description": "Plazas libres en los aparcamientos de la Universidad de Navarra",
+  "description": "Dónde aparcar, estudiar, tomar algo o ir a misa en la Universidad de Navarra",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -26,6 +26,56 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Parkings",
+      "short_name": "Parkings",
+      "url": "./index.html?tab=parking",
+      "icons": [
+        {
+          "src": "atajo-parking.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Salas de estudio",
+      "short_name": "Salas",
+      "url": "./index.html?tab=salas",
+      "icons": [
+        {
+          "src": "atajo-salas.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Cafeterías",
+      "short_name": "Cafeterías",
+      "url": "./index.html?tab=cafeterias",
+      "icons": [
+        {
+          "src": "atajo-cafeterias.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Misas",
+      "short_name": "Misas",
+      "url": "./index.html?tab=misas",
+      "icons": [
+        {
+          "src": "atajo-misas.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }
