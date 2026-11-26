@@ -457,7 +457,15 @@
 
   .colheader .cols{ padding-right:14px; }
   .row.twocols .name{ font-size:27px; padding-left:12px; }
-  .colheader.twocols .col{ width:72px; }
+  /* Dos columnas (P y ⚡): las cabeceras, más estrechas pero centradas sobre sus cajas (centros a 50 y 122 px del borde),
+     y los botones algo más juntos, para que el contador no quede pegado a la P. */
+  .colheader.twocols .cols{ padding-right:28px; gap:28px; }
+  .colheader.twocols .col{ width:44px; padding-left:0; }
+  .colheader.twocols .ctrls{ gap:5px; padding-right:4px; }
+  .colheader.twocols .mseg button{ width:36px; }
+  .colheader.twocols .timer{ font-size:16px; min-width:0; margin-left:auto; }
+  .colheader.twocols .ctrls .spacer{ display:none; }
+  .colheader .timer{ white-space:nowrap; flex-shrink:0; }
   #mapMetric button{ width:44px; }
   .pk.red{ fill:#A50F15; stroke:#6B0A0E; } .pn.red{ fill:#A50F15; }
   /* ---- Salas, cafeterías y meeting: una tarjeta por edificio, barra de ocupación continua ---- */
