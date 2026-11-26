@@ -229,10 +229,10 @@
   #mapWrap{ flex:1; display:none; flex-direction:column; position:relative; overflow:hidden; min-height:0; }
   #mapWrap.on{ display:flex; }
   #mapBox{ flex:0 0 auto; padding:6px 8px 0; display:flex; align-items:flex-start; justify-content:center; touch-action:none; }
-  #mapViewport{ position:relative; overflow:hidden; width:min(100%, calc((100dvh - 262px) * 0.5822)); aspect-ratio:500.7 / 860; border-radius:10px; background:#e9eee3; touch-action:none; }
+  #mapViewport{ position:relative; overflow:hidden; width:100%; aspect-ratio:612 / 452; border-radius:10px; background:#e9eee3; touch-action:none; }
   #campusMap{ width:100%; height:100%; display:block; transform-origin:0 0; will-change:transform; }
   #campusMap text{ font-family:'Inter',system-ui,sans-serif; }
-  #compass{ position:absolute; top:8px; left:8px; width:38px; height:38px; background:rgba(255,255,255,.88); border-radius:50%; pointer-events:none; }
+  #compass{ position:absolute; top:8px; right:8px; width:38px; height:38px; background:rgba(255,255,255,.88); border-radius:50%; pointer-events:none; }
   #compass.flipped{ top:auto; left:auto; bottom:8px; right:8px; }
   .pk{ fill:#4a4a4d; fill-opacity:.82; stroke:#2b2b2d; stroke-width:1.5; stroke-linejoin:round; }
   .pk.green{ fill:#1E8E3E; stroke:#0f5a26; }
@@ -243,9 +243,6 @@
   .pn{ font-family:'Space Grotesk','Inter',system-ui,sans-serif !important; font-weight:700; fill:#8a949d; stroke:#fff; stroke-linejoin:round; paint-order:stroke fill; }
   .pn.green{ fill:#1E8E3E; } .pn.orange{ fill:#F08A24; } .pn.yellow{ fill:#F2CB05; } .pn.red{ fill:#D5302F; }
   .pl{ fill:#33414d; }
-  .lbl-f{ display:none; }
-  #campusMap.flipped .lbl-n{ display:none; }
-  #campusMap.flipped .lbl-f{ display:inline; }
   #mapFoot{ display:flex; align-items:center; gap:8px; padding:10px 10px 12px; color:var(--muted); font-size:12px; flex-shrink:0; }
   #mapCaption{ flex:1; line-height:1.3; }
   .mbtn{ width:44px; height:44px; border-radius:10px; border:1px solid rgba(255,255,255,.30); background:#3B3F47; color:var(--text); display:flex; align-items:center; justify-content:center; font-size:21px; cursor:pointer; flex-shrink:0; }
@@ -604,6 +601,12 @@
   #campusMap.spmode .pk{ fill:#c9cfd6 !important; stroke:#aeb6bf !important; fill-opacity:1; }
   #campusMap:not(.spmode) #spMarks{ display:none; }
   #mapWrap.spmode #mapMetric{ display:none; }
+  /* Espacios: todo el plano a la altura disponible; se desplaza a lo ancho (sin pellizcar) */
+  #mapWrap.spmode #mapBox{ touch-action:pan-x; }
+  #mapWrap.spmode #mapViewport{ aspect-ratio:auto; height:calc(100dvh - 270px); max-height:600px; overflow-x:auto; overflow-y:hidden; touch-action:pan-x; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  #mapWrap.spmode #mapViewport::-webkit-scrollbar{ display:none; }
+  #mapWrap.spmode #campusMap{ width:auto; height:100%; aspect-ratio:860 / 500.7; transform:none !important; }
+  #mapWrap.spmode #compass{ display:none; }
 </style>
 </head>
 <body>
@@ -666,9 +669,8 @@
   <div id="mapWrap">
     <div class="pull" id="pullIndicator2">↓ Sigue tirando para recargar</div>
     <div id="mapBox"><div id="mapViewport">
-<svg xmlns="http://www.w3.org/2000/svg" id="campusMap" viewBox="-70 0 500.7 860" preserveAspectRatio="xMidYMid meet">
-<defs><clipPath id="cl"><rect x="-70" width="500.7" height="860"/></clipPath></defs>
-<g id="mapRot" clip-path="url(#cl)"><rect x="-70" width="500.7" height="860" fill="#e9eee3"/>
+<svg xmlns="http://www.w3.org/2000/svg" id="campusMap" viewBox="-600 -15 612 452" preserveAspectRatio="xMidYMid meet">
+<g id="mapRot"><g id="mapN" transform="rotate(90)"><rect x="-120" y="-60" width="600" height="980" fill="#e9eee3"/>
 <!-- Zona oeste y edificios añadidos el 26 nov 2026, calcados del plano oficial del campus (transformación afín ajustada con 9 puntos) -->
 <path d="M138.4,499.5 L126.9,589.5 L151.8,630.9 L197.1,703.5 L237.9,768.2 L278.7,832.9" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M28.2,433.0 L22.3,485.8 L18.9,558.1 L24.1,594.3 L61.1,661.6 L92.5,723.8 L124.0,780.7 L151.2,827.3" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -812,9 +814,9 @@
 <text class="pn" id="pn-P08" x="40.8" y="531.5" text-anchor="middle" data-cx="40.8" data-cy="515.5"></text>
 <text class="pl" id="pl-P09" x="319.5" y="337.0" font-size="6.5" font-weight="700" text-anchor="middle">P9</text>
 <text class="pn" id="pn-P09" x="319.5" y="376.0" text-anchor="middle" data-cx="319.5" data-cy="360.0"></text>
-<g id="spMarks"></g></g></svg>
+</g><g id="spMarks"></g></g></svg>
 <svg id="compass" viewBox="-19 -19 38 38"><circle r="17" fill="none" stroke="#9aa5ad" stroke-width="1.2"/>
-        <g id="cmpN"><path d="M-12,0 L-3,-5 L-3,5 Z" fill="#c62828"/><path d="M12,0 L3,-5 L3,5 Z" fill="#9aa5ad"/><text x="-7" y="-7" font-size="8" font-weight="700" fill="#c62828" text-anchor="middle" font-family="Inter,sans-serif">N</text></g>
+        <g id="cmpN"><path d="M0,-12 L-5,-3 L5,-3 Z" fill="#c62828"/><path d="M0,12 L-5,3 L5,3 Z" fill="#9aa5ad"/><text x="-9" y="-6" font-size="8" font-weight="700" fill="#c62828" text-anchor="middle" font-family="Inter,sans-serif">N</text></g>
         <g id="cmpF" style="display:none"><path d="M12,0 L3,-5 L3,5 Z" fill="#c62828"/><path d="M-12,0 L-3,-5 L-3,5 Z" fill="#9aa5ad"/><text x="7" y="-7" font-size="8" font-weight="700" fill="#c62828" text-anchor="middle" font-family="Inter,sans-serif">N</text></g>
       </svg></div>
     </div>
@@ -822,7 +824,7 @@
       <span id="mapCaption">Esquema aproximado · Este arriba</span>
       <button class="mbtn" id="btnZoomReset" aria-label="Quitar el zoom" style="display:none">⤢</button>
       <div class="mseg" id="mapMetric"><button data-m="p" aria-label="Plazas de parking"><svg class="svgi" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M10 16V8h3a2.5 2.5 0 0 1 0 5h-3"/></svg></button><button data-m="r" aria-label="Puntos de recarga"><svg class="svgi" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg></button></div>
-      <button class="mbtn" id="btnFlip" aria-label="Girar el mapa"><svg class="svgi" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg></button>
+      <button class="mbtn" id="btnFlip" aria-label="Girar el mapa" style="display:none"><svg class="svgi" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg></button>
     </div>
   </div>
 </div><!-- /scrParking -->
@@ -947,14 +949,14 @@
         • El número es el de plazas libres: <b style="color:#A50F15">rojo</b> 0 · <b style="color:#C85A08">naranja</b> 1 a 4 · <b style="color:#9A7400">amarillo</b> 5 a 9 · <b style="color:#1E8E4A">verde</b> 10 o más.<br>
         • Se actualizan solos (un parpadeo breve avisa de que han llegado datos nuevos). Toca la pantalla para actualizar en ese momento; el reloj de arriba cuenta el tiempo desde la última actualización.<br>
         • Con los botones de arriba cambias entre lista y mapa, y el altavoz lee en voz alta las plazas libres tras cada actualización.<br>
-        • En el mapa puedes ver plazas de parking o puntos de recarga, girarlo y hacer zoom.<br>
+        • El mapa (Norte arriba) muestra la zona de los parkings; puedes ver plazas de parking o puntos de recarga y ampliarlo con dos dedos.<br>
         • El botón de la gráfica muestra <b>cuándo se llena</b> cada parking un día laborable normal: a qué hora suele llenarse, cuándo vuelve a haber sitio y cuántas plazas suele haber a esta hora. Sale de la estadística de plazas de las últimas semanas.
 
         <h3>Salas, cafeterías y meeting points</h3>
         • Los datos salen de <a href="https://unav.quodus.ai/" target="_blank" rel="noopener">unav.quodus.ai</a>.<br>
         • Agrupados por edificio, con si está abierto, hasta cuándo, cuántas personas hay y la barra de ocupación: <b style="color:#1E8E4A">verde</b> menos del 50 % · <b style="color:#9A7400">amarillo</b> hasta el 79 % · <b style="color:#C85A08">naranja</b> hasta el 94 % · <b style="color:#A50F15">rojo</b> 95 % o más.<br>
         • Se actualizan al entrar en la pestaña o al tocar la pantalla.<br>
-        • En Pamplona, con el botón del mapa ves cada edificio en el plano con la ocupación más baja de sus espacios abiertos (o «Cerrada»); toca un marcador para ir a ese edificio en la lista.<br>
+        • En Pamplona, con el botón del mapa ves cada edificio en el plano (Norte arriba; desliza a los lados para recorrerlo) con la ocupación más baja de sus espacios abiertos (o «Cerrada»); toca un marcador para ir a ese edificio en la lista.<br>
         • Toca un espacio para ver su ficha completa (plano de puestos, servicios y ocupación de la semana); la flecha o el «atrás» del móvil vuelven a la lista.<br>
         • En Pamplona, <b>Favoritas</b> muestra solo tus edificios favoritos y <b>Todas</b>, todos. En Madrid y San Sebastián se ven siempre todos.
 
@@ -2084,16 +2086,28 @@ function renderList(){
    ========================================================= */
 const MAP_CODES = ["P01","P02","P03","P04","P05","P06","P07","P08","P09"];
 
+// El plano está dibujado con el Este arriba y se gira 90° (#mapN) para dejar el Norte arriba:
+// cada texto se gira -90° sobre su centro para que se lea derecho.
 function applyFlipTexts(){
   const svg = document.getElementById("campusMap");
-  svg.querySelectorAll("text:not(.lbl-n):not(.lbl-f)").forEach(t=>{
-    if (!state.mapFlip){ t.removeAttribute("transform"); return; }
+  svg.querySelectorAll("#mapN text:not(.lbl-n):not(.lbl-f)").forEach(t=>{
     const x = parseFloat(t.getAttribute("x")), y = parseFloat(t.getAttribute("y"));
     if (isNaN(x) || isNaN(y)) return;
     const fs = parseFloat(t.getAttribute("font-size")) || 7;
-    t.setAttribute("transform", `rotate(180 ${x} ${(y - fs*0.35).toFixed(1)})`);
+    t.setAttribute("transform", `rotate(-90 ${x} ${(y - fs*0.35).toFixed(1)})`);
   });
 }
+// Nombres de calles (siguen la calle): de cada pareja se deja la que, ya girada, se lee de izquierda a derecha.
+(function orientarCalles(){
+  document.querySelectorAll("#campusMap text.lbl-n, #campusMap text.lbl-f").forEach(t=>{
+    const tp = t.querySelector("textPath"); if (!tp) return;
+    const path = document.querySelector(tp.getAttribute("href"));
+    const ns = (path.getAttribute("d").match(/-?[\d.]+/g) || []).map(Number);
+    if (ns.length < 4) return;
+    const dy = ns[ns.length-1] - ns[1];
+    t.style.display = dy < 0 ? "inline" : "none";
+  });
+})();
 
 function renderMap(){
   MAP_CODES.forEach(code=>{
@@ -2124,12 +2138,11 @@ function applyFlip(){
   const svg = document.getElementById("campusMap");
   const vb = svg.viewBox.baseVal;
   svg.classList.toggle("flipped", state.mapFlip);
-  document.getElementById("mapRot").setAttribute("transform",
-    state.mapFlip ? `rotate(180 ${vb.x + vb.width/2} ${vb.y + vb.height/2})` : "");
-  document.getElementById("mapCaption").textContent =
-    "Esquema aproximado · " + (state.mapFlip ? "Oeste arriba" : "Este arriba");
-  document.getElementById("cmpN").style.display = state.mapFlip ? "none" : "";
-  document.getElementById("cmpF").style.display = state.mapFlip ? "" : "none";
+  state.mapFlip = false;   // ya no se gira: Norte siempre arriba
+  document.getElementById("mapRot").removeAttribute("transform");
+  document.getElementById("mapCaption").textContent = "Esquema aproximado · Norte arriba";
+  document.getElementById("cmpN").style.display = "";
+  document.getElementById("cmpF").style.display = "none";
   // Brújula en la esquina nordeste: con el Este arriba y el Norte a la izquierda es
   // la de arriba a la izquierda; al girar el mapa pasa a abajo a la derecha.
   document.getElementById("compass").classList.toggle("flipped", state.mapFlip);
@@ -2300,8 +2313,9 @@ function setMapZoom(k, x, y){
     indicator.textContent = "↓ Sigue tirando para recargar";
   }
 
+  const esp = () => document.getElementById("mapWrap").classList.contains("spmode");   // espacios: sin pellizcar, se desplaza a lo ancho
   box.addEventListener("touchstart", (e)=>{
-    if (e.touches.length >= 2){ startPinch(e.touches); return; }
+    if (e.touches.length >= 2){ if (!esp()) startPinch(e.touches); else mode = null; return; }
     if (mode !== "pinch"){ startPan(e.touches[0]); maxMove = 0; dragAmt = 0; pinched = false; }
   }, {passive:true});
 
@@ -2350,6 +2364,7 @@ function setMapZoom(k, x, y){
 
   // Rueda del ratón (ordenador)
   vp.addEventListener("wheel", (e)=>{
+    if (esp()) return;
     e.preventDefault();
     const p = pt(e);
     const k = mapZoom.k * (e.deltaY < 0 ? 1.2 : 1/1.2);
@@ -2642,21 +2657,29 @@ document.getElementById("btnFlip").addEventListener("click", ()=>{
    (o «Cerrado»). Tocar un marcador lleva a ese edificio en la lista.
    ========================================================= */
 const ANCLAS_EDIFICIO = {"Edificio Amigos": [267.6, 140], "Edificio Biblioteca Central": [200, 292], "Edificio FCOM": [205, 205], "Edificio Central": [232, 372], "Edificio de Arquitectura": [356, 290], "Edificio Facultades Eclesiásticas": [293.3, 37.1], "Edificio ICS - Instituto Cultura y Sociedad": [248, 268], "Edificio ISB": [258, 318], "Edificio de Ciencias": [57.6, 615.1], "Edificio Biblioteca de Ciencias": [130.4, 722.9]};
+const VB_PARKINGS = "-600 -15 612 452";   // zona de los parkings (Norte arriba)
+const VB_TODO = "-860 -70 860 500.7";      // todo el plano
 const spViewActual = () => state.city === "pamplona" ? state.spView : "list";
 function placeMap(){
   const mw = document.getElementById("mapWrap");
   const svg = document.getElementById("campusMap");
   const enEspacios = isSpaceScreen() && spViewActual() === "map";
+  svg.setAttribute("viewBox", enEspacios ? VB_TODO : VB_PARKINGS);
   if (enEspacios){
     const scr = document.getElementById("scrSpaces");
     if (mw.parentElement !== scr) scr.appendChild(mw);
+    const nuevo = !mw.classList.contains("spmode");
     mw.classList.add("on", "spmode"); svg.classList.add("spmode");
     document.getElementById("spWrap").style.display = "none";
+    setMapZoom(1, 0, 0);
+    // la primera vez, centrado en la zona central del campus (Biblioteca Central)
+    if (nuevo) requestAnimationFrame(()=>{ const vp = document.getElementById("mapViewport"); vp.scrollLeft = (vp.scrollWidth - vp.clientWidth) * 0.62; });
   } else {
     if (isSpaceScreen() || state.screen === "misas") document.getElementById("spWrap").style.display = "";
     const scr = document.getElementById("scrParking");
     if (mw.parentElement !== scr){ scr.appendChild(mw); }
     mw.classList.remove("spmode"); svg.classList.remove("spmode");
+    document.getElementById("mapViewport").scrollLeft = 0;
     applyView();
   }
 }
@@ -2675,13 +2698,12 @@ function renderSpMarks(){
     const txt = min === null ? (fem ? "Cerrada" : "Cerrado") : min + "%";
     const fs = min === null ? 11 : 17, w = min === null ? 54 : (txt.length*fs*0.62 + 14), h = 24;
     const col = { green:"#1E8E4A", yellow:"#F2C200", orange:"#E8700F", red:"#A50F15", gray:"#7A8494" }[cls] || "#7A8494";
-    const [x, y] = a;
+    const x = -a[1], y = a[0];   // el plano va girado 90° (Norte arriba)
     html += `<g class="spm ${cls}" data-b="${esc(b)}"><rect x="${(x-w/2).toFixed(1)}" y="${(y-h/2).toFixed(1)}" width="${w.toFixed(1)}" height="${h}" rx="7" fill="${col}"/>`
       + `<text class="v" x="${x}" y="${(y+fs*0.36).toFixed(1)}" font-size="${fs}" text-anchor="middle">${txt}</text>`
       + `<text class="n" x="${x}" y="${(y+h/2+10).toFixed(1)}" font-size="9" text-anchor="middle">${esc(shortBuilding(b))}${list.length > 1 ? " · " + list.length : ""}</text></g>`;
   });
   g.innerHTML = html;
-  applyFlipTexts();
 }
 // Tocar un marcador: a ese edificio en la lista
 function irAEdificio(b){
