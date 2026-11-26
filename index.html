@@ -2595,18 +2595,21 @@ async function abrirLleno(){
   if (!codes.length){ box.innerHTML = `<div class="empty">No hay estadística de los parkings de ${CITIES[state.city]}.</div>`; return; }
   const fmt = f => { const d = new Date(f + "T12:00"); return d.getDate() + " " + MESES_LARGOS[d.getMonth()].slice(0,3); };
   box.innerHTML = codes.map(c=>{
-    const q = pf.parkings[c], v = q.perfil, ll = q.lleno.map(hm2min).sort((a,b)=>a-b);
+    const q = pf.parkings[c], v = q.perfil, ll = q.lleno.map(hm2min).sort((a,b)=>a-b), pc = q.llenoPct || [];
     let txt;
-    if (ll.length >= Math.ceil(q.dias/2)){
-      const med = ll[Math.floor(ll.length/2)];
-      // desde cuándo vuelve a haber sitio holgado: primer tramo tras el lleno con 10 plazas o más de media (y el siguiente también)
+    if (ll.length){
+      const pct = Math.round(ll.length*100/q.dias);
+      const med = ll[Math.floor(ll.length/2)];   // hora típica a la que se llena (mediana)
+      // hasta cuándo: primer tramo de 15 min, tras esa hora, en que está lleno menos de un 25 % del tiempo (y el siguiente también)
       const k0 = Math.max(0, Math.floor((med-420)/15));
-      const k = v.findIndex((x,i)=> i > k0 && x >= 10 && (v[i+1] === undefined || v[i+1] >= 10));
-      txt = `Suele llenarse hacia las <b>${min2hm(med)}</b> (${ll.length} de ${q.dias} días)` + (k > 0 ? `; vuelve a haber 10 plazas o más hacia las <b>${min2hm(420 + k*15)}</b>.` : ".");
-    } else if (ll.length) txt = `Se llenó ${ll.length} de ${q.dias} días (la primera vez, hacia las ${min2hm(ll[0])}); casi siempre hay sitio.`;
-    else txt = `No se ha llenado ningún día. Lo más justo, hacia las <b>${min2hm(420 + v.indexOf(Math.min(...v))*15)}</b> (unas ${Math.min(...v)} plazas libres).`;
-    const ki = Math.round((ahoraMin-420)/15);
-    const ahora = ki >= 0 && ki < v.length ? " Un día normal, a esta hora " + (v[ki] < 1 ? "<b>suele estar lleno</b>." : v[ki] === 1 ? "queda <b>1</b> plaza." : `quedan unas <b>${v[ki]}</b>.`) : "";
+      const k = pc.length ? pc.findIndex((x,i)=> i > k0 && x < 25 && (pc[i+1] === undefined || pc[i+1] < 25)) : -1;
+      const tramo = k > 0 && pc.slice(k0, k).some(x => x >= 25);
+      txt = `Se llena el <b>${pct}%</b> de los días ` + (tramo ? `(aproximadamente desde las <b>${min2hm(med)}</b> hasta las <b>${min2hm(420 + k*15)}</b>).` : `(hacia las <b>${min2hm(med)}</b>, poco rato).`);
+    } else txt = `No se ha llenado ningún día.`;
+    const ki = Math.floor((ahoraMin-420)/15), hAhora = min2hm(ahoraMin);
+    const ahora = ki >= 0 && ki < v.length
+      ? ` Un día normal, a esta hora (${hAhora}) ` + (v[ki] < 1 ? "<b>suele estar lleno</b>." : v[ki] === 1 ? "queda <b>1</b> plaza libre." : `quedan unas <b>${v[ki]}</b> plazas libres.`)
+      : ` A esta hora (${hAhora}) no hay datos: la estadística va de 7:00 a 21:00.`;
     return `<div class="lcard"><h3>${NAME_BY_CODE[c].name}</h3><div class="lt">${txt}${ahora}</div>${grafica(v, ahoraMin)}
       <div class="lx"><span>7:00</span><span>9</span><span>11</span><span>13</span><span>15</span><span>17</span><span>19</span><span>21:00</span></div></div>`;
   }).join("") + `<div class="lleno-foot">Plazas libres medias en días laborables, del ${fmt(pf.desde)} al ${fmt(pf.hasta)} (${pf.dias} días). Rojo abajo: lleno de media; raya azul: ahora. Se actualiza cada pocos días.</div>`;
