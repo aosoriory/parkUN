@@ -1936,7 +1936,19 @@ function renderColHeader(){
     (state.verR ? `<div class="col"><svg class="svgi" style="margin:0 auto" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg></div>` : "");
 }
 
-function renderRows(){ renderList(); renderMap(); }
+function renderRows(){ renderList(); fitParkingNames(); renderMap(); }
+// Solo si un nombre de parking no cabe (p. ej. ARQUITECTURA con dos columnas), se reduce un poco su letra,
+// de medio en medio píxel y como mucho un 15 %; los demás nombres no cambian.
+function fitParkingNames(){
+  document.querySelectorAll("#rows .row .name").forEach(n=>{
+    n.style.fontSize = "";
+    const base = parseFloat(getComputedStyle(n).fontSize);
+    let fs = base;
+    while (n.scrollWidth > n.clientWidth + 1 && fs > base*0.85){ fs -= 0.5; n.style.fontSize = fs + "px"; }
+  });
+}
+window.addEventListener("resize", ()=>{ if (state.screen === "parking") fitParkingNames(); });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(()=>fitParkingNames());
 
 function renderList(){
   renderColHeader();
