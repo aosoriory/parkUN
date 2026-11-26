@@ -980,6 +980,7 @@ const state = {
   screen: "parking",  // pestaña abierta: "parking" | "salas" | "cafeterias" | "meeting" | "misas" (se guarda: al abrir, la última)
   city: "pamplona",   // "pamplona" | "madrid" | "sansebastian"
   favBuildings: [],   // nombres de edificio tal como los da Quodus ("Edificio Amigos")
+  favTodosPend: false,   // visitante nuevo: en cuanto se conozcan los edificios, todos pasan a favoritos
   buildingOrder: [],  // orden de los edificios de Pamplona elegido en Ajustes (los que no están, después, por orden alfabético)
   spaceMode: "fav",   // "fav" | "all"
   spaces: [],         // lista de /api/espacios
@@ -1012,6 +1013,7 @@ async function loadPrefs(){
   try{
     const raw = localStorage.getItem(PREFS_KEY);
     storageAvailable = true;
+    if (!raw) state.favTodosPend = true;   // primera vez: favoritos = todos los edificios (como los parkings)
     if (raw){
       const p = JSON.parse(raw);
       if (Array.isArray(p.fullOrder)) state.fullOrder = p.fullOrder;
@@ -1034,6 +1036,7 @@ async function loadPrefs(){
       if (CITIES[p.city]) state.city = p.city;
       if (typeof p.cityAuto === "boolean") state.cityAuto = p.cityAuto;
       if (Array.isArray(p.favBuildings)) state.favBuildings = p.favBuildings.filter(b=>typeof b === "string");
+      if (p.favTodosPend === true) state.favTodosPend = true;
       if (Array.isArray(p.buildingOrder)) state.buildingOrder = p.buildingOrder.filter(b=>typeof b === "string");
       if (p.spaceMode === "fav" || p.spaceMode === "all") state.spaceMode = p.spaceMode;
       if (["parking","salas","cafeterias","meeting","misas"].includes(p.screen)) state.screen = p.screen;
@@ -1059,6 +1062,7 @@ async function savePrefs(){
       city: state.city,
       cityAuto: state.cityAuto,
       favBuildings: state.favBuildings,
+      favTodosPend: state.favTodosPend,
       buildingOrder: state.buildingOrder,
       spaceMode: state.spaceMode,
       screen: state.screen,
@@ -1455,7 +1459,7 @@ function openText(sp, fem){
 
 function visibleSpaces(kind){
   let list = state.spaces.filter(s => s.kind === kind && s.city === state.city);
-  if (usesFavs() && state.spaceMode === "fav") list = list.filter(s => state.favBuildings.includes(s.building));
+  if (usesFavs() && state.spaceMode === "fav" && !state.favTodosPend) list = list.filter(s => state.favBuildings.includes(s.building));
   return list.sort((a,b)=> buildingCmp(a.building, b.building) || a.name.localeCompare(b.name, "es"));
 }
 // Orden de edificios: en Pamplona, el elegido en Ajustes; los demás (y en Madrid y San Sebastián), alfabético.
@@ -1468,7 +1472,19 @@ function buildingCmp(a, b){
   return shortBuilding(a).localeCompare(shortBuilding(b), "es");
 }
 
+// Visitante nuevo: cuando ya se conocen los edificios de Pamplona (salas, cafeterías, meeting points y capillas),
+// todos pasan a ser favoritos, igual que los parkings. Después, cada uno los cambia en Ajustes.
+function favTodos(){
+  if (!state.favTodosPend || !state.spaces.length) return;
+  const set = new Set();
+  state.spaces.filter(sp => sp.city === FAV_CITY && sp.building).forEach(sp => set.add(sp.building));
+  misasAll().filter(m => m.city === FAV_CITY && m.building).forEach(m => set.add(m.building));
+  state.favBuildings = [...set];
+  state.favTodosPend = false;
+  savePrefs();
+}
 function renderSpaces(){
+  favTodos();
   if (!isSpaceScreen()) return;
   const kind = state.screen;
   // Selector Favoritas/Todas: a la derecha de la primera cabecera de edificio (en Madrid y San Sebastián no hay favoritos)
@@ -1735,6 +1751,7 @@ function setMisasOffset(off){
 }
 
 function renderMisas(){
+  favTodos();
   if (state.screen !== "misas") return;
   const el = document.getElementById("spRows");
   el.classList.remove("hasseg");
@@ -1793,7 +1810,7 @@ function renderMisas(){
         : "se muestra el horario de los domingos. En la CUN es su horario de festivos; en los demás <b>no es seguro</b>, porque la Capellanía no publica horario para festivos."}</div>` : "") + `</div>`;
   const ALL = misasAll();
   let list = ALL.filter(m => m.city === state.city && m.days.includes(dow) && (!cierre || esCUN(m)));
-  if (usesFavs() && state.spaceMode === "fav") list = list.filter(m => state.favBuildings.includes(m.building));
+  if (usesFavs() && state.spaceMode === "fav" && !state.favTodosPend) list = list.filter(m => state.favBuildings.includes(m.building));
   list.sort((a,b)=> toMin(a.t) - toMin(b.t) || a.label.localeCompare(b.label, "es"));
   const hh = misasSrc.t ? new Date(misasSrc.t) : null;
   const cuando = hh ? `el ${hh.getDate()}/${hh.getMonth()+1} a las ${hhmm(misasSrc.t)}` : "";
@@ -2293,6 +2310,7 @@ function openSettings(){
   draftOrder = state.fullOrder.filter(c => isGap(c) || CITY_OF_PARKING(c) === FAV_CITY);
   draftActive = [...state.active];
   draftP = state.verP; draftR = state.verR; draftFreq = state.refreshSeconds;
+  favTodos();
   draftFav = [...state.favBuildings];
   draftBOrder = null;   // se calcula en renderBlist con los edificios que haya
   renderFreqSeg(); renderToggles(); renderPlist(); renderBlist();
