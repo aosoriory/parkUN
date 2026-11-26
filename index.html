@@ -1611,20 +1611,20 @@ async function refreshMisas(force){
   finally{ misasLoading = false; renderMisas(); renderTabs(); }
 }
 /* Días de fiesta: se muestra el horario de los domingos, con aviso de que no es seguro.
-   Festivos oficiales de cada ciudad (resto de 2026 y 2027; faltan los locales de 2027 de
-   Pamplona y Madrid, aún sin publicar) y días de precepto de la página de la Capellanía. */
+   Festivos oficiales de cada ciudad (resto de 2026 y 2027, con los locales de 2027 de
+   Pamplona —pamplona.es, BON 201 de 9 oct 2026— y Madrid —Pleno, sep 2026—) y días de precepto de la página de la Capellanía. */
 const FESTIVOS_MISAS = {
   pamplona: {
     "2026-11-30":"Fiesta local", "2026-12-03":"San Francisco Javier", "2026-12-08":"Inmaculada Concepción", "2026-12-25":"Navidad",
     "2027-01-01":"Año Nuevo", "2027-01-06":"Epifanía", "2027-03-19":"San José", "2027-03-25":"Jueves Santo", "2027-03-26":"Viernes Santo",
-    "2027-03-29":"Lunes de Pascua", "2027-05-01":"Fiesta del Trabajo", "2027-10-12":"Fiesta Nacional", "2027-11-01":"Todos los Santos",
-    "2027-12-03":"San Francisco Javier", "2027-12-06":"Día de la Constitución", "2027-12-08":"Inmaculada Concepción", "2027-12-25":"Navidad",
+    "2027-03-29":"Lunes de Pascua", "2027-05-01":"Fiesta del Trabajo", "2027-07-07":"San Fermín", "2027-10-12":"Fiesta Nacional", "2027-11-01":"Todos los Santos",
+    "2027-11-29":"San Saturnino", "2027-12-03":"San Francisco Javier", "2027-12-06":"Día de la Constitución", "2027-12-08":"Inmaculada Concepción", "2027-12-25":"Navidad",
   },
   madrid: {
     "2026-12-07":"Día de la Constitución (trasladado)", "2026-12-08":"Inmaculada Concepción", "2026-12-25":"Navidad",
     "2027-01-01":"Año Nuevo", "2027-01-06":"Epifanía", "2027-03-19":"San José", "2027-03-25":"Jueves Santo", "2027-03-26":"Viernes Santo",
-    "2027-05-01":"Fiesta del Trabajo", "2027-08-16":"Asunción (trasladada)", "2027-10-12":"Fiesta Nacional", "2027-11-01":"Todos los Santos",
-    "2027-12-06":"Día de la Constitución", "2027-12-08":"Inmaculada Concepción", "2027-12-25":"Navidad",
+    "2027-05-01":"Fiesta del Trabajo", "2027-05-15":"San Isidro", "2027-08-16":"Asunción (trasladada)", "2027-10-12":"Fiesta Nacional", "2027-11-01":"Todos los Santos",
+    "2027-11-09":"La Almudena", "2027-12-06":"Día de la Constitución", "2027-12-08":"Inmaculada Concepción", "2027-12-25":"Navidad",
   },
   sansebastian: {
     "2026-12-08":"Inmaculada Concepción", "2026-12-25":"Navidad",
