@@ -591,6 +591,9 @@
   /* Franja fija de Favoritas/Todas */
   #spBand{ display:flex; justify-content:flex-end; align-items:center; padding:10px 12px 8px; background:var(--bg); border-bottom:1px solid #DDE2E9; flex-shrink:0; }
   #spBand .tseg button{ height:38px; padding:0 14px; font-size:14px; }
+  /* Que no se corten las letras con rabo (g, p, j…) en nombres de una línea con «…»: el recorte por overflow
+     llega un poco más abajo, sin ocupar más sitio (relleno abajo compensado con margen negativo). */
+  .srow .t1, .srow.ingroup .t1, .bhead .bn{ padding-bottom:0.18em; margin-bottom:-0.18em; }
 </style>
 </head>
 <body>
