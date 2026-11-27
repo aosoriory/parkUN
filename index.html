@@ -232,6 +232,8 @@
   #mapViewport{ position:relative; overflow:hidden; width:100%; aspect-ratio:612 / 452; border-radius:10px; background:#e9eee3; touch-action:none; }
   #campusMap{ position:absolute; left:0; top:0; display:block; transform-origin:0 0; will-change:transform; }   /* tamaño y posición: setMapZoom() */
   #campusMap text{ font-family:'Inter',system-ui,sans-serif; }
+  /* Los nombres van encima de todo, con un halo del color del fondo para que se lean sobre calles y números */
+  #mapLabels text{ stroke:#e9eee3; stroke-width:2.2; stroke-linejoin:round; paint-order:stroke fill; }
   #compass{ position:absolute; top:8px; right:8px; width:38px; height:38px; background:rgba(255,255,255,.88); border-radius:50%; pointer-events:none; }
   #compass.flipped{ top:auto; left:auto; bottom:8px; right:8px; }
   .pk{ fill:#4a4a4d; fill-opacity:.82; stroke:#2b2b2d; stroke-width:1.5; stroke-linejoin:round; }
@@ -669,14 +671,45 @@
 <svg xmlns="http://www.w3.org/2000/svg" id="campusMap" viewBox="-600 -15 612 452" preserveAspectRatio="xMidYMid meet">
 <g id="mapRot"><g id="mapN" transform="rotate(90)"><rect x="-120" y="-60" width="600" height="980" fill="#e9eee3"/>
 <!-- Zona oeste y edificios añadidos el 26 nov 2026, calcados del plano oficial del campus (transformación afín ajustada con 9 puntos) -->
-<path d="M138.4,499.5 L126.9,589.5 L151.8,630.9 L197.1,703.5 L237.9,768.2 L278.7,832.9" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M28.2,433.0 L22.3,485.8 L18.9,558.1 L24.1,594.3 L61.1,661.6 L92.5,723.8 L124.0,780.7 L151.2,827.3" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M-39.6,675.8 L-25.9,640.7 L-7.5,609.7 L11.3,578.8 L18.9,558.1" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<!-- Zona centro-este redibujada el 27 nov 2026 con el plano de OpenStreetMap (callejero.net) que pasó Al -->
+<!-- fin de lo añadido -->
+<!-- Capas: zonas, agua, calles, edificios, parkings, números y, encima de todo, los nombres -->
+<polygon points="208.6,238.2 216.9,214.5 236.0,215.9 247.6,221.3 239.8,242.9 234.3,248.0" fill="#e1e5dc"/>
+<polygon points="247.7,339.3 269.3,287.4 272.8,286.8 288.0,294.7 266.9,346.7" fill="#e1e5dc"/>
+<polygon points="373.8,199.3 433.3,212.4 426.2,251.2 398.0,253.9 363.3,239.7" fill="#dde5c9" stroke="#b4c3a0" stroke-width="0.8" stroke-linejoin="round"/>
+<polygon points="407.8,92.6 467.3,90.8 468.8,127.7 408.6,130.9" fill="#c6ddb0" stroke="#a9c295" stroke-width="0.8" stroke-linejoin="round"/>
+<path d="M249.2,711.8 L255,770 L252,840 L248,900" fill="none" stroke="#b9dff0" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M371.2,-35.2 L374.2,30.8 L362.2,86.8 L369.2,156.8 L347.6,224.1 L343.2,238.3 L338.0,255.6 L331.8,272.9 L325.8,295.2 L319.7,316.5 L316.4,331.6 L312.9,342.8 L293.6,348.8 L292.8,362.0 L290.6,387.3 L287.8,412.6 L284.5,427.8 L277.1,431.8 L264.6,434.2 L258.5,438.8 L254.5,449.0 L251.9,464.2 L253.2,491.8 L223.2,565.8 L239.2,636.8 L249.2,711.8" fill="none" stroke="#b9dff0" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M138.4,499.5 L126.9,589.5 L137.1,606.5 L127.4,607.1 L129.9,633.3 L152.4,631.9 L197.1,703.5 L278.7,832.9" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M28.2,433.0 L24.4,467.0 L29.1,462.0 L40.8,472.4 L32.9,481.6 L37.3,487.3 L36.7,490.5 L21.1,508.2 L20.4,525.6 L13.8,520.5 L8.1,529.7 L19.7,539.8 L18.9,558.1 L24.1,594.3 L33.7,611.7 L32.0,615.1 L43.6,635.4 L47.3,636.2 L58.5,656.9 L51.9,660.7 L78.8,704.8 L82.1,703.2 L92.5,723.8 L124.0,780.7 L151.2,827.3" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M-39.6,675.8 L-25.9,640.7 L-14.1,620.6 L-6.1,620.9 L14.3,590.1 L14.8,569.2 L18.9,558.1" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M-53.0,680.9 L-71.4,661.2 L-92.0,635.3 L-110.3,614.5" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M-45.0,698.5 L-59.2,733.6 L-84.1,780.0 L-104.1,821.3" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
 <path d="M-33.3,687.2 L-15.3,687.2" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
 <circle cx="-43.7" cy="687.1" r="9" fill="#e3ead9" stroke="#ffffff" stroke-width="4.5"/>
-<path d="M249.2,711.8 L255,770 L252,840 L248,900" fill="none" stroke="#b9dff0" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M177.8,-49.7 L168.6,-24.6 L161.9,-5.0 L150.7,14.9 L140.8,35.3 L132.4,55.4 L123.1,75.5 L115.2,95.6 L105.8,115.8 L99.4,136.2 L93.5,156.2 L87.8,175.8 L78.1,195.5 L68.8,215.6 L58.9,235.7 L49.5,256.1 L42.6,276.2 L33.9,296.1 L25.5,316.1 L16.7,336.2 L8.3,356.3 L-0.1,376.5 L-7.0,396.8 L-13.3,416.7 L-20.6,436.6 L-28.5,456.7 L-35.3,476.7 L-42.6,496.6 L-51.4,516.5" fill="none" stroke="#ffffff" stroke-width="11" stroke-linecap="butt" stroke-linejoin="round"/>
+<path d="M358.3,-41.0 L361.8,24.9 L349.8,80.4 L354.5,149.8 L344.0,226.4 L313.3,280.8 L289.8,342.0 L265.2,403.3 L239.5,464.6 L237.7,484.8 L210.7,559.4 L228.4,632.1 L239.1,707.3" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M67.0,-5.5 L157.6,39.9 L191.9,58.2 L228.1,70.2 L262.0,77.1 L345.1,84.0 L430.7,63.7 L537.5,47.8" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M138.4,499.5 L210.7,559.4 L218.5,564.3 L231.3,564.9 L239.9,570.6 L247.1,585.7 L253.6,607.6 L260.0,624.5 L266.2,632.0" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M275.6,575.8 L276.3,596.8 L280.1,612.0 L277.9,625.7 L270.4,631.8" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M175.3,532.5 L175.8,524.6 L180.2,508.9 L183.1,489.3 L176.5,466.9 L179.3,458.0 L182.3,452.9 L185.2,425.7 L184.3,425.6 L184.8,418.8 L187.1,411.2 L184.0,396.2 L184.9,386.1 L189.4,370.8 L196.4,356.8 L201.3,354.1 L208.4,357.6 L216.6,359.2 L221.1,357.8 L221.8,355.9 L224.1,356.8 L229.6,353.7" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M184.7,416.3 L178.0,404.0 L166.4,379.2 L164.1,368.0 L166.2,356.6 L173.1,337.5" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M201.3,354.1 L200.2,340.3 L194.5,320.3" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M137.7,436.9 L135.0,463.5 L136.2,463.7 L136.1,468.4 L148.4,482.3 L153.2,496.0 L154.6,506.4 L153.5,515.6" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M331.4,318.3 L315.6,311.1" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M22.3,439.8 L27.1,450.0 L35.9,457.4 L52.8,468.0 L46.5,478.7 L37.9,488.6" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M-18.1,404.6 L-1.4,413.8 L14.0,422.2 L28.5,433.1 L65.4,451.1 L103.2,475.1 L138.4,499.5" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M198.9,67.8 L202.3,99.7 L197.9,120.9 L193.5,137.4 L180.1,175.2 L180.0,177.0 L172.4,197.6 L180.0,200.5 L180.7,212.8 L177.3,234.5 L170.0,249.6 L153.4,264.9 L122.8,289.9" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M197.0,126.3 L213.7,134.3" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M270.8,350.5 L286.7,357.2" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M332.7,329.3 L323.8,353.9" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M223.2,185.8 L233.1,191.4 L243.4,197.4 L252.0,202.2 L260.5,206.5 L266.0,211.2 L268.3,216.3 L268.3,221.5 L265.7,227.5 L262.3,234.3 L258.8,242.0 L256.3,249.8 L254.5,255.8" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M267.4,214.4 L271.5,224.4 L275.5,236.5 L279.5,247.0 L283.5,254.2 L289.2,263.1 L294.0,271.1 L298.0,279.2 L302.8,290.4 L306.9,301.7 L310.1,308.9 L315.6,311.1" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M260.7,237.8 L266.6,242.9 L274.7,247.3 L281.8,251.1" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M35.0,429.8 L57.4,419.3 L68.7,413.1 L78.2,403.6 L87.5,390.0 L92.6,374.9 L97.0,359.8 L98.8,344.9 L99.9,331.6 L102.8,321.6 L107.3,311.5 L113.6,305.4 L121.6,298.5 L129.6,293.2 L140.2,287.8" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M63.5,415.9 L76.8,409.5 L90.3,404.9 L117.3,400.0 L136.2,391.9 L152.4,381.1 L163.2,371.7 L176.7,358.2 L190.2,346.0 L206.4,336.6 L225.3,330.4 L228.6,330.0 L234.8,332.4 L236.1,329.0 L244.2,327.9 L249.3,331.6" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="210.7" cy="559.4" r="7.5" fill="#e3ead9" stroke="#ffffff" stroke-width="4.5"/>
+<circle cx="28.2" cy="433.0" r="7.5" fill="#e3ead9" stroke="#ffffff" stroke-width="4.5"/>
 <polygon data-b="CUN" points="-65.4,615.7 -59.2,560.5 11.8,558.1 11.0,589.1 -7.8,617.5" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
 <polygon data-b="Ciencias" points="45.3,633.2 34.9,615.0 44.9,595.4 66.7,594.5 80.0,610.0 76.2,628.1 61.7,636.8" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
 <polygon data-b="Investigacion" points="79.8,701.5 55.4,661.6 66.0,655.5 92.3,695.3" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
@@ -687,8 +720,43 @@
 <polygon data-b="Olabidea" points="132.9,629.8 131.0,610.2 171.3,607.7 171.7,627.4" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
 <polygon data-b="Goimendi" points="188.8,662.1 185.2,620.7 213.6,618.2 217.2,659.6" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
 <polygon data-b="Ermita" points="77.4,583.1 76.8,571.3 91.0,570.3 91.6,582.2" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
-
 <polygon data-b="Eclesiasticas" points="273.8,55.1 279.6,16.3 312.7,19.0 306.9,57.8" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
+<polygon points="407.6,467.5 407.1,474.5 410.7,475.5 418.3,483.9 422.8,483.4 423.2,475.9 419.2,474.9 419.2,471.4 410.6,465.9" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
+<polygon points="379.5,469.2 385.0,469.2 385.9,459.6 391.4,458.6 391.9,456.0 413.0,451.8 417.0,448.3 421.0,447.7 418.4,437.7 374.8,450.7" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
+<polygon points="333.5,326.0 350.1,332.9 355.6,332.8 358.6,330.8 360.6,324.7 358.1,323.2 358.5,315.7 365.0,314.6 371.4,299.5 371.4,295.0 376.8,288.4 379.7,276.3 369.2,273.4 368.6,271.4 362.6,270.5 361.6,268.0 357.6,267.0 349.2,288.7 346.2,291.7 341.3,307.3 338.3,309.4 337.9,315.4 334.4,319.9" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
+<polygon points="295.3,439.3 304.9,440.3 312.4,443.7 318.7,414.0 302.1,410.1 299.1,416.2" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
+<polygon data-n="Amigos" points="231.0,184.9 245.8,147.8 253.4,150.8 254.6,147.8 236.7,140.6 239.4,133.7 249.1,137.6 257.2,117.2 246.5,113.0 250.8,102.4 289.8,117.9 257.3,199.5 240.3,192.7 241.7,189.2" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
+<polygon data-n="Biblioteca" points="175.0,309.3 194.7,258.7 213.8,266.1 194.1,316.7" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
+<polygon data-n="ISB" points="202.2,309.2 216.7,272.0 225.2,275.3 219.8,289.4 235.6,295.5 241.0,281.5 251.0,285.3 246.0,298.2 252.1,300.6 247.5,312.3 241.4,309.9 233.7,329.9 223.7,326.0 231.5,306.1 215.6,299.9 210.7,312.5" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
+<polygon data-n="ICS" points="212.2,270.2 216.6,259.1 248.9,271.7 244.6,282.8" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
+<polygon data-n="Central" points="187.2,392.0 197.9,364.5 217.9,372.3 223.1,358.9 251.9,370.1 248.9,377.6 231.1,370.7 215.1,411.9 232.8,418.8 229.9,426.3 201.2,415.1 207.2,399.8" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
+<polygon data-n="FCOM" points="181.1,242.7 195.9,202.9 176.6,195.7 182.9,178.8 215.5,190.9 213.0,197.5 228.9,203.4 226.6,209.7 215.2,205.4 198.8,249.3" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
+<path data-n="Belagua" d="M137.5,461.5 L141.6,425.3 L148.3,426.1 L148.0,428.2 L153.9,428.9 L155.3,417.3 L161.3,417.9 L159.7,431.9 L174.6,433.6 L175.4,426.9 L182.7,427.7 L180.5,447.2 L175.2,446.6 L172.1,474.0 L146.7,471.1 L147.7,462.6 Z M143.7,456.8 L144.5,449.4 L149.8,450.0 L149.0,457.4 Z M146.5,440.5 L147.4,432.9 L152.4,433.5 L151.5,441.1 Z" fill="#d3d8d1" fill-rule="evenodd" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
+<polygon points="29.3,465.6 37.2,472.6 29.6,481.5 34.6,487.9 34.3,489.3 9.1,518.1 2.5,512.4 0.8,507.6 2.6,499.7 8.9,493.0 9.0,488.8 22.5,473.1" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
+<polygon points="14.4,524.3 38.4,544.1 34.8,549.4 11.4,529.2" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
+<polygon points="152.5,84.0 168.0,87.0 169.0,112.0 178.0,113.0 177.0,125.0 163.5,126.0 163.5,149.0 150.5,150.0 146.5,127.5 149.0,114.0 151.0,95.0" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
+<polygon points="382.6,159.6 415.6,167.3 409.2,190.2 380.1,183.3" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
+<polygon points="415.1,173.3 439.6,173.7 438.5,189.1 424.2,188.9 418.0,199.4 412.1,195.3" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
+<polygon points="57.9,306.6 63.6,293.5 79.1,277.7 112.1,268.0 126.7,262.7 128.7,271.3 121.8,282.8 105.7,292.6 92.1,304.7 82.7,315.8 70.2,313.4 67.3,310.7" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
+<polygon class="pk" id="pk-P01" points="292.9,583.0 243.5,562.6 280.4,473.4 329.7,493.8"/>
+<polygon class="pk" id="pk-P02" points="228.9,354.1 234.9,338.8 263.1,349.8 257.2,365.0"/>
+<polygon class="pk" id="pk-P03" points="420.3,27.0 415.0,63.5 372.3,79.1 380.1,25.4"/>
+<polygon class="pk" id="pk-P04" points="342.8,80.5 300.2,16.1 310.9,9.0 353.5,73.5"/>
+<polygon class="pk" id="pk-P05" points="180.1,173.3 197.0,128.2 230.9,140.9 214.0,186.0"/>
+<polygon class="pk" id="pk-P06" points="147.3,299.1 166.6,249.6 186.9,257.5 167.6,307.0"/>
+<polygon class="pk" id="pk-P07" points="147.3,299.1 121.7,289.2 148.6,265.0 159.0,269.0"/>
+<polygon class="pk" id="pk-P08" points="47.1,546.8 9.0,513.6 34.6,484.2 72.7,517.4"/>
+<polygon class="pk" id="pk-P09" points="302.5,344.8 305.9,336.8 337.2,348.5 333.8,358.1"/>
+<text class="pn" id="pn-P01" x="286.6" y="544.2" text-anchor="middle" data-cx="286.6" data-cy="528.2"></text>
+<text class="pn" id="pn-P02" x="246.0" y="367.9" text-anchor="middle" data-cx="246.0" data-cy="351.9"></text>
+<text class="pn" id="pn-P03" x="396.9" y="64.8" text-anchor="middle" data-cx="396.9" data-cy="48.8"></text>
+<text class="pn" id="pn-P04" x="326.8" y="60.8" text-anchor="middle" data-cx="326.8" data-cy="44.8"></text>
+<text class="pn" id="pn-P05" x="205.5" y="173.1" text-anchor="middle" data-cx="205.5" data-cy="157.1"></text>
+<text class="pn" id="pn-P06" x="174.0" y="297.0" text-anchor="middle" data-cx="174.0" data-cy="281.0"></text>
+<text class="pn" id="pn-P07" x="126.0" y="295.0" text-anchor="middle" data-cx="126.0" data-cy="279.0"></text>
+<text class="pn" id="pn-P08" x="40.8" y="531.5" text-anchor="middle" data-cx="40.8" data-cy="515.5"></text>
+<text class="pn" id="pn-P09" x="319.8" y="363.0" text-anchor="middle" data-cx="319.8" data-cy="347.0"></text>
+<g id="mapLabels">
 <text x="-29.1" y="588.4" font-size="6.5" fill="#6f7a71" font-weight="600" text-anchor="middle">Clínica (CUN)</text>
 <text x="57.6" y="617.1" font-size="6.5" fill="#6f7a71" font-weight="600" text-anchor="middle">Ciencias</text>
 <text x="67.6" y="684.3" font-size="6.5" fill="#6f7a71" font-weight="600" text-anchor="middle">Investigación</text>
@@ -701,35 +769,8 @@
 <text x="308.3" y="427.7" font-size="6.5" fill="#6f7a71" font-weight="600" text-anchor="middle">Comedores</text>
 <text x="293.3" y="39.1" font-size="6.5" fill="#6f7a71" font-weight="600" text-anchor="middle">Fac. Eclesiásticas</text>
 <text x="-62.8" y="694.2" font-size="6.5" fill="#6f7a71" font-weight="600" text-anchor="middle">Hospitales</text>
-<!-- Zona centro-este redibujada el 27 nov 2026 con el plano de OpenStreetMap (callejero.net) que pasó Al -->
-<polygon points="208.6,238.2 216.9,214.5 236.0,215.9 247.6,221.3 239.8,242.9 234.3,248.0" fill="#e1e5dc"/>
-<polygon points="247.7,339.3 269.3,287.4 272.8,286.8 288.0,294.7 266.9,346.7" fill="#e1e5dc"/>
-<polygon points="407.6,467.5 407.1,474.5 410.7,475.5 418.3,483.9 422.8,483.4 423.2,475.9 419.2,474.9 419.2,471.4 410.6,465.9" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
-<polygon points="379.5,469.2 385.0,469.2 385.9,459.6 391.4,458.6 391.9,456.0 413.0,451.8 417.0,448.3 421.0,447.7 418.4,437.7 374.8,450.7" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
-<polygon points="333.5,326.0 350.1,332.9 355.6,332.8 358.6,330.8 360.6,324.7 358.1,323.2 358.5,315.7 365.0,314.6 371.4,299.5 371.4,295.0 376.8,288.4 379.7,276.3 369.2,273.4 368.6,271.4 362.6,270.5 361.6,268.0 357.6,267.0 349.2,288.7 346.2,291.7 341.3,307.3 338.3,309.4 337.9,315.4 334.4,319.9" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
-<polygon points="295.3,439.3 304.9,440.3 312.4,443.7 318.7,414.0 302.1,410.1 299.1,416.2" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
-<polygon data-n="Amigos" points="231.0,184.9 245.8,147.8 253.4,150.8 254.6,147.8 236.7,140.6 239.4,133.7 249.1,137.6 257.2,117.2 246.5,113.0 250.8,102.4 289.8,117.9 257.3,199.5 240.3,192.7 241.7,189.2" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
-<polygon data-n="Biblioteca" points="175.0,309.3 194.7,258.7 213.8,266.1 194.1,316.7" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
-<polygon data-n="ISB" points="202.2,309.2 216.7,272.0 225.2,275.3 219.8,289.4 235.6,295.5 241.0,281.5 251.0,285.3 246.0,298.2 252.1,300.6 247.5,312.3 241.4,309.9 233.7,329.9 223.7,326.0 231.5,306.1 215.6,299.9 210.7,312.5" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
-<polygon data-n="ICS" points="212.2,270.2 216.6,259.1 248.9,271.7 244.6,282.8" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
-<polygon data-n="Central" points="187.2,392.0 197.9,364.5 217.9,372.3 223.1,358.9 251.9,370.1 248.9,377.6 231.1,370.7 215.1,411.9 232.8,418.8 229.9,426.3 201.2,415.1 207.2,399.8" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
 <text x="234.6" y="315.4" font-size="6.5" fill="#6f7a71" font-weight="600" text-anchor="middle">Ismael S. Bella</text>
 <text x="231.5" y="271.3" font-size="6.5" fill="#6f7a71" font-weight="600" text-anchor="middle">ICS</text>
-<!-- fin de lo añadido -->
-
-
-
-
-
-<polygon data-n="FCOM" points="181.1,242.7 195.9,202.9 176.6,195.7 182.9,178.8 215.5,190.9 213.0,197.5 228.9,203.4 226.6,209.7 215.2,205.4 198.8,249.3" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
-
-
-
-
-
-<path data-n="Belagua" d="M137.5,461.5 L141.6,425.3 L148.3,426.1 L148.0,428.2 L153.9,428.9 L155.3,417.3 L161.3,417.9 L159.7,431.9 L174.6,433.6 L175.4,426.9 L182.7,427.7 L180.5,447.2 L175.2,446.6 L172.1,474.0 L146.7,471.1 L147.7,462.6 Z M143.7,456.8 L144.5,449.4 L149.8,450.0 L149.0,457.4 Z M146.5,440.5 L147.4,432.9 L152.4,433.5 L151.5,441.1 Z" fill="#d3d8d1" fill-rule="evenodd" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
-<polygon points="29.3,465.6 37.2,472.6 29.6,481.5 34.6,487.9 34.3,489.3 9.1,518.1 2.5,512.4 0.8,507.6 2.6,499.7 8.9,493.0 9.0,488.8 22.5,473.1" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
-<polygon points="14.4,524.3 38.4,544.1 34.8,549.4 11.4,529.2" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
 <text x="219.3" y="387.6" font-size="6.8" fill="#6f7a71" font-weight="600" text-anchor="middle">Edificio Central</text>
 <text x="195.3" y="287.9" font-size="6.8" fill="#6f7a71" font-weight="600" text-anchor="middle">Biblioteca</text>
 <text x="197.7" y="225.1" font-size="6.8" fill="#6f7a71" font-weight="600" text-anchor="middle">Comunicación</text>
@@ -737,43 +778,11 @@
 <text x="164.5" y="447.2" font-size="6.8" fill="#6f7a71" font-weight="600" text-anchor="middle">Belagua</text>
 <text x="27.7" y="473.6" font-size="6.8" fill="#6f7a71" font-weight="600" text-anchor="middle">CIMA</text>
 <text x="20.5" y="546.0" font-size="6.8" fill="#6f7a71" font-weight="600" text-anchor="middle">ACUNSA</text>
-<polygon points="152.5,84.0 168.0,87.0 169.0,112.0 178.0,113.0 177.0,125.0 163.5,126.0 163.5,149.0 150.5,150.0 146.5,127.5 149.0,114.0 151.0,95.0" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
 <text x="157.0" y="117.5" font-size="6.2" fill="#6f7a71" font-weight="600" text-anchor="middle">Col. Mayor Mendaur</text>
-<path d="M177.8,-49.7 L168.6,-24.6 L161.9,-5.0 L150.7,14.9 L140.8,35.3 L132.4,55.4 L123.1,75.5 L115.2,95.6 L105.8,115.8 L99.4,136.2 L93.5,156.2 L87.8,175.8 L78.1,195.5 L68.8,215.6 L58.9,235.7 L49.5,256.1 L42.6,276.2 L33.9,296.1 L25.5,316.1 L16.7,336.2 L8.3,356.3 L-0.1,376.5 L-7.0,396.8 L-13.3,416.7 L-20.6,436.6 L-28.5,456.7 L-35.3,476.7 L-42.6,496.6 L-51.4,516.5" fill="none" stroke="#ffffff" stroke-width="11" stroke-linecap="butt" stroke-linejoin="round"/>
-<path d="M371.2,-35.2 L374.2,30.8 L362.2,86.8 L369.2,156.8 L347.6,224.1 L343.2,238.3 L338.0,255.6 L331.8,272.9 L325.8,295.2 L319.7,316.5 L316.4,331.6 L312.9,342.8 L293.6,348.8 L292.8,362.0 L290.6,387.3 L287.8,412.6 L284.5,427.8 L277.1,431.8 L264.6,434.2 L258.5,438.8 L254.5,449.0 L251.9,464.2 L253.2,491.8 L223.2,565.8 L239.2,636.8 L249.2,711.8" fill="none" stroke="#b9dff0" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-<polygon points="373.8,199.3 433.3,212.4 426.2,251.2 398.0,253.9 363.3,239.7" fill="#dde5c9" stroke="#b4c3a0" stroke-width="0.8" stroke-linejoin="round"/>
-<polygon points="407.8,92.6 467.3,90.8 468.8,127.7 408.6,130.9" fill="#c6ddb0" stroke="#a9c295" stroke-width="0.8" stroke-linejoin="round"/>
-
-
-<polygon points="382.6,159.6 415.6,167.3 409.2,190.2 380.1,183.3" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
-<polygon points="415.1,173.3 439.6,173.7 438.5,189.1 424.2,188.9 418.0,199.4 412.1,195.3" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
 <text x="358.3" y="298.1" font-size="6.5" fill="#6f7a71" font-weight="600" text-anchor="middle">Arquitectura</text>
 <text x="398.9" y="231.3" font-size="6.5" fill="#6f7a71" font-weight="600" text-anchor="middle">Campo de rugby</text>
 <text x="396.9" y="163.1" font-size="6.5" fill="#6f7a71" font-weight="600" text-anchor="middle">Polideportivo</text>
 <text x="426.1" y="110.5" font-size="6.5" fill="#6f7a71" font-weight="600" text-anchor="middle">Campo de fútbol</text>
-<path d="M358.3,-41.0 L361.8,24.9 L349.8,80.4 L354.5,149.8 L344.0,226.4 L313.3,280.8 L289.8,342.0 L265.2,403.3 L239.5,464.6 L237.7,484.8 L210.7,559.4 L228.4,632.1 L239.1,707.3" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M67.0,-5.5 L157.6,39.9 L191.9,58.2 L228.1,70.2 L262.0,77.1 L345.1,84.0 L430.7,63.7 L537.5,47.8" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M138.4,499.5 L210.7,559.4 L218.5,564.3 L231.3,564.9 L239.9,570.6 L247.1,585.7 L253.6,607.6 L260.0,624.5 L266.2,632.0" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M275.6,575.8 L276.3,596.8 L280.1,612.0 L277.9,625.7 L270.4,631.8" fill="none" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M175.3,532.5 L175.8,524.6 L180.2,508.9 L183.1,489.3 L176.5,466.9 L179.3,458.0 L182.3,452.9 L184.8,418.8 L187.1,411.2 L184.0,396.2 L184.9,386.1 L189.4,370.8 L196.4,356.8 L201.3,354.1 L208.4,357.6 L216.6,359.2 L225.3,356.3 L229.6,353.7" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M184.7,416.3 L178.0,404.0 L166.4,379.2 L164.1,368.0 L166.2,356.6 L173.1,337.5" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M201.3,354.1 L200.2,340.3 L194.5,320.3" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M137.7,436.9 L136.3,453.3 L136.1,468.4 L148.4,482.3 L153.2,496.0 L154.6,506.4 L153.5,515.6" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M333.3,319.2 L315.6,311.1" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M22.3,439.8 L27.1,450.0 L35.9,457.4 L52.8,468.0 L46.5,478.7 L37.3,489.3 L32.1,494.8" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M-18.1,404.6 L-1.4,413.8 L14.0,422.2 L28.5,433.1 L65.4,451.1 L103.2,475.1 L138.4,499.5" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M198.9,67.8 L200.1,80.0 L202.3,99.7 L197.9,120.9 L193.5,137.4 L186.3,157.3 L180.1,175.2 L179.4,191.2 L180.7,212.8 L177.3,234.5 L170.0,249.6 L153.4,264.9 L122.8,289.9" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M197.0,126.3 L213.7,134.3" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M270.8,350.5 L286.7,357.2" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M335.7,320.6 L332.1,331.0 L323.8,353.9" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-<polygon points="57.9,306.6 63.6,293.5 79.1,277.7 112.1,268.0 126.7,262.7 128.7,271.3 121.8,282.8 105.7,292.6 92.1,304.7 82.7,315.8 70.2,313.4 67.3,310.7" fill="#d3d8d1" stroke="#bcc3ba" stroke-width="0.8" stroke-linejoin="round"/>
-<path d="M223.2,185.8 L233.1,191.4 L243.4,197.4 L252.0,202.2 L260.5,206.5 L266.0,211.2 L268.3,216.3 L268.3,221.5 L265.7,227.5 L262.3,234.3 L258.8,242.0 L256.3,249.8 L254.5,255.8" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M267.4,214.4 L271.5,224.4 L275.5,236.5 L279.5,247.0 L283.5,254.2 L289.2,263.1 L294.0,271.1 L298.0,279.2 L302.8,290.4 L306.9,301.7 L310.1,308.9 L315.6,311.1" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M260.7,237.8 L266.6,242.9 L274.7,247.3 L281.8,251.1" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M35.0,429.8 L57.4,419.3 L68.7,413.1 L78.2,403.6 L87.5,390.0 L92.6,374.9 L97.0,359.8 L98.8,344.9 L99.9,331.6 L102.8,321.6 L107.3,311.5 L113.6,305.4 L121.6,298.5 L129.6,293.2 L140.2,287.8" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M63.5,415.9 L76.8,409.5 L90.3,404.9 L117.3,400.0 L136.2,391.9 L152.4,381.1 L163.2,371.7 L176.7,358.2 L190.2,346.0 L206.4,336.6 L225.3,330.4 L244.2,327.9 L249.3,331.6" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="210.7" cy="559.4" r="7.5" fill="#e3ead9" stroke="#ffffff" stroke-width="4.5"/>
-<circle cx="28.2" cy="433.0" r="7.5" fill="#e3ead9" stroke="#ffffff" stroke-width="4.5"/>
 <path id="al1n" d="M210.7,559.4 L237.7,484.8 L267.2,417.2 L323.9,292.7 L344.0,226.4 L354.5,149.8" fill="none"/>
 <text class="lbl-n" font-size="7" fill="#7a8591" font-weight="600" letter-spacing=".4"><textPath href="#al1n" startOffset="50%" text-anchor="middle"><tspan dy="-4">Calle Universidad</tspan></textPath></text>
 <path id="al1f" d="M354.5,149.8 L344.0,226.4 L323.9,292.7 L267.2,417.2 L237.7,484.8 L210.7,559.4" fill="none"/>
@@ -790,33 +799,16 @@
 <text class="lbl-n" font-size="7" fill="#7a8591" font-weight="600" letter-spacing=".4"><textPath href="#alavn" startOffset="50%" text-anchor="middle"><tspan dy="-4">Av. de Navarra</tspan></textPath></text>
 <path id="alavf" d="M150.7,14.9 L140.8,35.3 L132.4,55.4 L123.1,75.5 L115.2,95.6 L105.8,115.8 L99.4,136.2 L93.5,156.2 L87.8,175.8 L78.1,195.5 L68.8,215.6 L58.9,235.7 L49.5,256.1 L42.6,276.2 L33.9,296.1 L25.5,316.1 L16.7,336.2 L8.3,356.3" fill="none"/>
 <text class="lbl-f" font-size="7" fill="#7a8591" font-weight="600" letter-spacing=".4"><textPath href="#alavf" startOffset="50%" text-anchor="middle"><tspan dy="-4">Av. de Navarra</tspan></textPath></text>
-<polygon class="pk" id="pk-P01" points="292.9,583.0 243.5,562.6 280.4,473.4 329.7,493.8"/>
-<polygon class="pk" id="pk-P02" points="228.9,354.1 234.9,338.8 263.1,349.8 257.2,365.0"/>
-<polygon class="pk" id="pk-P03" points="420.3,27.0 415.0,63.5 372.3,79.1 380.1,25.4"/>
-<polygon class="pk" id="pk-P04" points="342.8,80.5 300.2,16.1 310.9,9.0 353.5,73.5"/>
-<polygon class="pk" id="pk-P05" points="184.9,173.9 192.5,127.0 229.1,139.8 215.5,187.7"/>
-<polygon class="pk" id="pk-P06" points="147.3,299.1 166.6,249.6 186.9,257.5 167.6,307.0"/>
-<polygon class="pk" id="pk-P07" points="147.3,299.1 121.7,289.2 148.6,265.0 159.0,269.0"/>
-<polygon class="pk" id="pk-P08" points="47.1,546.8 9.0,513.6 34.6,484.2 72.7,517.4"/>
-<polygon class="pk" id="pk-P09" points="302.5,344.8 305.9,336.8 337.2,348.5 333.8,358.1"/>
 <text class="pl" id="pl-P01" x="286.6" y="505.2" font-size="6.5" font-weight="700" text-anchor="middle">P1</text>
-<text class="pn" id="pn-P01" x="286.6" y="544.2" text-anchor="middle" data-cx="286.6" data-cy="528.2"></text>
 <text class="pl" id="pl-P02" x="246.0" y="328.9" font-size="6.5" font-weight="700" text-anchor="middle">P2</text>
-<text class="pn" id="pn-P02" x="246.0" y="367.9" text-anchor="middle" data-cx="246.0" data-cy="351.9"></text>
 <text class="pl" id="pl-P03" x="396.9" y="25.8" font-size="6.5" font-weight="700" text-anchor="middle">P3</text>
-<text class="pn" id="pn-P03" x="396.9" y="64.8" text-anchor="middle" data-cx="396.9" data-cy="48.8"></text>
 <text class="pl" id="pl-P04" x="326.8" y="21.8" font-size="6.5" font-weight="700" text-anchor="middle">P4</text>
-<text class="pn" id="pn-P04" x="326.8" y="60.8" text-anchor="middle" data-cx="326.8" data-cy="44.8"></text>
 <text class="pl" id="pl-P05" x="205.5" y="134.1" font-size="6.5" font-weight="700" text-anchor="middle">P5</text>
-<text class="pn" id="pn-P05" x="205.5" y="173.1" text-anchor="middle" data-cx="205.5" data-cy="157.1"></text>
 <text class="pl" id="pl-P06" x="167.1" y="255.3" font-size="6.5" font-weight="700" text-anchor="middle">P6</text>
-<text class="pn" id="pn-P06" x="174.0" y="297.0" text-anchor="middle" data-cx="174.0" data-cy="281.0"></text>
 <text class="pl" id="pl-P07" x="144.1" y="257.6" font-size="6.5" font-weight="700" text-anchor="middle">P7</text>
-<text class="pn" id="pn-P07" x="126.0" y="295.0" text-anchor="middle" data-cx="126.0" data-cy="279.0"></text>
 <text class="pl" id="pl-P08" x="40.8" y="492.5" font-size="6.5" font-weight="700" text-anchor="middle">P8</text>
-<text class="pn" id="pn-P08" x="40.8" y="531.5" text-anchor="middle" data-cx="40.8" data-cy="515.5"></text>
 <text class="pl" id="pl-P09" x="319.8" y="324.0" font-size="6.5" font-weight="700" text-anchor="middle">P9</text>
-<text class="pn" id="pn-P09" x="319.8" y="363.0" text-anchor="middle" data-cx="319.8" data-cy="347.0"></text>
+</g>
 </g><g id="spMarks"></g></g></svg>
 <svg id="compass" viewBox="-19 -19 38 38"><circle r="17" fill="none" stroke="#9aa5ad" stroke-width="1.2"/>
         <g id="cmpN"><path d="M0,-12 L-5,-3 L5,-3 Z" fill="#c62828"/><path d="M0,12 L-5,3 L5,3 Z" fill="#9aa5ad"/><text x="-9" y="-6" font-size="8" font-weight="700" fill="#c62828" text-anchor="middle" font-family="Inter,sans-serif">N</text></g>
