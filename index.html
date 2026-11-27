@@ -230,7 +230,7 @@
   #mapWrap.on{ display:flex; }
   #mapBox{ flex:0 0 auto; padding:6px 8px 0; display:flex; align-items:flex-start; justify-content:center; touch-action:none; }
   #mapViewport{ position:relative; overflow:hidden; width:100%; aspect-ratio:612 / 452; border-radius:10px; background:#e9eee3; touch-action:none; }
-  #campusMap{ width:100%; height:100%; display:block; transform-origin:0 0; will-change:transform; }
+  #campusMap{ position:absolute; left:0; top:0; display:block; transform-origin:0 0; will-change:transform; }   /* tamaño y posición: setMapZoom() */
   #campusMap text{ font-family:'Inter',system-ui,sans-serif; }
   #compass{ position:absolute; top:8px; right:8px; width:38px; height:38px; background:rgba(255,255,255,.88); border-radius:50%; pointer-events:none; }
   #compass.flipped{ top:auto; left:auto; bottom:8px; right:8px; }
@@ -602,10 +602,7 @@
   #campusMap:not(.spmode) #spMarks{ display:none; }
   #mapWrap.spmode #mapMetric{ display:none; }
   /* Espacios: todo el plano a la altura disponible; se desplaza a lo ancho (sin pellizcar) */
-  #mapWrap.spmode #mapBox{ touch-action:pan-x; }
-  #mapWrap.spmode #mapViewport{ aspect-ratio:auto; height:calc(100dvh - 270px); max-height:600px; overflow-x:auto; overflow-y:hidden; touch-action:pan-x; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
-  #mapWrap.spmode #mapViewport::-webkit-scrollbar{ display:none; }
-  #mapWrap.spmode #campusMap{ width:auto; height:100%; aspect-ratio:860 / 500.7; transform:none !important; }
+  #mapWrap.spmode #mapViewport, #mapWrap.zoomed #mapViewport{ aspect-ratio:auto; height:calc(100dvh - 270px); max-height:640px; }
   #mapWrap.spmode #compass{ display:none; }
 </style>
 </head>
@@ -949,14 +946,14 @@
         • El número es el de plazas libres: <b style="color:#A50F15">rojo</b> 0 · <b style="color:#C85A08">naranja</b> 1 a 4 · <b style="color:#9A7400">amarillo</b> 5 a 9 · <b style="color:#1E8E4A">verde</b> 10 o más.<br>
         • Se actualizan solos (un parpadeo breve avisa de que han llegado datos nuevos). Toca la pantalla para actualizar en ese momento; el reloj de arriba cuenta el tiempo desde la última actualización.<br>
         • Con los botones de arriba cambias entre lista y mapa, y el altavoz lee en voz alta las plazas libres tras cada actualización.<br>
-        • El mapa (Norte arriba) muestra la zona de los parkings; puedes ver plazas de parking o puntos de recarga y ampliarlo con dos dedos.<br>
+        • El mapa (Norte arriba) muestra la zona de los parkings; puedes ver plazas de parking o puntos de recarga y ampliarlo con dos dedos (ampliado, ocupa más alto).<br>
         • El botón de la gráfica muestra <b>cuándo se llena</b> cada parking un día laborable normal: a qué hora suele llenarse, cuándo vuelve a haber sitio y cuántas plazas suele haber a esta hora. Sale de la estadística de plazas de las últimas semanas.
 
         <h3>Salas, cafeterías y meeting points</h3>
         • Los datos salen de <a href="https://unav.quodus.ai/" target="_blank" rel="noopener">unav.quodus.ai</a>.<br>
         • Agrupados por edificio, con si está abierto, hasta cuándo, cuántas personas hay y la barra de ocupación: <b style="color:#1E8E4A">verde</b> menos del 50 % · <b style="color:#9A7400">amarillo</b> hasta el 79 % · <b style="color:#C85A08">naranja</b> hasta el 94 % · <b style="color:#A50F15">rojo</b> 95 % o más.<br>
         • Se actualizan al entrar en la pestaña o al tocar la pantalla.<br>
-        • En Pamplona, con el botón del mapa ves cada edificio en el plano (Norte arriba; desliza a los lados para recorrerlo) con la ocupación más baja de sus espacios abiertos (o «Cerrada»); toca un marcador para ir a ese edificio en la lista.<br>
+        • En Pamplona, con el botón del mapa ves cada edificio en el plano (Norte arriba; desliza para recorrerlo y amplíalo con dos dedos) con la ocupación más baja de sus espacios abiertos (o «Cerrada»); toca un marcador para ir a ese edificio en la lista.<br>
         • Toca un espacio para ver su ficha completa (plano de puestos, servicios y ocupación de la semana); la flecha o el «atrás» del móvil vuelven a la lista.<br>
         • En Pamplona, <b>Favoritas</b> muestra solo tus edificios favoritos y <b>Todas</b>, todos. En Madrid y San Sebastián se ven siempre todos.
 
@@ -2159,6 +2156,7 @@ function applyView(){
   document.getElementById("listWrap").style.display = map ? "none" : "";
   document.getElementById("mapWrap").classList.toggle("on", map);
   document.querySelectorAll("#viewSeg button").forEach(b=>b.classList.toggle("on", b.dataset.v === (map ? "map" : "list")));
+  if (map && !mapEsp()) requestAnimationFrame(()=>setMapZoom(mapZoom.k, mapZoom.x, mapZoom.y));
 }
 
 /* =========================================================
@@ -2276,18 +2274,29 @@ initGestures(document.getElementById("listWrap"), document.getElementById("pullI
 /* Gestos del mapa: pellizcar para ampliar, arrastrar para moverlo cuando está ampliado.
    Con el mapa sin ampliar valen los mismos gestos que en la lista:
    un toque actualiza los datos y tirar hacia abajo recarga la app. */
-const mapZoom = { k:1, x:0, y:0 };
+const mapZoom = { k:1, x:0, y:0, bw:0, bh:0 };
+// Tamaño del plano sin ampliar: en Parkings, todo el ancho (apaisado); en los espacios, todo el alto
+// (más ancho que la pantalla: se desplaza). Ampliado (k > 1), en Parkings el recuadro crece en alto.
+const mapEsp = () => document.getElementById("mapWrap").classList.contains("spmode");
 function setMapZoom(k, x, y){
-  const vp = document.getElementById("mapViewport");
-  const r = vp.getBoundingClientRect();
+  const vp = document.getElementById("mapViewport"), svg = document.getElementById("campusMap");
   k = Math.max(1, Math.min(6, k));
-  x = Math.max(r.width  - k*r.width,  Math.min(0, x));
-  y = Math.max(r.height - k*r.height, Math.min(0, y));
-  if (k <= 1.001){ k = 1; x = 0; y = 0; }
-  mapZoom.k = k; mapZoom.x = x; mapZoom.y = y;
-  document.getElementById("campusMap").style.transform = k === 1 ? "" : `translate(${x}px,${y}px) scale(${k})`;
+  if (k <= 1.001) k = 1;
+  document.getElementById("mapWrap").classList.toggle("zoomed", k > 1);
+  const vw = vp.clientWidth, vh = vp.clientHeight;
+  if (!vw || !vh) return;
+  const vb = svg.viewBox.baseVal, ar = vb.width / vb.height;
+  const bw = mapEsp() ? vh*ar : vw, bh = bw / ar;
+  svg.style.width = bw + "px"; svg.style.height = bh + "px";
+  const sw = k*bw, sh = k*bh;
+  x = sw > vw ? Math.max(vw - sw, Math.min(0, x)) : (vw - sw)/2;
+  y = sh > vh ? Math.max(vh - sh, Math.min(0, y)) : (vh - sh)/2;
+  Object.assign(mapZoom, { k, x, y, bw, bh });
+  svg.style.transform = `translate(${x}px,${y}px) scale(${k})`;
   document.getElementById("btnZoomReset").style.display = k > 1 ? "" : "none";
 }
+const mapMovible = () => { const vp = document.getElementById("mapViewport");
+  return mapZoom.k*mapZoom.bw > vp.clientWidth + 1 || mapZoom.k*mapZoom.bh > vp.clientHeight + 1; };
 (function initMapGestures(){
   const box = document.getElementById("mapBox");
   const vp = document.getElementById("mapViewport");
@@ -2313,9 +2322,8 @@ function setMapZoom(k, x, y){
     indicator.textContent = "↓ Sigue tirando para recargar";
   }
 
-  const esp = () => document.getElementById("mapWrap").classList.contains("spmode");   // espacios: sin pellizcar, se desplaza a lo ancho
   box.addEventListener("touchstart", (e)=>{
-    if (e.touches.length >= 2){ if (!esp()) startPinch(e.touches); else mode = null; return; }
+    if (e.touches.length >= 2){ startPinch(e.touches); return; }
     if (mode !== "pinch"){ startPan(e.touches[0]); maxMove = 0; dragAmt = 0; pinched = false; }
   }, {passive:true});
 
@@ -2332,7 +2340,7 @@ function setMapZoom(k, x, y){
     const t = e.touches[0];
     const dx = t.clientX - sx, dy = t.clientY - sy;
     maxMove = Math.max(maxMove, Math.abs(dx), Math.abs(dy));
-    if (mapZoom.k > 1.001){
+    if (mapMovible()){
       setMapZoom(mapZoom.k, pan0.x + dx, pan0.y + dy);
     } else if (dy > TAP_SLOP){
       dragAmt = Math.min(dy, RELOAD_PULL + 30);
@@ -2349,7 +2357,7 @@ function setMapZoom(k, x, y){
       if (mode === "pinch"){ startPan(e.touches[0]); maxMove = 999; pinched = true; }
       return;
     }
-    const reload = mode === "single" && mapZoom.k === 1 && dragAmt >= RELOAD_PULL;
+    const reload = mode === "single" && !mapMovible() && dragAmt >= RELOAD_PULL;
     const tap = !reload && !pinched && mode === "single" && maxMove <= TAP_SLOP;
     resetIndicator();
     mode = null; dragAmt = 0;
@@ -2364,7 +2372,6 @@ function setMapZoom(k, x, y){
 
   // Rueda del ratón (ordenador)
   vp.addEventListener("wheel", (e)=>{
-    if (esp()) return;
     e.preventDefault();
     const p = pt(e);
     const k = mapZoom.k * (e.deltaY < 0 ? 1.2 : 1/1.2);
@@ -2671,16 +2678,15 @@ function placeMap(){
     const nuevo = !mw.classList.contains("spmode");
     mw.classList.add("on", "spmode"); svg.classList.add("spmode");
     document.getElementById("spWrap").style.display = "none";
-    setMapZoom(1, 0, 0);
-    // la primera vez, centrado en la zona central del campus (Biblioteca Central)
-    if (nuevo) requestAnimationFrame(()=>{ const vp = document.getElementById("mapViewport"); vp.scrollLeft = (vp.scrollWidth - vp.clientWidth) * 0.62; });
+    // al abrirlo, sin ampliar y centrado en la zona central del campus (Biblioteca Central)
+    if (nuevo) requestAnimationFrame(()=>{ setMapZoom(1, 0, 0); const vw = document.getElementById("mapViewport").clientWidth; setMapZoom(1, -(mapZoom.bw - vw)*0.62, 0); });
   } else {
     if (isSpaceScreen() || state.screen === "misas") document.getElementById("spWrap").style.display = "";
     const scr = document.getElementById("scrParking");
     if (mw.parentElement !== scr){ scr.appendChild(mw); }
     mw.classList.remove("spmode"); svg.classList.remove("spmode");
-    document.getElementById("mapViewport").scrollLeft = 0;
     applyView();
+    requestAnimationFrame(()=>setMapZoom(1, 0, 0));
   }
 }
 function renderSpMarks(){
