@@ -602,7 +602,7 @@
   #campusMap:not(.spmode) #spMarks{ display:none; }
   #mapWrap.spmode #mapMetric{ display:none; }
   /* Espacios: todo el plano a la altura disponible; se desplaza a lo ancho (sin pellizcar) */
-  #mapWrap.spmode #mapViewport, #mapWrap.zoomed #mapViewport{ aspect-ratio:auto; height:calc(100dvh - 270px); max-height:640px; }
+  #mapWrap.spmode #mapViewport{ aspect-ratio:auto; height:calc(100dvh - 270px); max-height:640px; }
   #mapWrap.spmode #compass{ display:none; }
 </style>
 </head>
@@ -2282,11 +2282,21 @@ function setMapZoom(k, x, y){
   const vp = document.getElementById("mapViewport"), svg = document.getElementById("campusMap");
   k = Math.max(1, Math.min(6, k));
   if (k <= 1.001) k = 1;
-  document.getElementById("mapWrap").classList.toggle("zoomed", k > 1);
-  const vw = vp.clientWidth, vh = vp.clientHeight;
-  if (!vw || !vh) return;
   const vb = svg.viewBox.baseVal, ar = vb.width / vb.height;
-  const bw = mapEsp() ? vh*ar : vw, bh = bw / ar;
+  const vw = vp.clientWidth;
+  if (!vw) return;
+  let vh, bw, bh;
+  if (mapEsp()){
+    vp.style.height = "";
+    vh = vp.clientHeight; bw = vh*ar; bh = vw ? bw / ar : 0;
+  } else {
+    // Parkings: el recuadro crece poco a poco con el zoom, hasta el alto libre de la pantalla
+    bw = vw; bh = bw / ar;
+    const maxH = Math.max(bh, Math.min(640, window.innerHeight - 270));
+    vh = Math.round(Math.min(maxH, bh*k));
+    vp.style.height = vh + "px";
+  }
+  if (!vh) return;
   svg.style.width = bw + "px"; svg.style.height = bh + "px";
   const sw = k*bw, sh = k*bh;
   x = sw > vw ? Math.max(vw - sw, Math.min(0, x)) : (vw - sw)/2;
